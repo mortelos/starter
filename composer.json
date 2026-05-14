@@ -1,0 +1,26 @@
+{
+    "name": "mortelos/starter",
+    "description": "Starter shell contracts for MortelOS workspaces",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.4",
+        "illuminate/support": "^13.0",
+        "livewire/livewire": "^4.0",
+        "mortelos/ui": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mortelos\\Starter\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Mortelos\\Starter\\MortelosStarterServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
