@@ -65,52 +65,68 @@ new class extends Component {
             <flux:separator variant="subtle" />
         @endif
 
-        <flux:sidebar.group heading="{{ $section['label'] }}" class="grid">
-            @foreach ($section['items'] as $item)
-                @if (($item['type'] ?? 'link') === 'action')
-                    <flux:sidebar.item
-                        icon="{{ $item['icon'] }}"
-                        wire:click="dispatchAction('{{ $item['action'] }}')"
-                        :current="false"
-                    >
-                        {{ $item['label'] }}
-                    </flux:sidebar.item>
-                @else
-                    <flux:sidebar.item
-                        icon="{{ $item['icon'] }}"
-                        href="{{ route($item['route']) }}"
-                        wire:navigate
-                        :current="request()->routeIs($item['route'])"
-                        :badge="$item['permission'] === 'nav.sidebar.inbox' && $inboxCount > 0 ? $inboxCount : null"
-                        badge:color="teal"
-                    >
-                        {{ $item['label'] }}
-                    </flux:sidebar.item>
-                @endif
-            @endforeach
-        </flux:sidebar.group>
+        <div class="flex flex-col" data-sidebar-section>
+            <div class="px-3 py-2 in-data-flux-sidebar-collapsed-desktop:hidden">
+                <div class="text-sm text-zinc-400 font-medium leading-none">{{ $section['label'] }}</div>
+            </div>
+
+            <div class="flex flex-col">
+                @foreach ($section['items'] as $item)
+                    @if (($item['type'] ?? 'link') === 'action')
+                        <flux:sidebar.item
+                            icon="{{ $item['icon'] }}"
+                            wire:click="dispatchAction('{{ $item['action'] }}')"
+                            :current="false"
+                        >
+                            {{ $item['label'] }}
+                        </flux:sidebar.item>
+                    @else
+                        <flux:sidebar.item
+                            icon="{{ $item['icon'] }}"
+                            href="{{ route($item['route']) }}"
+                            wire:navigate
+                            :current="request()->routeIs($item['route'])"
+                            :badge="$item['permission'] === 'nav.sidebar.inbox' && $inboxCount > 0 ? $inboxCount : null"
+                            badge:color="teal"
+                        >
+                            {{ $item['label'] }}
+                        </flux:sidebar.item>
+                    @endif
+                @endforeach
+            </div>
+        </div>
     @endforeach
 
     @if (count($overviews) > 0)
         <flux:separator variant="subtle" />
-        <flux:sidebar.group heading="Mijn overzichten" class="grid">
-            @foreach ($overviews as $overzicht)
-                <flux:sidebar.item
-                    icon="table-cells"
-                    href="{{ route('overzichten.show', $overzicht['id']) }}"
-                    wire:navigate
-                    :current="request()->routeIs('overzichten.show')"
-                >
-                    {{ $overzicht['name'] }}
-                </flux:sidebar.item>
-            @endforeach
-        </flux:sidebar.group>
+        <div class="flex flex-col" data-sidebar-section>
+            <div class="px-3 py-2 in-data-flux-sidebar-collapsed-desktop:hidden">
+                <div class="text-sm text-zinc-400 font-medium leading-none">Mijn overzichten</div>
+            </div>
+
+            <div class="flex flex-col">
+                @foreach ($overviews as $overzicht)
+                    <flux:sidebar.item
+                        icon="table-cells"
+                        href="{{ route('overzichten.show', $overzicht['id']) }}"
+                        wire:navigate
+                        :current="request()->routeIs('overzichten.show')"
+                    >
+                        {{ $overzicht['name'] }}
+                    </flux:sidebar.item>
+                @endforeach
+            </div>
+        </div>
     @else
         <flux:separator variant="subtle" />
-        <flux:sidebar.group heading="Mijn overzichten">
-            <p class="px-3 py-2 text-xs text-zinc-400">
+        <div class="flex flex-col" data-sidebar-section>
+            <div class="px-3 py-2 in-data-flux-sidebar-collapsed-desktop:hidden">
+                <div class="text-sm text-zinc-400 font-medium leading-none">Mijn overzichten</div>
+            </div>
+
+            <p class="px-3 py-2 text-xs text-zinc-400 in-data-flux-sidebar-collapsed-desktop:hidden">
                 Je hebt nog geen overzichten.<br>Stel een vraag om te beginnen.
             </p>
-        </flux:sidebar.group>
+        </div>
     @endif
 </flux:sidebar.nav>
