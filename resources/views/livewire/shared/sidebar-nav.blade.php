@@ -65,7 +65,7 @@ new class extends Component {
             <flux:separator variant="subtle" />
         @endif
 
-        <flux:sidebar.group heading="{{ $section['label'] }}">
+        <flux:sidebar.group heading="{{ $section['label'] }}" class="grid">
             @foreach ($section['items'] as $item)
                 @if (($item['type'] ?? 'link') === 'action')
                     <flux:sidebar.item
@@ -93,7 +93,7 @@ new class extends Component {
 
     @if (count($overviews) > 0)
         <flux:separator variant="subtle" />
-        <flux:sidebar.group heading="Mijn overzichten">
+        <flux:sidebar.group heading="Mijn overzichten" class="grid">
             @foreach ($overviews as $overzicht)
                 <flux:sidebar.item
                     icon="table-cells"
