@@ -23,6 +23,7 @@
                 wire:navigate
                 name="{{ config('app.name') }}"
             />
+            <flux:sidebar.toggle class="lg:hidden min-h-[44px] -me-2" icon="x-mark" />
             <flux:sidebar.collapse class="max-lg:hidden min-h-[44px] in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
         </flux:sidebar.header>
 
