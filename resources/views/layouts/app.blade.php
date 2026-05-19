@@ -16,14 +16,14 @@
         $universalSearchComponent = config('starter.layout.universal_search_component');
     @endphp
 
-    <flux:sidebar sticky collapsible="mobile" class="border-r border-zinc-200 bg-surface-alt">
+    <flux:sidebar sticky collapsible class="border-r border-zinc-200 bg-surface-alt">
         <flux:sidebar.header>
             <flux:sidebar.brand
                 href="{{ route('dashboard') }}"
                 wire:navigate
                 name="{{ config('app.name') }}"
             />
-            <flux:sidebar.collapse class="lg:hidden min-h-[44px]" />
+            <flux:sidebar.collapse class="min-h-[44px] in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
         </flux:sidebar.header>
 
         @if (is_string($sidebarNavComponent))
@@ -35,9 +35,14 @@
         <flux:sidebar.spacer />
 
         @if (is_string($topbarComponent))
-            <livewire:dynamic-component
-                :is="$topbarComponent"
-                wire:key="starter-topbar" />
+            <flux:sidebar.nav class="max-lg:hidden">
+                <livewire:dynamic-component
+                    :is="$topbarComponent"
+                    :sidebar="true"
+                    position="top"
+                    align="start"
+                    wire:key="starter-sidebar-topbar" />
+            </flux:sidebar.nav>
         @endif
     </flux:sidebar>
 
@@ -58,6 +63,12 @@
     <flux:header class="lg:hidden">
         <flux:sidebar.toggle class="lg:hidden min-h-[44px]" icon="bars-2" inset="left" />
         <flux:spacer />
+
+        @if (is_string($topbarComponent))
+            <livewire:dynamic-component
+                :is="$topbarComponent"
+                wire:key="starter-mobile-topbar" />
+        @endif
     </flux:header>
 
     <flux:main>
