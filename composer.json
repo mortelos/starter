@@ -7,7 +7,7 @@
         "php": "^8.4",
         "illuminate/support": "^13.0",
         "livewire/livewire": "^4.0",
-        "mortelos/ui": "^0.1"
+        "mortelos/ui": "^0.2"
     },
     "autoload": {
         "psr-4": {
