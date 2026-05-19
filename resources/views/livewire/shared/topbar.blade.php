@@ -7,6 +7,12 @@ new class extends Component {
 
     public string $userEmail = '';
 
+    public string $position = 'bottom';
+
+    public string $align = 'end';
+
+    public bool $sidebar = false;
+
     /** @var list<array{id: string, name: string, is_current: bool}> */
     public array $tenants = [];
 
@@ -32,11 +38,18 @@ new class extends Component {
     }
 }; ?>
 
-<flux:dropdown position="bottom" align="end">
-    <flux:profile
-        :name="$userName"
-        avatar="{{ 'https://ui-avatars.com/api/?name=' . urlencode($userName) . '&background=0d9488&color=fff&size=32' }}"
-    />
+<flux:dropdown :position="$position" :align="$align">
+    @if ($sidebar)
+        <flux:sidebar.profile
+            :name="$userName"
+            avatar="{{ 'https://ui-avatars.com/api/?name=' . urlencode($userName) . '&background=0d9488&color=fff&size=32' }}"
+        />
+    @else
+        <flux:profile
+            :name="$userName"
+            avatar="{{ 'https://ui-avatars.com/api/?name=' . urlencode($userName) . '&background=0d9488&color=fff&size=32' }}"
+        />
+    @endif
 
     <flux:menu>
         <flux:menu.heading>
