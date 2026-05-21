@@ -116,7 +116,7 @@ class extends Component {
     }
 }; ?>
 
-<div class="-mx-6 lg:-mx-8 -my-6 lg:-my-8 flex h-[calc(100%+3rem)] lg:h-[calc(100%+4rem)] overflow-hidden" x-data="{
+<div class="-mx-6 -my-6 flex h-[calc(100dvh-3.5rem)] overflow-hidden lg:-mx-8 lg:-my-8 lg:h-dvh" x-data="{
     showDetail: @js($selectedItemId !== ''),
     isMobile: window.innerWidth < 768,
     isTablet: window.innerWidth >= 768 && window.innerWidth < 1024,
@@ -129,7 +129,7 @@ class extends Component {
     {{-- Left panel: filters + list --}}
     <nav
         aria-label="Inbox navigatie"
-        class="flex flex-col overflow-y-auto border-r border-zinc-200"
+        class="flex min-h-0 flex-col overflow-y-auto border-r border-zinc-200"
         :class="{
             'hidden': (isMobile || isTablet) && showDetail,
             'w-full': isMobile && !showDetail,
@@ -161,7 +161,7 @@ class extends Component {
 
     {{-- Right panel: detail --}}
     <div
-        class="flex-1 overflow-y-auto"
+        class="min-h-0 min-w-0 flex-1 overflow-hidden"
         x-show="(!isMobile && !isTablet) || showDetail"
         x-cloak
     >

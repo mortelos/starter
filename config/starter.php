@@ -40,6 +40,8 @@ return [
 
     'governance' => [
         'resolver' => null,
+        'access_resolver' => null,
+        'proposal_queue_component' => null,
         'stats_component' => null,
         'trust_config_component' => null,
         'learning_patterns_component' => null,
