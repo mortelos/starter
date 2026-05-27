@@ -1,19 +1,24 @@
 # MortelOS Starter
 
-Starter gives you the ready-made app shell for a MortelOS workspace: login,
-tenant selection, dashboard, inbox, users, settings and governance pages. You
-only build your own auth, data and rules, and wire them in through config.
+Starter is the ready-made app shell for a MortelOS workspace: login, tenant
+selection, dashboard, inbox, users, settings and governance pages.
 
-The package is intentionally not a complete product. It is the stable shell that
-a host application wires into its own tenant model, auth controllers, policies,
-connectors, widgets and customer-specific packages.
+MortelOS is built to be extended by an AI agent, not hand-wired. You describe a
+portal capability in plain language, your AI coding agent assembles it from
+MortelOS's governed primitives, and you review the result against the contracts
+in this README. You stay the director and the reviewer; the agent does the
+wiring.
 
-For designing portals on top of this shell, see
+Agents work on two surfaces. A coding agent **builds** the host app from this
+README (setup and portal sections below). The MortelOS MCP server lets agents
+**operate** the running workspace at runtime (see [Agent access](#agent-access-mcp)).
+
+For the full design method an agent follows, see
 [docs/building-portals.md](docs/building-portals.md).
 
-## What you get vs what you provide
+## What is fixed vs what your agent builds
 
-| Starter provides | You provide |
+| Starter provides (fixed) | Your agent assembles from your description (you review) |
 | --- | --- |
 | App layout `mortelos-starter::layouts.app` | Brand and which shell components are active |
 | Routes for login, tenant select, dashboard, inbox, governance, users, settings, onboarding, invitations, logout | Auth controllers and post-login redirect rules |
@@ -30,51 +35,44 @@ For designing portals on top of this shell, see
 
 Discovered automatically through `Mortelos\Starter\MortelosStarterServiceProvider`.
 
-## Quickstart
+## Setup
 
-### 1. Install and publish config
+### 1. Install the package
 
 ```bash
 composer require mortelos/starter
 php artisan vendor:publish --tag=mortelos-starter
 ```
 
-### 2. Load the starter routes
+### 2. Let your agent wire it in
 
-Create a thin route bridge and include it from your web routes:
+Open this repo in your AI coding agent and give it the wiring task. A prompt that
+works:
+
+> Wire `mortelos/starter` into this Laravel host app. Add the starter route
+> bridge and require it from `routes/web.php`, delegate
+> `resources/views/layouts/app.blade.php` to `mortelos-starter::layouts.app`, and
+> create `config/starter.php` from the package defaults with only the minimal
+> auth contracts filled. Use this README's contract tables as the spec.
+
+The agent produces three things. This is what correct output looks like, so you
+can review it:
 
 ```php
-// routes/starter.php
-<?php
-
-declare(strict_types=1);
-
+// routes/starter.php  - bridge to the package routes
 require base_path('vendor/mortelos/starter/routes/starter.php');
-```
 
-```php
 // routes/web.php
 require __DIR__.'/starter.php';
 ```
-
-### 3. Delegate your app layout
 
 ```blade
 {{-- resources/views/layouts/app.blade.php --}}
 @include('mortelos-starter::layouts.app', ['slot' => $slot])
 ```
 
-### 4. Wire the minimum config
-
-The app boots as soon as the auth contracts are filled in. Everything else has a
-default or is optional, so start with this and grow:
-
 ```php
-// config/starter.php
-<?php
-
-declare(strict_types=1);
-
+// config/starter.php  - starts from package defaults, fills the minimal auth block
 $defaults = require __DIR__.'/../vendor/mortelos/starter/config/starter.php';
 
 return array_replace_recursive($defaults, [
@@ -90,19 +88,66 @@ return array_replace_recursive($defaults, [
 ]);
 ```
 
-You now have a working `login` -> tenant select -> `dashboard` flow. Add the
-optional resolvers below to light up navigation, search, governance and widgets.
+### 3. Review
 
-Publish views only when the host app needs explicit overrides; most apps keep the
-package views upstream and customize through config and resolvers:
+The app boots as soon as the auth contracts are filled. Check the five auth keys
+against the table below, then load the app: you should get a working `login` ->
+tenant select -> `dashboard` flow. Everything else is optional and degrades
+silently until you add it.
 
-```bash
-php artisan vendor:publish --tag=mortelos-starter-views
+## Build a portal
+
+Start from the capability, not from a page. Describe what each role should be
+able to do, and let the agent assemble it. An example prompt:
+
+> Add a customer document-review portal on Starter. Customers upload documents;
+> account managers review and approve them. Follow `docs/building-portals.md`:
+> record the package decision, model the domain as entities, links and events,
+> add the navigation and inbox resolvers, seed deny-by-default policies, and
+> route approvals through the inbox.
+
+The agent works through the MortelOS method (capability map, package decision,
+domain model, projections, connectors, widgets, policies, workflows,
+observability) and fills the contracts below. You review the package decision,
+the policies and the resulting surfaces, and approve changes through governance.
+
+Read [docs/building-portals.md](docs/building-portals.md) for the full method.
+Point your agent at it as context.
+
+## Agent access (MCP)
+
+Building the host app is one AI surface. Operating the running workspace is the
+other. MortelOS exposes the live workspace to any MCP-capable agent, so it can
+search and mutate entities, run skills, trigger workflows, act on governance
+approvals and launch sub-agents without going through the web UI.
+
+This server is provided by the MortelOS core package (`uteq/mortel`), not by
+Starter. The host app mounts it in `routes/ai.php`:
+
+```php
+// routes/ai.php
+use Laravel\Mcp\Facades\Mcp;
+use Mortel\MCP\Servers\UteqOSServer;
+
+Mcp::oauthRoutes();                       // OAuth 2.1 discovery + dynamic client registration
+Mcp::web('/mcp/uteqos', UteqOSServer::class)
+    ->middleware([
+        'auth:api',                       // Passport OAuth
+        // tenancy init from MCP token, role resolution,
+        // trust-level enforcement, data classification, throttling
+    ]);
 ```
 
-## Configuration
+Access is OAuth-authenticated and tenant-scoped, and every call passes through
+role resolution, trust-level enforcement and data classification. An agent only
+sees and changes what its grants allow. The same policies you review for the web
+shell govern the MCP surface, so the runtime agent is bound by the same contracts
+as the portal it operates.
 
-Starter config is merged from the package `config/starter.php`. A host app
+## Contracts (your review checklist)
+
+These are the contracts the agent fills, and the spec you review its output
+against. Starter config is merged from the package `config/starter.php`; the host
 overrides only the local bindings. See that file for every default key.
 
 ### Auth (required to boot)
@@ -153,20 +198,6 @@ authenticated and `app($settingsService)->enabled()` returns true.
 | `users.resolver` | `canManage(): bool`, `members(): array`, `pendingInvites(): array`, `invite(string $email, string $role): void`, `revokeInvite(string $inviteId): void` |
 | `onboarding.resolver` | `resolve(): array`, `complete(): void` |
 
-## Customizing
-
-- **Navigation and search:** implement the resolvers above and point
-  `layout.*_component` at `starter::shared.sidebar-nav` / `universal-search`.
-- **Dashboard:** list your own Livewire widget components in
-  `dashboard.primary_widgets` / `secondary_widgets`.
-- **Governance:** bind the `governance.*_component` slots to Policy Studio
-  (`policy-studio::governance.proposal-queue`).
-- **Inbox details:** add custom item types to `inbox.intake_detail_types`.
-
-For the full method of designing a portal (capabilities, packages, projections,
-connectors, policies, workflows, observability), see
-[docs/building-portals.md](docs/building-portals.md).
-
 ## Reference implementation
 
 UteqOS is the current reference host app. It demonstrates the route bridge, a
@@ -179,7 +210,7 @@ rule that every host must use the same class names or tenant model.
 
 | Symptom | Cause |
 | --- | --- |
-| `LogicException: Missing starter route class config [...]` | A required `auth.controllers.*` key is empty. Fill the auth block (step 4). |
+| `LogicException: Missing starter route class config [...]` | A required `auth.controllers.*` key is empty. Fill the auth block (setup step 2). |
 | Routes return 404 | The starter route bridge is not required from `routes/web.php`. |
 | Blank or unstyled page | `resources/views/layouts/app.blade.php` does not delegate to `mortelos-starter::layouts.app`. |
 | Sidebar, search or chat missing | The matching resolver or component is still `null` in config. These are optional and degrade silently. |
@@ -192,12 +223,12 @@ For the package itself:
 composer validate --strict
 ```
 
-For a host app, add architecture tests that prove the route bridge requires the
-package route file, starter route names do not drift into host `web.php`, the
-host layout delegates to `mortelos-starter::layouts.app`, the layout renders the
-configured dynamic components, published config matches the package default
-contract, and starter Livewire components render through the `starter::`
-namespace. In UteqOS this is covered by tests under
+For a host app, ask your agent to add architecture tests that prove the route
+bridge requires the package route file, starter route names do not drift into
+host `web.php`, the host layout delegates to `mortelos-starter::layouts.app`, the
+layout renders the configured dynamic components, published config matches the
+package default contract, and starter Livewire components render through the
+`starter::` namespace. In UteqOS this is covered by tests under
 `tests/Feature/Architecture` and `tests/Unit/Architecture`.
 
 ## Maintainer notes
