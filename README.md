@@ -114,6 +114,24 @@ the policies and the resulting surfaces, and approve changes through governance.
 Read [docs/building-portals.md](docs/building-portals.md) for the full method.
 Point your agent at it as context.
 
+### Guided kickoff skill
+
+This package ships a Claude skill, `portal-kickoff`, that runs the method above as
+a guided workflow: it interviews for the capability map one question at a time,
+wires the Starter foundation, records package decisions, writes a standalone build
+plan under `docs/portals/<slug>/`, then builds the portal one vertical slice at a
+time with a review checkpoint each step. It is the first skill to run on a new
+portal.
+
+The skill lives in this package at `.claude/skills/portal-kickoff/`, but portal
+work writes into the host app, so run it from the host-app working directory.
+Symlink it into the host once:
+
+```bash
+mkdir -p .claude/skills
+ln -s vendor/mortelos/starter/.claude/skills/portal-kickoff .claude/skills/portal-kickoff
+```
+
 ## Agent access (MCP)
 
 Building the host app is one AI surface. Operating the running workspace is the
