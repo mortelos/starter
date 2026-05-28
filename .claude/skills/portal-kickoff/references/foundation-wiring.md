@@ -3,15 +3,15 @@
 Phase [3]. Wire the Starter contracts so the app boots and every later capability
 plugs into governed primitives. This is the checklist; the canonical contract spec
 is the README contract tables plus `config/starter.php` defaults and
-`routes/starter.php`. Detect what is already done in phase [0] and only fill gaps —
-do not clobber an already-wired host.
+`routes/starter.php`. Detect what is already done in phase [0] and only fill
+gaps; do not clobber an already-wired host.
 
 ## A. Make the app boot (required)
 
 These three edits + the five auth contracts are the minimum. The app boots as
 soon as the auth contracts are filled; everything else degrades silently.
 
-1. **Route bridge** — `routes/starter.php` in the host requires the package routes,
+1. **Route bridge**, `routes/starter.php` in the host requires the package routes,
    and `routes/web.php` requires that bridge:
    ```php
    // routes/starter.php
@@ -19,12 +19,12 @@ soon as the auth contracts are filled; everything else degrades silently.
    // routes/web.php
    require __DIR__.'/starter.php';
    ```
-2. **Layout delegation** — `resources/views/layouts/app.blade.php` delegates to the
+2. **Layout delegation**, `resources/views/layouts/app.blade.php` delegates to the
    package layout:
    ```blade
    @include('mortelos-starter::layouts.app', ['slot' => $slot])
    ```
-3. **Config from package defaults** — `config/starter.php` starts from the package
+3. **Config from package defaults**, `config/starter.php` starts from the package
    defaults and overrides only host bindings:
    ```php
    $defaults = require __DIR__.'/../vendor/mortelos/starter/config/starter.php';
@@ -41,13 +41,13 @@ soon as the auth contracts are filled; everything else degrades silently.
 | `auth.controllers.passkey_authenticated` | Controller for passkey login POST |
 | `auth.controllers.accept_invitation` | Controller with `show()` and `store()` |
 | `auth.controllers.tenant_select` | Controller with `show()` and `store()` |
-| `auth.controllers.passkey_authentication_options` | Optional — passkey options GET |
+| `auth.controllers.passkey_authentication_options` | Optional, passkey options GET |
 | `auth.passkey_form_component` / `auth.password_form_component` | Optional Blade form components |
 
 These controllers and the redirect resolver live in the **host** (`App\Http\
 Controllers\Auth\…`, `App\Actions\Auth\…`). If a required key is empty, the route
 file throws `LogicException: Missing starter route class config [...]`
-(`routes/starter.php:13`) — that means an `auth.controllers.*` key is still null.
+(`routes/starter.php:13`), that means an `auth.controllers.*` key is still null.
 
 **Checkpoint:** confirm `login → tenant-select → dashboard` works before moving on.
 
@@ -83,7 +83,7 @@ resolvers (often backed by entities, the inbox count, and saved overviews).
 | `chat.settings_service` | Service with `enabled(): bool` (chat panel renders only when set, user authed, and enabled) |
 | `chat.conversation_panel_component` | Defaults to `chat::conversation-panel` |
 
-Wire these as the capability map calls for them — e.g. a governance-heavy portal
+Wire these as the capability map calls for them, e.g. a governance-heavy portal
 fills the `governance.*` slots via Policy Studio; a portal with no chat leaves
 `chat.settings_service` null.
 

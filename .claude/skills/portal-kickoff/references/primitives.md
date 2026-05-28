@@ -2,7 +2,7 @@
 
 Map each customer concept to the right primitive (building-portals.md §3–§6).
 Keep domain rules behind actions, projections, policies, resolvers, or package
-services — never inside Blade or Livewire components.
+services, never inside Blade or Livewire components.
 
 ## Concept → primitive (§3)
 
@@ -38,7 +38,7 @@ package usually contains: a channel/provider id, a setup provider (forms/OAuth),
 sync jobs + health checks, a data-request provider (agent/chat), retry/reauth,
 channel status mapping, policy hooks for setup and data access.
 
-Connectors **expose data, state, and actions** — they do not render portal UI
+Connectors **expose data, state, and actions**, they do not render portal UI
 unless they own a reusable setup/status widget.
 
 ## Surfaces & widgets (§6)
@@ -63,9 +63,9 @@ for local experiments.
 
 ## Reference packages
 
-- `mortelos/entity-graph` — owns API routes, views, a Livewire namespace,
+- `mortelos/entity-graph`, owns API routes, views, a Livewire namespace,
   migrations, extension contracts, a chat widget, and an agent tool.
-- `mortelos/policy-studio` — owns governance widgets, routes, and proposal-first
+- `mortelos/policy-studio`, owns governance widgets, routes, and proposal-first
   policy flows.
 
 Use them as worked examples of what a well-bounded package owns.

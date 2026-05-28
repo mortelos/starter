@@ -3,16 +3,16 @@
 The structured output of phase [1]. Write it to
 `docs/portals/<slug>/capability-map.md` and have the user confirm it before any
 wiring. It is the single source the build plan (phase [4]) is derived from, so it
-must contain no `TBD` — only answers or confirmed assumptions.
+must contain no `TBD`, only answers or confirmed assumptions.
 
 Fill the template below. Drop sections that genuinely do not apply (e.g. no
 connectors), but never leave a placeholder.
 
 ```markdown
-# Capability Map — <Portal name>
+# Capability Map, <Portal name>
 
 - **Slug:** <slug>
-- **Goal (north star):** <one sentence — what the working portal must let people do>
+- **Goal (north star):** <one sentence, what the working portal must let people do>
 - **Tenancy:** <single-tenant | multi-tenant; isolation + branding notes (host-owned)>
 - **Date:** <YYYY-MM-DD>
 
@@ -34,7 +34,7 @@ For each capability:
 - **Approval:** <none | reviewed by <role> before effect>  → see Workflows
 - **Surface:** <starter page | package route | dashboard widget | chat widget | page widget>
 - **Audit/reporting:** <what history/report is needed, or "none">
-- **Reuse:** <package-now | package-ready | workspace-only> — <one-line reason>
+- **Reuse:** <package-now | package-ready | workspace-only>, <one-line reason>
 
 ## Domain model
 
@@ -63,7 +63,7 @@ For each capability:
 ## Observability
 
 What operators must be able to answer: <connector health · projection drift ·
-policy denials · agent/widget runs · audit trail — pick what applies>.
+policy denials · agent/widget runs · audit trail, pick what applies>.
 
 ## Non-functional
 
