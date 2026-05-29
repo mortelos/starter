@@ -1,0 +1,30 @@
+---
+description: MortelOS / mortelos-starter conventions and portal-build workflow
+globs:
+alwaysApply: true
+---
+
+# MortelOS conventions
+
+All agent instructions for this repo live in [`AGENTS.md`](mdc:AGENTS.md). Read
+it before doing anything portal-related.
+
+Key reading order:
+
+1. `AGENTS.md` — the rules
+2. `README.md` — wiring contract tables
+3. `docs/building-portals.md` — the design method (§1–§11)
+4. `knowledge/` — short, AI-first notes per topic (start at `knowledge/README.md`)
+
+Hard rules:
+
+- **Capability-first**, never page-first. Run the interview before code.
+- **Deny by default** for new policies.
+- **Tenant identity is host-owned**, not portal-owned.
+- **Flux UI first** before any custom component.
+- **Livewire 4 SFC**, Pest tests, action classes for write paths.
+- **Package-first governance**: record a decision before building any new surface.
+- **No em-dashes** in Dutch prose.
+- Reply in Dutch; code/commits/PR descriptions stay in English.
+
+When in doubt, point to `AGENTS.md §<N>` and follow that section verbatim.

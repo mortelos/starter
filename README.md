@@ -16,6 +16,21 @@ README (setup and portal sections below). The MortelOS MCP server lets agents
 For the full design method an agent follows, see
 [docs/building-portals.md](docs/building-portals.md).
 
+## For AI agents (start here)
+
+If you are a coding agent (Claude, Codex, Cursor, Windsurf, generic LLM) and the
+user just asked you to build a portal:
+
+1. Read [`AGENTS.md`](AGENTS.md) — single source of truth for every agent.
+2. Read [`docs/building-portals.md`](docs/building-portals.md) — the design method.
+3. Skim [`knowledge/`](knowledge/README.md) — short, scanbare notes per topic
+   (primitives, TALL conventions, package governance, MCP runtime, troubleshooting).
+4. If you are Claude, also use the
+   [`portal-kickoff` skill](.claude/skills/portal-kickoff/SKILL.md), which runs
+   the method as a guided workflow.
+
+Bootstrap a fresh host in one session: [`docs/init-host-app.md`](docs/init-host-app.md).
+
 ## What is fixed vs what your agent builds
 
 | Starter provides (fixed) | Your agent assembles from your description (you review) |
@@ -41,8 +56,15 @@ Discovered automatically through `Mortelos\Starter\MortelosStarterServiceProvide
 
 ```bash
 composer require mortelos/starter
-php artisan vendor:publish --tag=mortelos-starter
+php artisan vendor:publish --tag=mortelos-starter            # config defaults
+php artisan vendor:publish --tag=mortelos-starter-stubs      # working auth + config stubs
 ```
+
+The `mortelos-starter-stubs` tag publishes minimal working auth controllers, a
+post-login redirect action, and a recommended `config/starter.php` shape, so a
+fresh host can boot the `login → tenant-select → dashboard` flow immediately.
+Replace each stub with a real implementation as your capability map specifies
+the auth flow. See [`stubs/README.md`](stubs/README.md) for what gets published.
 
 ### 2. Let your agent wire it in
 
@@ -238,16 +260,31 @@ rule that every host must use the same class names or tenant model.
 For the package itself:
 
 ```bash
+composer install
 composer validate --strict
+composer test            # vendor/bin/pest
+composer test:arch       # architecture suite only
+composer format:check    # pint --test
 ```
+
+The package ships:
+
+- Architecture tests for service-provider boot, view + Livewire namespace
+  registration, publish-tag presence, and the `LogicException` path when an
+  auth contract is empty
+- Feature tests for the config-merge shape (full contract surface)
+- Stub tests that assert the publishable stubs exist with the correct host
+  namespace
 
 For a host app, ask your agent to add architecture tests that prove the route
 bridge requires the package route file, starter route names do not drift into
-host `web.php`, the host layout delegates to `mortelos-starter::layouts.app`, the
-layout renders the configured dynamic components, published config matches the
-package default contract, and starter Livewire components render through the
-`starter::` namespace. In UteqOS this is covered by tests under
-`tests/Feature/Architecture` and `tests/Unit/Architecture`.
+host `web.php`, the host layout delegates to `mortelos-starter::layouts.app`,
+the layout renders the configured dynamic components, published config matches
+the package default contract, and starter Livewire components render through
+the `starter::` namespace. In UteqOS this is covered by tests under
+`tests/Feature/Architecture` and `tests/Unit/Architecture`. The host should
+also ship `php artisan starter:doctor` as a quick wiring diagnostic; see
+[`knowledge/07-test-and-verify.md`](knowledge/07-test-and-verify.md).
 
 ## Maintainer notes
 
