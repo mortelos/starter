@@ -1,21 +1,28 @@
 # Agent Instructions — mortelos/starter
 
-You are an AI coding agent working on a **host application** that consumes the
-`mortelos/starter` Composer package. This file is the single source of truth for
-every agent (Claude, Codex, Cursor, Windsurf, generic LLM); `CLAUDE.md`,
-`.cursor/rules/`, and `.windsurfrules` all point here.
+You are an AI coding agent working on a **MortelOS Starter** project — a Laravel
+application template for AI-driven portal builds on the TALL stack. This file
+is the single source of truth for every agent (Claude, Codex, Cursor, Windsurf,
+generic LLM); `CLAUDE.md`, `.cursor/rules/`, and `.windsurfrules` all point here.
 
-**This repo is the package itself**, installed in host apps as
-`vendor/mortelos/starter`. The starter does not boot standalone — it provides
-the application shell (login, tenant select, dashboard, inbox, governance,
-users, settings) that a host app wires together.
+**This repo is a runnable Laravel application**, not a library. You bootstrap a
+new portal with:
 
-Default to **build mode**: assemble portals from MortelOS primitives. The runtime
-**operate mode** runs through the UteqOS MCP server, not through this codebase.
+```bash
+composer create-project mortelos/starter mijn-portal
+```
+
+…and you get a working Laravel app with the MortelOS shell already wired:
+login, tenant select, dashboard, inbox, governance, users, settings, plus a
+seeded admin account. From there you assemble portal capabilities on top.
+
+The runtime **operate mode** (chat, agent tools, governance approvals) runs
+through the UteqOS MCP server in `uteq/mortel`, not through this codebase.
+Default to **build mode**: assemble portals from MortelOS primitives.
 
 ## 1. Read this in order
 
-1. `README.md` — installation, wiring contract tables, agent prompts that work
+1. `README.md` — installation, contract tables, agent prompts that work
 2. `docs/building-portals.md` — the design method (§1–§11)
 3. `knowledge/` — short, AI-first notes per topic (start at `knowledge/README.md`)
 4. `.claude/skills/portal-kickoff/` — Claude-only guided kickoff (skip for other agents)
@@ -58,44 +65,37 @@ Workflows           → inbox approvals for risky/human-reviewed action (§8)
 Observability       → why did this appear/disappear/fail?            (§10)
         │
         ▼
-Tests & release     → host-wiring tests + package tests              (§11)
+Tests & release     → host wiring + capability tests                 (§11)
 ```
 
 Never embed domain rules in Blade or Livewire components. Push them behind
 actions, projections, policies, resolvers or package services.
 
-## 3. Foundation wiring contract (boot minimum)
+## 3. What's already wired (the boot baseline)
 
-The host app boots once these three edits and five `auth.*` keys are in place.
-Everything else is optional and degrades silently.
+Out of the box this app boots `/` → `/login` → `/auth/tenant-select` →
+`/dashboard` with a seeded admin account
+(`admin@example.test` / `password`). All five `auth.*` contract keys point at
+working stubs under `app/Http/Controllers/Auth/` and
+`app/Actions/Auth/ResolvePostLoginRedirect.php`. Replace each stub with a real
+implementation as your portal's auth flow gets specified.
 
-| # | Edit | Where |
-| - | --- | --- |
-| 1 | Route bridge: host `routes/web.php` requires host `routes/starter.php`, which requires `vendor/mortelos/starter/routes/starter.php` | host `routes/` |
-| 2 | Layout delegation: host `resources/views/layouts/app.blade.php` includes `mortelos-starter::layouts.app` | host `resources/views/` |
-| 3 | Config merge: host `config/starter.php` starts from package defaults via `array_replace_recursive`, fills auth bindings | host `config/` |
-
-| Auth contract key | Expected shape |
+| Contract key | Default class |
 | --- | --- |
-| `auth.post_login_redirect_resolver` | `execute(User $user, string $tenantId): string` |
-| `auth.controllers.password_login` | Invokable controller for POST login |
-| `auth.controllers.passkey_authenticated` | Controller for passkey login POST |
-| `auth.controllers.accept_invitation` | Controller with `show()` and `store()` |
-| `auth.controllers.tenant_select` | Controller with `show()` and `store()` |
+| `auth.post_login_redirect_resolver` | `App\Actions\Auth\ResolvePostLoginRedirect` (returns `/dashboard`) |
+| `auth.controllers.password_login` | `App\Http\Controllers\Auth\PasswordLoginController` (email + password) |
+| `auth.controllers.passkey_authenticated` | `App\Http\Controllers\Auth\PasskeyAuthenticatedController` (501 stub; replace) |
+| `auth.controllers.accept_invitation` | `App\Http\Controllers\Auth\AcceptInvitationController` (501 stubs; replace) |
+| `auth.controllers.tenant_select` | `App\Http\Controllers\Auth\TenantSelectController` (auto-picks single tenant) |
 
-If any of those five is `null`, `routes/starter.php:13` throws
-`LogicException: Missing starter route class config [...]`. Fill them, run
-`php artisan starter:doctor` (see `knowledge/07-test-and-verify.md`), then load
-the app: `login → tenant-select → dashboard` must work end-to-end.
+Optional resolvers (`navigation.sidebar_resolver`,
+`navigation.universal_search_resolver`, `governance.resolver`,
+`users.resolver`, `onboarding.resolver`, `inbox.item_type_resolver`, etc.) are
+all `null` by default and degrade silently. Fill them as the capability map
+calls for them.
 
-The package ships **runnable stubs** under `stubs/` that get a host booting in
-minutes; publish them with:
-
-```bash
-php artisan vendor:publish --tag=mortelos-starter-stubs
-```
-
-See `knowledge/07-test-and-verify.md` for what to verify after publishing.
+Verify with `php artisan starter:doctor` — green means the boot baseline is
+intact.
 
 ## 4. Primitives (the only things you should be assembling)
 
@@ -103,11 +103,11 @@ See `knowledge/07-test-and-verify.md` for what to verify after publishing.
 | --- | --- | --- |
 | Customer, project, document, dossier | **Entity** | `uteq/mortel` |
 | Customer owns dossier, document belongs to project | **Entity link** | `uteq/mortel` |
-| User uploads document, connector syncs invoice | **Event** | `uteq/mortel` (spatie/laravel-event-sourcing under the hood) |
+| User uploads document, connector syncs invoice | **Event** | `uteq/mortel` (`spatie/laravel-event-sourcing` under the hood) |
 | Portal-ready dossier overview | **Projection** | host or package; rebuild via `php artisan mortel:projection:rebuild --type=<…>` |
 | Integration boundary around CRM, finance, mail, AI | **Connector** | dedicated package (see `mortelos/entity-graph` for shape) |
 | Role can view or change something | **Policy** | host or package; governed through Policy Studio |
-| Per-tenant or per-customer behavior toggle | **Tenant config / package config** | host config or `config/<package>.php` |
+| Per-tenant or per-customer behavior toggle | **Tenant config / package config** | host `config/` or `config/<package>.php` |
 | Reusable interactive task surface | **Chat widget** | package; registered via `WidgetRegistry` |
 | Per-page reusable Livewire block | **Page widget** | package or host |
 | Dense operational card | **Dashboard widget** | host or package; registered in `dashboard.primary_widgets` / `secondary_widgets` |
@@ -147,14 +147,14 @@ Worked examples: `knowledge/04-package-governance.md`,
 
 ## 6. TALL stack conventions (Livewire 4 SFC + Flux UI first)
 
-The starter ships Livewire **4 single-file components** (SFC) under the
-`starter::` namespace. The host follows the same shape.
+The starter ships Livewire **4 single-file components** under
+`resources/views/livewire/`. New portal pages follow the same shape.
 
 | Rule | Why |
 | --- | --- |
 | Always check **Flux UI** first before writing custom Alpine/Tailwind | Flux Pro is the design system; custom components fragment the look |
 | **Livewire 4 SFC** for new components, not class-based v3 style | Single file = co-located state, view, lifecycle |
-| **Pest** is the test framework | Architecture + feature tests run through Pest in both starter and host |
+| **Pest** is the test framework (`vendor/bin/pest`) | Architecture + feature tests run through Pest |
 | **Action classes** under `app/Actions/<Domain>/` for write paths | Keeps domain rules out of components |
 | **Pint** for formatting (`vendor/bin/pint --dirty`) | Single style across packages |
 | **Deny by default** for new policies | Governance baseline (§7) |
@@ -175,10 +175,9 @@ Worked patterns: `knowledge/03-tall-conventions.md`.
 ## 8. MCP runtime (operate mode)
 
 The runtime agent surface is **separate from this build mode**. The
-`uteq/mortel` package mounts the UteqOS MCP server in the host:
+`uteq/mortel` package mounts the UteqOS MCP server in `routes/ai.php`:
 
 ```php
-// routes/ai.php (host)
 use Laravel\Mcp\Facades\Mcp;
 use Mortel\MCP\Servers\UteqOSServer;
 
@@ -209,10 +208,10 @@ Every change that touches host behavior gets a verification checklist (see
 `knowledge/07-test-and-verify.md`):
 
 1. **Boot smoke test** — `login → tenant-select → dashboard` returns 200 for
-   a seeded test user
-2. **Doctor command** — `php artisan starter:doctor` reports green (or N/A
-   if not installed; ship a stub in host if missing)
-3. **Architecture tests** — `vendor/bin/pest --filter=Architecture` passes
+   the seeded admin
+2. **Doctor command** — `php artisan starter:doctor` reports green
+3. **Pest** — `vendor/bin/pest` is green (16+ baseline assertions, growing
+   per capability)
 4. **Manual URL + test account** — paste URL + account credentials so the
    human can verify in seconds
 5. **Pint** — `vendor/bin/pint --dirty` is clean
@@ -224,52 +223,37 @@ If any of those is skipped, say so explicitly in the handoff. Do not claim
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `LogicException: Missing starter route class config [...]` | An `auth.controllers.*` key is `null` | Fill it in host `config/starter.php`; see §3 |
-| Routes return 404 | Route bridge not required from `routes/web.php` | Add the two `require` lines from §3 |
-| Blank or unstyled page | Host layout doesn't delegate to `mortelos-starter::layouts.app` | Replace host `layouts/app.blade.php` body with the delegation |
+| `LogicException: Missing starter route class config [...]` | An `auth.controllers.*` key is `null` in `config/starter.php` | Fill it; see §3 |
+| Vite manifest not found | `npm install && npm run build` not run | `npm install --ignore-scripts && npm run build` |
+| `View [layouts.guest] not found` | `resources/views/layouts/guest.blade.php` got removed | Restore it from git; the login page expects it |
 | Sidebar/search/chat missing | Matching resolver still `null` in config | Optional; fill when the capability needs it |
-| Stubs not visible after publish | Cached config or wrong tag | `php artisan config:clear && php artisan vendor:publish --tag=mortelos-starter-stubs --force` |
+| `mortelos/ui` not installable | Private package, vcs repo in `composer.json` not honored | Ensure SSH access to `github.com/uteq/mortelos-ui` or add the vcs repo |
 
 Extended list: `knowledge/08-troubleshooting.md`.
 
 ## 12. Don't
 
-- Don't invent a tenant/membership/role model in the portal — that is
-  **host-owned** (§9 of `docs/building-portals.md`)
+- Don't invent a tenant/membership/role model in the portal hastily — that is
+  **host-owned** (§9 of `docs/building-portals.md`). The stub `TenantSelectController`
+  is a placeholder; replace it once the membership model is in place
 - Don't write domain rules inside Blade or Livewire components
 - Don't add a new feature without recording a package decision
 - Don't replace `mortelos-starter::layouts.app` with a custom layout; extend it
 - Don't bypass policies with component-level conditionals
-- Don't hardcode `App\…`, `Mortel\…` or `Uteq\…` classes inside the package — use
+- Don't hardcode `App\…` or `Uteq\…` classes inside packages — use
   config and resolver contracts
 - Don't claim a portal "works" without the verification checklist (§10)
 - Don't use em-dashes in Dutch prose (project convention)
 
 ## 13. Reference host app
 
-UteqOS is the current reference host
-(`/Users/uteq/Sites/uteqos`, on this developer machine, or
-`https://github.com/uteq/mortelos-uteqos` when available). It demonstrates:
+**UteqOS** (`https://github.com/uteq/mortelos-uteqos` or
+`/Users/uteq/Sites/uteqos` on a developer machine) is the most mature MortelOS
+host. It demonstrates fully fleshed-out resolvers, working passkey + tenant +
+governance flows, mounted MCP server, architecture tests, and a complete
+`config/starter.php` shape. Use it for shape and intent when you need a real
+example beyond what's wired in this template.
 
-- The route bridge
-- A `config/starter.php` that starts from package defaults and injects host resolvers
-- Layout delegation
-- Host-backed `Starter*Resolver` classes in `app/Support/`
-- Auth controllers in `app/Http/Controllers/Auth/`
-- Architecture tests under `tests/Feature/Architecture` and `tests/Unit/Architecture`
-
-Use UteqOS for shape and intent. Do not copy class names verbatim into a new
-host; the contract is the resolver shape, not the class name.
-
-## 14. Edit workflow for this repo
-
-This package is consumed via symlink in development
-(`vendor/mortelos/starter` → `~/Sites/mortelos-starter`). When editing here:
-
-1. Edits land in the host app via the symlink
-2. Commit **separately** in this repository (not in the host repo)
-3. After service-provider or config changes, run
-   `composer update mortelos/starter` in the host so autoload metadata picks
-   up changes
-4. Run `composer validate --strict` and `vendor/bin/pest` in this repo before
-   pushing
+UteqOS still uses the older library-pattern (`vendor/mortelos/starter`). New
+portals built from this template inline the shell instead. The contract tables
+in `README.md` and this file are the same in both worlds.

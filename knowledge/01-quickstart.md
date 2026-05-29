@@ -1,20 +1,31 @@
 # 01 — Quickstart (60-second mental model)
 
-## What this package is
+## What this repo is
 
-`mortelos/starter` is a **Laravel library package** that ships the app shell
-(layout, routes, auth pages, dashboard, inbox, governance, users, settings) so
-host apps don't rebuild it. It is consumed via Composer as
-`vendor/mortelos/starter` and does not boot standalone.
+`mortelos/starter` is a **Laravel application template** for AI-driven portal
+builds on the TALL stack. One command spins up a runnable Laravel app with the
+MortelOS shell already wired:
 
-## What a host app provides
+```bash
+composer create-project mortelos/starter mijn-portal
+```
 
-| The package | The host |
+The project boots immediately: login, tenant select, dashboard, inbox,
+governance, users, settings, plus a seeded admin account. From there an AI
+agent assembles portal capabilities on top.
+
+## What you get out of the box
+
+| Layer | What's in place |
 | --- | --- |
-| Layout `mortelos-starter::layouts.app`, `starter::` Livewire pages | Brand + which shell slots are active |
-| Routes for login, tenant-select, dashboard, inbox, governance, users, settings, onboarding, invitations, logout | Auth controllers + post-login redirect rule |
-| Publishable config + views | Resolvers for navigation, search, governance, inbox |
-| Stubs for fastest boot | Tenant/membership/roles/invitation model |
+| Framework | Laravel 13.8, Livewire 4 SFC, Flux UI, Pest, Tailwind via Vite |
+| Auth | Working `PasswordLoginController` + stub `Passkey*`, `AcceptInvitation*`, `TenantSelectController`; `ResolvePostLoginRedirect` returns `/dashboard` |
+| Shell pages | `/login`, `/dashboard`, `/inbox`, `/governance`, `/users`, `/settings`, `/onboarding`, `/auth/tenant-select`, `/logout` |
+| Views | Layouts (`mortelos-starter::layouts.app`, `layouts.guest`), all `starter::pages.*` Livewire SFCs, shared sidebar/topbar/universal-search |
+| Config | `config/starter.php` with full contract surface; required keys point at working stubs |
+| Diagnostic | `php artisan starter:doctor` reports wiring health |
+| Database | SQLite by default, migrations + `DatabaseSeeder` create `admin@example.test` / `password` |
+| Tests | Pest baseline: boot smoke + full config-shape coverage |
 
 ## What "building a portal" means here
 
@@ -31,33 +42,29 @@ You build a portal by:
 7. Seeding **deny-by-default policies**
 8. Routing risky actions through the **inbox**
 9. Wiring **observability**
-10. Testing host wiring and package behavior
+10. Testing host wiring and capability behavior
 
 This is the method in `docs/building-portals.md`. The Claude
 [`portal-kickoff` skill](../.claude/skills/portal-kickoff/SKILL.md) runs it as
 a guided workflow; other agents follow the same phases manually.
 
-## Bootstrapping a host (the short version)
+## Bootstrapping from zero
 
 ```bash
-# 1. Pull in the package
-composer require mortelos/starter
-
-# 2. Publish defaults + working stubs
-php artisan vendor:publish --tag=mortelos-starter
-php artisan vendor:publish --tag=mortelos-starter-stubs
-
-# 3. Wire the three required edits (see AGENTS.md §3)
-#    - routes/web.php requires routes/starter.php (which requires the package routes)
-#    - resources/views/layouts/app.blade.php delegates to mortelos-starter::layouts.app
-#    - config/starter.php merges package defaults with host auth bindings
-
-# 4. Verify
-php artisan starter:doctor      # green = ready
-php artisan serve               # login -> tenant-select -> dashboard works
+composer create-project mortelos/starter mijn-portal
+cd mijn-portal
+npm install --ignore-scripts
+npm run build
+php artisan starter:doctor    # should be green
+php artisan serve             # open http://127.0.0.1:8000
+# log in as admin@example.test / password
 ```
 
-Detailed step-by-step: [`docs/init-host-app.md`](../docs/init-host-app.md).
+For active dev (server + queue + logs + vite in parallel):
+
+```bash
+composer dev
+```
 
 ## Decisions you do not have to make
 

@@ -10,8 +10,8 @@ the extended version with concrete commands.
 The route file at `routes/starter.php:13` throws this when an `auth.controllers.*`
 key is `null` in the merged config.
 
-**Fix.** Open the host `config/starter.php`. Confirm the auth block contains a
-class name for the failing key. Example:
+**Fix.** Open `config/starter.php` and confirm the auth block contains a class
+name for the failing key. Example:
 
 ```php
 'auth' => [
@@ -22,15 +22,22 @@ class name for the failing key. Example:
 ],
 ```
 
-If you don't have a controller yet, publish the stubs:
+The default config already points at working stubs under
+`app/Http/Controllers/Auth/`. If those files got deleted, restore from git
+or scaffold replacements before booting.
+
+### Vite manifest not found
+
+Frontend assets haven't been built yet.
+
+**Fix.**
 
 ```bash
-php artisan vendor:publish --tag=mortelos-starter-stubs --force
+npm install --ignore-scripts
+npm run build
 ```
 
-That writes `app/Http/Controllers/Auth/*.php` and
-`app/Actions/Auth/ResolvePostLoginRedirect.php` into the host. Then point the
-config at them.
+For active development use `composer dev` which runs vite alongside the server.
 
 ### Routes return 404
 
@@ -84,56 +91,33 @@ isn't writing `tenant_id`.
 2. `session('tenant_id')` must be set by the tenant-select store action. If not, the resolver redirects to tenant-select again. Check `TenantSelectController::store`.
 3. `post_login_redirect_resolver->execute($user, $tenantId)` must return a string URL.
 
-## Config and publish issues
+## Asset and dependency issues
 
-### Stubs not visible after publish
+### `mortelos/ui` cannot be installed
 
-Cached config or wrong tag.
-
-**Fix.**
-
-```bash
-php artisan config:clear
-php artisan vendor:publish --tag=mortelos-starter-stubs --force
-```
-
-If the tag itself doesn't exist, the package version is older than the stubs
-feature. Update:
-
-```bash
-composer update mortelos/starter
-```
-
-### Published views drift from package
-
-You ran `php artisan vendor:publish --tag=mortelos-starter-views` once, edited
-nothing, and now the published views are behind the package.
-
-**Fix.** Don't publish views unless you genuinely customize them. Unpublish:
-
-```bash
-rm -rf resources/views/vendor/mortelos-starter
-php artisan view:clear
-```
-
-Laravel will resolve `mortelos-starter::*` to the package views directly.
-
-### Config merge isn't picking up package defaults
-
-The host `config/starter.php` doesn't use `array_replace_recursive`.
+The package is private and requires SSH access to
+`github.com/uteq/mortelos-ui`. The vcs repository is already declared in
+`composer.json`.
 
 **Fix.**
 
-```php
-$defaults = require __DIR__.'/../vendor/mortelos/starter/config/starter.php';
-
-return array_replace_recursive($defaults, [
-    'auth' => [ /* host overrides */ ],
-]);
+```bash
+ssh -T git@github.com   # confirm GitHub SSH access
+composer install
 ```
 
-`array_merge` only merges top-level keys; recursive merge preserves nested
-defaults like `dashboard.primary_widgets`.
+If you need to install via HTTPS with a token, configure
+`auth.json` with a Composer GitHub token.
+
+### `View [layouts.guest] not found`
+
+The login page expects `resources/views/layouts/guest.blade.php`.
+
+**Fix.** Restore from git:
+
+```bash
+git restore resources/views/layouts/guest.blade.php
+```
 
 ## Sidebar, search, governance, chat missing
 
@@ -152,16 +136,14 @@ These are **optional** and degrade silently. If `navigation.sidebar_resolver` is
 
 3. Clear cache: `php artisan config:clear`
 
-## Symlink edit issues
-
-This package is consumed by symlink in dev. Common gotchas:
+## Routing and provider issues
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| Edits to the package don't show in the host | Composer copied instead of symlinked | Re-install with `"prefer-stable": true` and an explicit `repositories` entry of type `path` with `"symlink": true` |
-| `composer update mortelos/starter` removes your edits | The symlink replaced by a real install | Same fix as above; double-check `composer.json` `repositories` |
-| Service provider changes not picked up | Autoload cache stale | `composer dump-autoload` in the host |
-| `route:list` doesn't show starter routes | Route bridge not required, OR `routes/starter.php` cached | `php artisan route:clear` then re-check the bridge |
+| `route:list` doesn't show starter routes | `routes/starter.php` not required from `routes/web.php`, or route cache stale | Confirm `require __DIR__.'/starter.php';` in `routes/web.php`; then `php artisan route:clear` |
+| `StarterServiceProvider` changes not picked up | Autoload cache stale | `composer dump-autoload` |
+| Config changes not visible | Config cache stale | `php artisan config:clear` |
+| Compiled views render old layout | View cache stale | `php artisan view:clear` |
 
 ## Tests fail in CI but pass locally
 
@@ -175,8 +157,8 @@ This package is consumed by symlink in dev. Common gotchas:
 
 1. Check the relevant `routes/starter.php:<line>` (always cited by error)
 2. Run `php artisan starter:doctor`
-3. Run `php artisan route:list --name=starter` and `--name=auth.`
+3. Run `php artisan route:list`
 4. Run `php artisan config:show starter`
-5. Open `vendor/mortelos/starter/` and compare against your host wiring
+5. Run `vendor/bin/pest` to see which baseline assertion fails
 6. If still stuck, fall back to the UteqOS reference host in
    `/Users/uteq/Sites/uteqos/` and diff

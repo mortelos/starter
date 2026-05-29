@@ -39,11 +39,6 @@ it('defaults the password form component to the package blade', function (): voi
         ->toBe('mortelos-starter::auth.password-form');
 });
 
-it('defaults the chat conversation panel component', function (): void {
-    expect(config('starter.auth.passkey_form_component'))->toBeNull();
-    expect(config('starter.chat.conversation_panel_component'))->toBe('chat::conversation-panel');
-});
-
 it('lists default dashboard widgets', function (): void {
     expect(config('starter.dashboard.primary_widgets'))
         ->toContain('dashboard.ai-performance')

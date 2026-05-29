@@ -2,19 +2,25 @@
 
 declare(strict_types=1);
 
+use App\Actions\Auth\ResolvePostLoginRedirect;
+use App\Http\Controllers\Auth\AcceptInvitationController;
+use App\Http\Controllers\Auth\PasskeyAuthenticatedController;
+use App\Http\Controllers\Auth\PasswordLoginController;
+use App\Http\Controllers\Auth\TenantSelectController;
+
 return [
 
     'auth' => [
-        'post_login_redirect_resolver' => null,
+        'post_login_redirect_resolver' => ResolvePostLoginRedirect::class,
         'passkey_form_component' => null,
         'password_form_component' => 'mortelos-starter::auth.password-form',
 
         'controllers' => [
-            'accept_invitation' => null,
-            'passkey_authenticated' => null,
+            'accept_invitation' => AcceptInvitationController::class,
+            'passkey_authenticated' => PasskeyAuthenticatedController::class,
             'passkey_authentication_options' => null,
-            'password_login' => null,
-            'tenant_select' => null,
+            'password_login' => PasswordLoginController::class,
+            'tenant_select' => TenantSelectController::class,
         ],
     ],
 

@@ -1,46 +1,97 @@
 {
+    "$schema": "https://getcomposer.org/schema.json",
     "name": "mortelos/starter",
-    "description": "Starter shell contracts for MortelOS workspaces",
-    "type": "library",
+    "type": "project",
+    "description": "MortelOS Starter — Laravel application template for AI-driven portal builds on the TALL stack",
+    "keywords": ["mortelos", "starter", "laravel", "tall", "livewire", "ai", "portal"],
     "license": "proprietary",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/uteq/mortelos-ui.git"
+        }
+    ],
     "require": {
         "php": "^8.4",
-        "illuminate/support": "^13.0",
+        "laravel/framework": "^13.8",
+        "laravel/tinker": "^3.0",
+        "livewire/flux": "^2.13",
         "livewire/livewire": "^4.0",
         "mortelos/ui": "^0.2"
     },
     "require-dev": {
-        "laravel/pint": "^1.18",
-        "orchestra/testbench": "^11.0",
+        "fakerphp/faker": "^1.23",
+        "laravel/pail": "^1.2.5",
+        "laravel/pint": "^1.27",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-laravel": "^4.0"
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "phpunit/phpunit": "^12.5.12"
     },
     "autoload": {
         "psr-4": {
-            "Mortelos\\Starter\\": "src/"
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Mortelos\\Starter\\Tests\\": "tests/"
+            "Tests\\": "tests/"
         }
     },
     "scripts": {
+        "setup": [
+            "composer install",
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php artisan key:generate",
+            "@php artisan migrate --force",
+            "@php artisan db:seed --force",
+            "npm install --ignore-scripts",
+            "npm run build"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+        ],
         "test": "vendor/bin/pest",
         "test:arch": "vendor/bin/pest --filter=Architecture",
         "format": "vendor/bin/pint",
-        "format:check": "vendor/bin/pint --test"
+        "format:check": "vendor/bin/pint --test",
+        "doctor": "@php artisan starter:doctor",
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "@php artisan migrate --graceful --ansi",
+            "@php artisan db:seed --force --ansi"
+        ],
+        "pre-package-uninstall": [
+            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ]
     },
     "extra": {
         "laravel": {
-            "providers": [
-                "Mortelos\\Starter\\MortelosStarterServiceProvider"
-            ]
+            "dont-discover": []
         }
     },
     "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
         }
     },
     "minimum-stability": "stable",

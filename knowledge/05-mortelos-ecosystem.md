@@ -8,7 +8,7 @@ map; do not duplicate what one of these already owns.
 | Package | Role |
 | --- | --- |
 | `uteq/mortel` | The binding agent. Entity registry, entity links, event sourcing (`spatie/laravel-event-sourcing`), projection plumbing, MCP server (`Mortel\MCP\Servers\UteqOSServer`), Laravel AI integration (`laravel/ai`), tenant primitives. |
-| `mortelos/starter` | App shell: layout, auth routes, dashboard/inbox/governance/users/settings pages, `starter::` Livewire namespace, contracts the host fills via `config/starter.php`. **This repo.** |
+| `mortelos/starter` | Laravel application template that ships the app shell inline: layout, auth routes, dashboard/inbox/governance/users/settings pages, `starter::` Livewire namespace, all contract defaults wired to working stubs. **This repo.** New portals start with `composer create-project mortelos/starter <slug>`. |
 | `mortelos/ui` | Shared design primitives consumed by starter and packages. Flux-aligned. |
 | `mortelos/dev-tools` | Artisan commands for `package-decision`, `package-decisions:check`, governance CI, scaffolding helpers. |
 
@@ -24,7 +24,11 @@ map; do not duplicate what one of these already owns.
 Reference packages to imitate when building your own:
 - For an end-to-end feature package: **`mortelos/entity-graph`**
 - For a governance-heavy package: **`mortelos/policy-studio`**
-- For the shell pattern: **`mortelos/starter`** (this one)
+- For the shell pattern: **`mortelos/starter`** (this one) — boots out of the box
+
+> UteqOS still uses the older library-pattern (`vendor/mortelos/starter`). New
+> portals built from this template inline the shell instead. The contract shape
+> is identical in both worlds.
 
 ## Reference host
 

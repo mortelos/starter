@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
-use Mortelos\Starter\Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
-uses(TestCase::class)->in('Feature', 'Architecture');
+pest()->extend(TestCase::class)->in('Feature');
+
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
+    ->in('Feature/Database');

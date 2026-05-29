@@ -1,22 +1,33 @@
 # Claude Code instructions — mortelos/starter
 
-The single source of truth for all agents (including Claude) is
-[`AGENTS.md`](AGENTS.md). Read it first. This file only adds Claude-specific
-setup that other agents don't need.
+The single source of truth for all agents (Claude, Codex, Cursor, Windsurf,
+generic LLM) is [`AGENTS.md`](AGENTS.md). Read it first. This file only adds
+Claude-specific setup that other agents don't need.
 
-## When working in a host app
+## What this repo is
 
-Before doing anything portal-related, run the `portal-kickoff` skill. It owns
-phases 0–6 of the MortelOS portal workflow (pre-flight, interview, package
-decisions, foundation wiring, build plan, vertical-slice loop, checkpoint).
-
-The skill lives in this package at `.claude/skills/portal-kickoff/`. Host apps
-symlink it in once:
+`mortelos/starter` is a **Laravel application template** for AI-driven portal
+builds on the TALL stack. New portals start with:
 
 ```bash
-mkdir -p .claude/skills
-ln -s vendor/mortelos/starter/.claude/skills/portal-kickoff .claude/skills/portal-kickoff
+composer create-project mortelos/starter mijn-portal
+cd mijn-portal
 ```
+
+…which yields a working Laravel app with the MortelOS shell already wired:
+login, tenant select, dashboard, inbox, governance, users, settings, plus
+seeded admin account. From there an AI agent assembles portal capabilities on
+top.
+
+## When building a portal
+
+Run the `portal-kickoff` skill on a new portal request. It owns phases 0–6 of
+the MortelOS portal workflow (pre-flight, interview, package decisions,
+foundation review, build plan, vertical-slice loop, checkpoint).
+
+The skill lives at `.claude/skills/portal-kickoff/`. Because this repo is the
+host app (no `vendor/mortelos/starter` indirection anymore), the skill is
+already in the right place — no symlink needed.
 
 After that the skill triggers automatically on phrases like "build a customer
 portal", "customers should be able to upload documents", "set up a workspace".
@@ -24,7 +35,7 @@ See its `description` frontmatter for the full trigger list.
 
 ## TALL stack helpers
 
-If the user has the `uteq-tall-master` plugin installed (commonly does):
+If the `uteq-tall-master` plugin is installed (commonly is):
 
 - `tall-model` — scaffold a model + migration + factory
 - `tall-feature` — TDD red-green-refactor of a capability
@@ -34,17 +45,6 @@ If the user has the `uteq-tall-master` plugin installed (commonly does):
 Use them from inside phase [5] of the `portal-kickoff` workflow. Fall back to
 the headless recipe in `.claude/skills/portal-kickoff/references/build-loop.md`
 when these skills aren't callable.
-
-## Edit workflow when consumed via symlink
-
-This package is symlinked into host apps as `vendor/mortelos/starter`. When you
-edit here:
-
-1. Edits land in the host app via the symlink (no host commit needed)
-2. Commit **separately** in this repository
-3. After service-provider or config changes, run
-   `composer update mortelos/starter` in the host app
-4. Run `composer validate --strict` and `vendor/bin/pest` before pushing
 
 ## Communication conventions (project-wide)
 

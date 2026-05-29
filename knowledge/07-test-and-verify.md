@@ -7,91 +7,87 @@ Before claiming any change is done. Source method:
 
 | Level | What it proves | Effort |
 | --- | --- | --- |
-| `composer validate --strict` | The package manifest is valid | 1s |
 | `vendor/bin/pint --dirty` | Code style is clean on changed files | 1s |
-| `vendor/bin/pest` (this repo) | Package boot, route bridge, config merge work in isolation | seconds |
-| `php artisan starter:doctor` (in host) | Five auth contracts filled, layout delegated, route bridge required | seconds |
-| Architecture tests (host) | Tests under `tests/Feature/Architecture` + `tests/Unit/Architecture` pass | seconds |
+| `php artisan starter:doctor` | Five auth contracts filled, route bridge, layout, namespaces | seconds |
+| `vendor/bin/pest` | Boot smoke + config-shape + capability tests pass | seconds |
+| `vendor/bin/pest --filter=Architecture` | Architecture-only suite (when present) | seconds |
 | Manual smoke: `login → tenant-select → dashboard` | The user can actually sign in | minute |
-| Capability-level Pest test in host | The capability you built actually works | minutes |
+| Capability-level Pest test in `tests/Feature/<Capability>/` | The capability you built actually works | minutes |
 
 **Never** claim "works" based on `composer validate` alone. Always do at least
-the smoke flow.
+the smoke flow or run the baseline Pest suite.
 
-## Package-level tests (this repo)
+## Baseline tests that ship with the template
 
-Run them from `mortelos-starter/`:
+`tests/Feature/BootSmokeTest.php` covers:
 
-```bash
-composer install
-vendor/bin/pest                 # full suite
-vendor/bin/pest --filter=Architecture   # architecture only
-composer validate --strict
-vendor/bin/pint --test          # check-only; --dirty to fix changed files
-```
+- `GET /` redirects guests to `/login`
+- `GET /login` returns 200 (vite assets must be built)
+- `routes/starter.php` throws `LogicException` when an `auth.controllers.*` key
+  is `null`
+- `mortelos-starter::layouts.app` and `layouts.guest` views resolve
+- Shell page Blade files exist on disk under `resources/views/livewire/pages/`
+- `php artisan starter:doctor` returns success
 
-The package ships:
-
-- A boot test that loads the service provider via Orchestra Testbench
-- A route test that asserts `LogicException` when `auth.controllers.*` is empty
-- A config-merge test that asserts package defaults are preserved
-- A views test that asserts `mortelos-starter::layouts.app` resolves
-- A namespace test that asserts `starter::` Livewire components register
-
-Add a new test whenever you change a contract.
-
-## Host-level architecture tests (in the host repo, e.g. UteqOS)
-
-Required architecture coverage in any host that consumes starter:
-
-1. The route bridge is required from `web.php`
-2. No starter route names leak into host `routes/web.php`
-3. The host `layouts/app.blade.php` delegates to `mortelos-starter::layouts.app`
-4. The layout renders the configured dynamic shell components
-5. Published config matches the package default contract
-6. Starter Livewire components resolve through the `starter::` namespace
-7. Every required `auth.controllers.*` key resolves to an existing class
-
-In UteqOS these live under `tests/Feature/Architecture/` and
-`tests/Unit/Architecture/`. Steal the shapes for a new host.
+`tests/Feature/ConfigShapeTest.php` covers the full contract surface for
+`auth`, `layout`, `navigation`, `governance`, `users`, `onboarding`,
+`dashboard`, `inbox`, and `chat`. If you add a new contract key, add a row to
+this test.
 
 ## The doctor command
 
-`php artisan starter:doctor` is the host-side diagnostic. It checks:
+`php artisan starter:doctor` is the boot-baseline diagnostic. It checks:
 
-- Are all five `auth.controllers.*` keys non-null?
-- Do the configured class names exist and implement the expected shape?
-- Is the route bridge required from `routes/web.php`?
-- Does the host layout delegate to `mortelos-starter::layouts.app`?
-- Is `starter::` Livewire namespace registered? (Should be, via the package
-  service provider — but verify in case `composer dump-autoload` is stale.)
-- Are optional resolvers either filled or explicitly null?
+- All five required `auth.controllers.*` keys are non-null
+- Each configured class actually exists (autoload-resolvable)
+- `routes/starter.php` exists at the expected path
+- `routes/web.php` requires `routes/starter.php`
+- `resources/views/layouts/app.blade.php` is present
 
 Output is a green/red checklist. If red, the row tells you which key to fix.
 
-If the host doesn't yet have a doctor command, ask the user to scaffold one
-(it's a one-file Artisan command; pattern below):
+The source for the command is `app/Console/Commands/StarterDoctor.php`. Extend
+it as your portal adds host-owned contracts (tenant model presence, custom
+resolvers, connector health, etc.).
+
+## Adding a capability test
+
+Pattern for a new `tests/Feature/Documents/ApproveDocumentTest.php` (after
+running `tall-feature` or scaffolding manually):
 
 ```php
-// app/Console/Commands/StarterDoctor.php
-public function handle(): int
-{
-    $required = [
-        'starter.auth.post_login_redirect_resolver',
-        'starter.auth.controllers.password_login',
-        'starter.auth.controllers.passkey_authenticated',
-        'starter.auth.controllers.accept_invitation',
-        'starter.auth.controllers.tenant_select',
-    ];
+<?php
 
-    $missing = collect($required)->reject(fn ($k) => filled(config($k)))->all();
+declare(strict_types=1);
 
-    foreach ($required as $key) {
-        $this->{filled(config($key)) ? 'info' : 'error'}($key);
-    }
+use App\Actions\Documents\ApproveDocument;
+use App\Events\DocumentApproved;
+use App\Models\Document;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-    return $missing === [] ? self::SUCCESS : self::FAILURE;
-}
+uses(RefreshDatabase::class);
+
+it('emits DocumentApproved and updates the projection', function (): void {
+    $user = User::factory()->admin()->create();
+    $doc  = Document::factory()->pending()->create();
+
+    $this->actingAs($user);
+
+    app(ApproveDocument::class)->execute($doc->id, $user);
+
+    // assertions on event, projection, audit trail
+});
+
+it('denies non-admin', function (): void {
+    $user = User::factory()->create();
+    $doc  = Document::factory()->pending()->create();
+
+    $this->actingAs($user);
+
+    expect(fn () => app(ApproveDocument::class)->execute($doc->id, $user))
+        ->toThrow(Illuminate\Auth\Access\AuthorizationException::class);
+});
 ```
 
 ## Manual verification template
@@ -113,7 +109,8 @@ Steps:
 5. Check Mailpit (http://localhost:8025) if an email/notification is triggered
 ```
 
-For permission changes, include both a "should see" and a "should NOT see" role:
+For permission changes, include both a "should see" and a "should NOT see"
+role:
 
 ```markdown
 ## Verification
@@ -130,12 +127,13 @@ verification required."
 
 ## Common failure modes to catch in tests
 
-- `auth.controllers.*` becomes `null` in a host config edit → caught by the
-  doctor command and the `LogicException` test
-- Layout customization drops the `mortelos-starter::layouts.app` include →
-  caught by the host architecture test on layout delegation
-- Published view in `resources/views/vendor/mortelos-starter/` drifts from the
-  package version → optional architecture test that diffs the two; usually
-  unnecessary, unpublish instead
-- New Livewire page added under host `App\Livewire\` accidentally overrides a
-  starter page → namespace conflict; surfaced by Livewire on boot
+- An `auth.controllers.*` key becomes `null` in a config edit → caught by the
+  doctor command and the `LogicException` test in `BootSmokeTest`
+- `resources/views/layouts/guest.blade.php` got removed → caught by the
+  `BootSmokeTest` view-existence assertion
+- Vite manifest missing in CI → assert the asset build runs before `pest`, or
+  test the `/login` 200 only locally
+- New Livewire page added accidentally collides with a starter page → surfaced
+  by Livewire on boot; add an architecture test if you grow many of these
+- Required contract key added but not seeded with a default → `ConfigShapeTest`
+  fails on the missing key
