@@ -95,9 +95,8 @@ isn't writing `tenant_id`.
 
 ### `mortelos/ui` cannot be installed
 
-The package is private and requires SSH access to
-`github.com/uteq/mortelos-ui` (migrating to `github.com/mortelos/ui`). The vcs
-repository is already declared in `composer.json`.
+The package is private and requires SSH access to `github.com/mortelos/ui`.
+The vcs repository is already declared in `composer.json`.
 
 **Fix.**
 
@@ -108,9 +107,6 @@ composer install
 
 If you need to install via HTTPS with a token, configure `auth.json` with a
 Composer GitHub token.
-
-**After the repo transfer:** update `composer.json` `repositories[].url` to
-`https://github.com/mortelos/ui.git` and run `composer update mortelos/ui`.
 
 ### `View [layouts.guest] not found`
 

@@ -56,7 +56,7 @@ user just asked you to build a portal:
 - PHP `^8.4`
 - Laravel `^13.8` (installed as part of the template)
 - Node `^20` (for Vite + Tailwind)
-- SSH access to `github.com/uteq/mortelos-ui` (private dependency; migrating to `github.com/mortelos/ui`)
+- SSH access to `github.com/mortelos/ui` (private dependency)
 
 ## Setup
 
@@ -218,7 +218,7 @@ authenticated, and `app($settingsService)->enabled()` returns true.
 | `View [layouts.guest] not found` | `resources/views/layouts/guest.blade.php` was removed; restore it from git. |
 | Routes return 404 | `routes/web.php` doesn't require `routes/starter.php`. |
 | Sidebar, search, or chat missing | The matching resolver or component is still `null` in config. These are optional and degrade silently. |
-| `mortelos/ui` not installable | Ensure SSH access to `github.com/uteq/mortelos-ui` (private dep; migrating to `github.com/mortelos/ui`). The vcs repository is already declared in `composer.json`. After the repo transfer, update the `repositories` entry to the new URL. |
+| `mortelos/ui` not installable | Ensure SSH access to `github.com/mortelos/ui` (private dep). The vcs repository is already declared in `composer.json`. |
 
 Extended troubleshooting: [`knowledge/08-troubleshooting.md`](knowledge/08-troubleshooting.md).
 

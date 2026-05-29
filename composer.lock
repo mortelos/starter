@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a64e4e6a6c5e2400a38e799b0bbdeab0",
+    "content-hash": "348a34a1554a52023b16a2d2d5aa7ac8",
     "packages": [
         {
             "name": "brick/math",
@@ -2276,12 +2276,12 @@
             "version": "v0.2.0",
             "source": {
                 "type": "git",
-                "url": "git@github.com:uteq/mortelos-ui.git",
+                "url": "git@github.com:mortelos/ui.git",
                 "reference": "1c10a9b53fc5ed0a20580138d808c74c8b3605e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uteq/mortelos-ui/zipball/1c10a9b53fc5ed0a20580138d808c74c8b3605e5",
+                "url": "https://api.github.com/repos/mortelos/ui/zipball/1c10a9b53fc5ed0a20580138d808c74c8b3605e5",
                 "reference": "1c10a9b53fc5ed0a20580138d808c74c8b3605e5",
                 "shasum": ""
             },
@@ -2308,8 +2308,8 @@
             ],
             "description": "Reusable UI primitives for MortelOS starter and packages",
             "support": {
-                "source": "https://github.com/uteq/mortelos-ui/tree/v0.2.0",
-                "issues": "https://github.com/uteq/mortelos-ui/issues"
+                "source": "https://github.com/mortelos/ui/tree/v0.2.0",
+                "issues": "https://github.com/mortelos/ui/issues"
             },
             "time": "2026-05-14T09:40:58+00:00"
         },
