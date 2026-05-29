@@ -25,7 +25,7 @@ the auth contracts.
 | PHP | `^8.4` |
 | Composer | `^2.7` |
 | Node | `^20` (for Vite + Tailwind) |
-| SSH access to `github.com/uteq/mortelos-ui` | Required for `composer install` |
+| SSH access to `github.com/uteq/mortelos-ui` (migrating to `github.com/mortelos/ui`) | Required for `composer install` |
 
 On macOS with Homebrew:
 

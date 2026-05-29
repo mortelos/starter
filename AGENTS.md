@@ -227,7 +227,7 @@ If any of those is skipped, say so explicitly in the handoff. Do not claim
 | Vite manifest not found | `npm install && npm run build` not run | `npm install --ignore-scripts && npm run build` |
 | `View [layouts.guest] not found` | `resources/views/layouts/guest.blade.php` got removed | Restore it from git; the login page expects it |
 | Sidebar/search/chat missing | Matching resolver still `null` in config | Optional; fill when the capability needs it |
-| `mortelos/ui` not installable | Private package, vcs repo in `composer.json` not honored | Ensure SSH access to `github.com/uteq/mortelos-ui` or add the vcs repo |
+| `mortelos/ui` not installable | Private package, vcs repo in `composer.json` not honored | Ensure SSH access to `github.com/uteq/mortelos-ui` (migrating to `github.com/mortelos/ui`) or add the vcs repo |
 
 Extended list: `knowledge/08-troubleshooting.md`.
 
