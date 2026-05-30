@@ -128,7 +128,7 @@ class extends Component {
             @if ($step === 1)
                 <h2 class="mb-4 text-2xl font-semibold text-zinc-900">Welkom, {{ $userName }}!</h2>
                 <p class="mb-3 text-zinc-600">
-                    Dit is UteqOS, je persoonlijke werkplek voor alle AI-voorstellen, acties en inzichten.
+                    Dit is MortelOS, je persoonlijke werkplek voor alle AI-voorstellen, acties en inzichten.
                 </p>
                 <p class="text-zinc-600">
                     De AI werkt voor jou: hij luistert, stelt voor en handelt op jouw akkoord.
@@ -138,7 +138,7 @@ class extends Component {
             {{-- Step 2: AI Introduction --}}
             @if ($step === 2)
                 <h2 class="mb-4 text-2xl font-semibold text-zinc-900">Jouw AI-assistent</h2>
-                <p class="mb-6 text-zinc-600">De AI in UteqOS werkt met drie niveaus:</p>
+                <p class="mb-6 text-zinc-600">De AI in MortelOS werkt met drie niveaus:</p>
 
                 <div class="mb-6 space-y-3">
                     <div class="flex items-start gap-3 rounded-lg bg-zinc-50 p-4">

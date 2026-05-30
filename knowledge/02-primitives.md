@@ -7,7 +7,7 @@ Anything domain-specific lives behind one of these. Source method:
 ## Entity
 
 A **first-class noun** in the customer's domain: customer, project, document,
-dossier, invoice, contract, employee. Backed by `uteq/mortel`'s entity registry,
+dossier, invoice, contract, employee. Backed by `mortelos/framework`'s entity registry,
 addressable by stable id, type, and tenant. Entities carry attributes; they do
 not carry behavior. Behavior lives in actions, projections and policies.
 
@@ -40,7 +40,7 @@ relations.
 
 An **immutable record that something happened**. `DocumentUploaded`,
 `InvoiceSynced`, `PolicyProposed`, `MembershipInvited`. Under the hood:
-`spatie/laravel-event-sourcing` aggregates in `uteq/mortel`.
+`spatie/laravel-event-sourcing` aggregates in `mortelos/framework`.
 
 Use an event when:
 

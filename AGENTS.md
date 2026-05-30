@@ -17,7 +17,8 @@ login, tenant select, dashboard, inbox, governance, users, settings, plus a
 seeded admin account. From there you assemble portal capabilities on top.
 
 The runtime **operate mode** (chat, agent tools, governance approvals) runs
-through the UteqOS MCP server in `uteq/mortel`, not through this codebase.
+through the MortelOS MCP server in `mortelos/framework`, not through this
+codebase.
 Default to **build mode**: assemble portals from MortelOS primitives.
 
 ## 1. Read this in order
@@ -25,7 +26,7 @@ Default to **build mode**: assemble portals from MortelOS primitives.
 1. `README.md` — installation, contract tables, agent prompts that work
 2. `docs/building-portals.md` — the design method (§1–§11)
 3. `knowledge/` — short, AI-first notes per topic (start at `knowledge/README.md`)
-4. `.claude/skills/portal-kickoff/` — Claude-only guided kickoff (skip for other agents)
+4. `.agents/skills/portal-kickoff/` — guided kickoff for agents that support local skills
 5. This file — the rules below
 
 If the user asks "build a portal for X" and gives only that, **do not invent the
@@ -101,9 +102,9 @@ intact.
 
 | Concept | Primitive | Lives in |
 | --- | --- | --- |
-| Customer, project, document, dossier | **Entity** | `uteq/mortel` |
-| Customer owns dossier, document belongs to project | **Entity link** | `uteq/mortel` |
-| User uploads document, connector syncs invoice | **Event** | `uteq/mortel` (`spatie/laravel-event-sourcing` under the hood) |
+| Customer, project, document, dossier | **Entity** | `mortelos/framework` |
+| Customer owns dossier, document belongs to project | **Entity link** | `mortelos/framework` |
+| User uploads document, connector syncs invoice | **Event** | `mortelos/framework` (`spatie/laravel-event-sourcing` under the hood) |
 | Portal-ready dossier overview | **Projection** | host or package; rebuild via `php artisan mortel:projection:rebuild --type=<…>` |
 | Integration boundary around CRM, finance, mail, AI | **Connector** | dedicated package (see `mortelos/entity-graph` for shape) |
 | Role can view or change something | **Policy** | host or package; governed through Policy Studio |
@@ -175,14 +176,14 @@ Worked patterns: `knowledge/03-tall-conventions.md`.
 ## 8. MCP runtime (operate mode)
 
 The runtime agent surface is **separate from this build mode**. The
-`uteq/mortel` package mounts the UteqOS MCP server in `routes/ai.php`:
+`mortelos/framework` package exposes the MortelOS MCP server. A host mounts it
+in `routes/ai.php`:
 
 ```php
 use Laravel\Mcp\Facades\Mcp;
-use Mortel\MCP\Servers\UteqOSServer;
 
 Mcp::oauthRoutes();
-Mcp::web('/mcp/uteqos', UteqOSServer::class)
+Mcp::web('/mcp/mortelos', config('mortelos.mcp.server'))
     ->middleware(['auth:api' /* + tenancy, trust, classification, throttling */]);
 ```
 
@@ -240,20 +241,14 @@ Extended list: `knowledge/08-troubleshooting.md`.
 - Don't add a new feature without recording a package decision
 - Don't replace `mortelos-starter::layouts.app` with a custom layout; extend it
 - Don't bypass policies with component-level conditionals
-- Don't hardcode `App\…` or `Uteq\…` classes inside packages — use
+- Don't hardcode host-specific classes inside packages — use
   config and resolver contracts
 - Don't claim a portal "works" without the verification checklist (§10)
 - Don't use em-dashes in Dutch prose (project convention)
 
-## 13. Reference host app
+## 13. Reference host apps
 
-**UteqOS** (`https://github.com/uteq/mortelos-uteqos` or
-`/Users/uteq/Sites/uteqos` on a developer machine) is the most mature MortelOS
-host. It demonstrates fully fleshed-out resolvers, working passkey + tenant +
-governance flows, mounted MCP server, architecture tests, and a complete
-`config/starter.php` shape. Use it for shape and intent when you need a real
-example beyond what's wired in this template.
-
-UteqOS still uses the older library-pattern (`vendor/mortelos/starter`). New
-portals built from this template inline the shell instead. The contract tables
-in `README.md` and this file are the same in both worlds.
+Use internal MortelOS host apps for shape and intent when you need a complete
+example beyond what this template ships. Treat them as examples, not naming
+sources: new starter documentation should use `mortelos/framework`,
+`mortelos/chat`, `mortelos/ui` and `mortelos/starter`.

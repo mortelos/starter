@@ -21,7 +21,7 @@ its section numbers (§1–§11) as the source of truth; the references here onl
 
 ## Availability in a host app
 
-This skill ships inside the host app at `.claude/skills/portal-kickoff/`.
+This skill ships inside the host app at `.agents/skills/portal-kickoff/`.
 Portal work writes into the host app (`App\...`, `config/starter.php`,
 `routes/web.php`, host policies), so run the skill from the host-app working
 directory. No symlink is needed in projects created from `mortelos/starter`.

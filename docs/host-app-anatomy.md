@@ -2,8 +2,8 @@
 
 What a working MortelOS host app looks like on disk. This template starts at
 the **out-of-the-box** column; portal work grows it toward the **fleshed-out**
-column. The most mature reference is **UteqOS**; use it for shape and intent
-when this template doesn't yet ship the bit you need.
+column. Use complete internal MortelOS host apps for shape and intent when this
+template doesn't yet ship the bit you need.
 
 ## Directory layout
 
@@ -78,7 +78,7 @@ mijn-portal/
 │       │   └── shared/                             ✓ ships (sidebar-nav, topbar, universal-search)
 │       └── shared/                                 — host-owned shared Blade components
 ├── routes/
-│   ├── ai.php                                      — host mounts UteqOSServer (MCP) when ready
+│   ├── ai.php                                      — host mounts MortelOS MCP when ready
 │   ├── console.php                                 ✓ ships
 │   ├── starter.php                                 ✓ ships (the route bridge)
 │   └── web.php                                     ✓ ships (requires starter.php)
@@ -123,7 +123,7 @@ rows are what the portal-kickoff workflow grows.
 | Policy abilities | `app/Policies/` | Host seeds defaults; Policy Studio reviews changes |
 | Connectors (Moneybird, Fireflies, etc.) | `packages/<connector>/` (path repo) or composer dep | Reusable across MortelOS installs |
 | Portal capability docs | `docs/portals/<slug>/` | Per-portal; tracked in git |
-| MCP server mount | `routes/ai.php` | Host mounts; server is provided by `uteq/mortel` |
+| MCP server mount | `routes/ai.php` | Host mounts; server is provided by `mortelos/framework` |
 
 ## Test accounts (host seeded)
 
@@ -154,7 +154,7 @@ ships:
 
 - [ ] The capability written up in `docs/portals/<slug>/capability-map.md`
 - [ ] A package decision recorded in `.mortelos/package-decisions.md`
-- [ ] The domain modelled as entities/links/events under `uteq/mortel`'s
+- [ ] The domain modelled as entities/links/events under `mortelos/framework`'s
       primitives
 - [ ] At least one projection with rebuild + verify behavior
 - [ ] A surface (starter page, package route, dashboard widget, chat widget,

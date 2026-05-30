@@ -35,7 +35,7 @@ See its `description` frontmatter for the full trigger list.
 
 ## TALL stack helpers
 
-If the `uteq-tall-master` plugin is installed (commonly is):
+If TALL helper skills are installed:
 
 - `tall-model` — scaffold a model + migration + factory
 - `tall-feature` — TDD red-green-refactor of a capability

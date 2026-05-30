@@ -149,8 +149,8 @@ These are **optional** and degrade silently. If `navigation.sidebar_resolver` is
 - **Different PHP version**. Package requires `^8.4`. CI on 8.3 → fails.
 - **Different Laravel**. Requires `^13.0` Illuminate components.
 - **Missing extension**. Check `composer.json` `require` against CI image.
-- **Stancl/tenancy not installed in CI**. Some hosts use it; the suggest is in
-  `uteq/mortel`. Add to `require-dev` of the host's test environment.
+- **Stancl/tenancy not installed in CI**. Some hosts use it; add it to
+  `require-dev` of the host's test environment when the host depends on it.
 
 ## When you're stuck
 
@@ -159,5 +159,4 @@ These are **optional** and degrade silently. If `navigation.sidebar_resolver` is
 3. Run `php artisan route:list`
 4. Run `php artisan config:show starter`
 5. Run `vendor/bin/pest` to see which baseline assertion fails
-6. If still stuck, fall back to the UteqOS reference host in
-   `/Users/uteq/Sites/uteqos/` and diff
+6. If still stuck, compare against a complete internal MortelOS host app

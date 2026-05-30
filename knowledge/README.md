@@ -9,7 +9,7 @@ matches what you're doing right now.
 | [`02-primitives.md`](02-primitives.md) | Translating a customer concept into entities/links/events/projections/policies |
 | [`03-tall-conventions.md`](03-tall-conventions.md) | Writing or modifying any Livewire / Blade / Pest code |
 | [`04-package-governance.md`](04-package-governance.md) | Adding a new surface and deciding `package-now` / `-ready` / `workspace-only` |
-| [`05-mortelos-ecosystem.md`](05-mortelos-ecosystem.md) | Picking the right package for a job: `uteq/mortel`, `mortelos/ui`, `entity-graph`, `policy-studio`, etc. |
+| [`05-mortelos-ecosystem.md`](05-mortelos-ecosystem.md) | Picking the right package for a job: `mortelos/framework`, `mortelos/ui`, `entity-graph`, `policy-studio`, etc. |
 | [`06-mcp-runtime.md`](06-mcp-runtime.md) | Anything that mentions MCP, agent tools, OAuth at runtime |
 | [`07-test-and-verify.md`](07-test-and-verify.md) | Before you claim work is done; doctor command, architecture tests, manual checklist |
 | [`08-troubleshooting.md`](08-troubleshooting.md) | Something doesn't boot or behave as expected |

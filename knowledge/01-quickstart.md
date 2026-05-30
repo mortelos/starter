@@ -73,7 +73,7 @@ These are already decided; don't re-litigate them:
 - **TALL stack** (Tailwind, Alpine, Livewire 4, Laravel) — fixed
 - **Flux UI** as the design system — always check Flux first before custom
 - **Pest** as the test framework
-- **spatie/laravel-event-sourcing** under `uteq/mortel`'s events
+- **spatie/laravel-event-sourcing** under `mortelos/framework`'s events
 - **OAuth 2.1 + Passport** for MCP
 - **Policy Studio** for governance review surfaces
 - **Capability-first, never page-first**
