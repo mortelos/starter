@@ -165,7 +165,7 @@ Consumers known today:
 
 | Pkg | GitHub transfer | Package release | UteqOS | Agent Console | Sijperda-OS |
 | --- | --- | --- | --- | --- | --- |
-| `mortelos/dev-tools` | pending | n/a (composer name was already `mortelos/dev-tools`; only vcs URL swap) | pending | pending | n/a |
+| `mortelos/dev-tools` | done | n/a (composer name was already correct) | `0745e8d` (bundled w/ WIP, branch `codex/flexible-ai-overviews`) | `ded9b41` (branch `codex/agent-console-agui`) | n/a |
 | `mortelos/channel-plaud` | — | — | — | — | n/a |
 | `mortelos/channel-fireflies` | — | — | — | — | n/a |
 | `mortelos/channel-google-drive` | — | — | — | — | n/a |
