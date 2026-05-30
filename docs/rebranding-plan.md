@@ -166,16 +166,24 @@ Consumers known today:
 | Pkg | GitHub transfer | Package release | UteqOS | Agent Console | Sijperda-OS |
 | --- | --- | --- | --- | --- | --- |
 | `mortelos/dev-tools` | done | n/a (composer name was already correct) | `0745e8d` (bundled w/ WIP, branch `codex/flexible-ai-overviews`) | `ded9b41` (branch `codex/agent-console-agui`) | n/a |
-| `mortelos/channel-plaud` | — | — | — | — | n/a |
-| `mortelos/channel-fireflies` | — | — | — | — | n/a |
-| `mortelos/channel-google-drive` | — | — | — | — | n/a |
-| `mortelos/channel-moneybird` | — | — | — | — | n/a |
-| `mortelos/channel-telegram` | — | — | — | — | n/a |
-| `mortelos/channel-gmail` | — | — | — | — | n/a |
-| `mortelos/widget-compliance` | — | — | — | — | — |
-| `mortelos/widget-document-feedback` | — | — | — | — | — |
-| `mortelos/chat` | — | — | — | — | n/a |
-| `mortelos/framework` | — | — | — | — | — |
+| `mortelos/channel-plaud` | done | `3b9eca9` + `1dd3eca` tags `0.3.0`+`0.3.1` | `8f0ee31c5` | `0cf5a032c` | n/a |
+| `mortelos/channel-fireflies` | done | `1da23b8` + `e3cc362` tags `0.3.0`+`0.3.1` | `8f0ee31c5` | `0cf5a032c` | n/a |
+| `mortelos/channel-google-drive` | done | `d96b5f7` + `f7721a7` tags `0.3.0`+`0.3.1` | `8f0ee31c5` | `0cf5a032c` | n/a |
+| `mortelos/channel-moneybird` | done | `184a7c5` + `8ebc844` tags `0.3.0`+`0.3.1` | `8f0ee31c5` | `0cf5a032c` | n/a |
+| `mortelos/channel-telegram` | done | `131f9da` + `7ef5bca` tags `0.3.0`+`0.3.1` | `8f0ee31c5` | `0cf5a032c` | n/a |
+| `mortelos/channel-gmail` | done | `9700408` + `0ebf182` tags `0.3.0`+`0.3.1` | `8f0ee31c5` | `0cf5a032c` | n/a |
+| `mortelos/widget-compliance` | done | `06a47c8` + `27e273f` tags `0.3.0`+`0.3.1` | `8f0ee31c5` | `0cf5a032c` | `dc8408c` (branch `codex/rebrand-layer-a`) |
+| `mortelos/widget-document-feedback` | done | `ed71891` + `29923df` tags `0.3.0`+`0.3.1` | `8f0ee31c5` | `0cf5a032c` | `dc8408c` |
+| `mortelos/chat` | done | `a7432d8` + `46143e9` (+ WIP `917eeef`) tags `v0.3.0`+`v0.3.1` | `8f0ee31c5` | `0cf5a032c` | n/a |
+| `mortelos/framework` | done | WIP `217f8bc` + `01681c6` tag `v0.4.0` | `8f0ee31c5` (incl. host script path fixes) | `0cf5a032c` (incl. path packages + config) | `dc8408c` |
+
+## Known follow-ups (out of Layer A scope)
+
+- **UteqOS `patches/uteq-mortel-*.patch` no longer apply**: Nathan's WIP commit on mortel (217f8bc) already includes the source the patches were applying. The `post-autoload-dump` script errors but runtime is intact. Patches can be deleted in a follow-up.
+- **`config/uteq-chat.php`**: filename still has `uteq-` prefix in UteqOS + Agent Console. Renaming the file impacts `config('uteq-chat.*')` call sites — out of Layer A.
+- **Knowledge sweep**: `.claude/skills/*` and `knowledge/*` in mortelos-starter (and consumer hosts) still reference `uteq/mortel` and `uteq/chat`. Track separately.
+- **PHP namespace rename** (Layer B): `Uteq\Chat\` → `Mortelos\Chat\` and `Mortel\` → `Mortelos\Framework\` is a future effort.
+- **Two orphan vendor dirs in UteqOS** (`vendor/uteq/gmail-channel`, `vendor/uteq/os-core`): unrelated to this rebrand, pre-existing.
 
 ## Out-of-scope (separate sweeps later)
 
