@@ -197,8 +197,8 @@ Details: `knowledge/06-mcp-runtime.md`.
 
 | Agent | Entry | Notes |
 | --- | --- | --- |
-| Claude Code | `CLAUDE.md` → here + `.claude/skills/portal-kickoff/` | Use the `portal-kickoff` skill first on any new portal request |
-| Codex (OpenAI) | `AGENTS.md` (this file) | No skill mechanism; follow §1 reading order and the interview flow in `docs/building-portals.md` §1 |
+| Claude Code | `CLAUDE.md` → here + `.claude/skills/portal-kickoff/` | `.claude` is a symlink to the canonical `.agents` skill |
+| Codex (OpenAI) | `AGENTS.md` (this file) + `.agents/skills/portal-kickoff/` when supported | Use the `portal-kickoff` skill first on any new portal request |
 | Cursor | `.cursor/rules/mortelos.mdc` → here | Always-on rule pointing at this file |
 | Windsurf | `.windsurfrules` → here | Same as Cursor |
 | Generic LLM via README | `README.md` → "For AI agents" section → here | When a user pastes the README into a fresh chat |

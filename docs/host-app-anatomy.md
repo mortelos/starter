@@ -91,9 +91,12 @@ mijn-portal/
 │   └── TestCase.php                                ✓ ships
 ├── .mortelos/
 │   └── package-decisions.md                        — one entry per surface
+├── .agents/
+│   └── skills/
+│       └── portal-kickoff/                         ✓ ships, canonical skill source
 ├── .claude/
 │   └── skills/
-│       └── portal-kickoff/                         ✓ ships (no symlink needed)
+│       └── portal-kickoff -> ../../.agents/skills/portal-kickoff
 ├── AGENTS.md                                       ✓ ships
 ├── CLAUDE.md                                       ✓ ships
 ├── composer.json                                   ✓ ships

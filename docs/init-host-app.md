@@ -38,8 +38,8 @@ ssh -T git@github.com   # confirm SSH access
 
 Once the app boots and you see the dashboard:
 
-1. **Run the `portal-kickoff` skill** (Claude) on the user's request, or
-2. **Follow `docs/building-portals.md` §1** (other agents) to start the
+1. **Run the `portal-kickoff` skill** on the user's request, or
+2. **Follow `docs/building-portals.md` §1** when your agent cannot use local skills to start the
    capability-first interview
 
 After the capability map is captured the agent fills the contracts:

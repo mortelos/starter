@@ -293,8 +293,8 @@ Skill locations:
 
 | Path | Purpose |
 | --- | --- |
-| `.agents/skills/portal-kickoff/` | General agent skill location |
-| `.claude/skills/portal-kickoff/` | Claude-compatible mirror |
+| `.agents/skills/portal-kickoff/` | Canonical skill source |
+| `.claude/skills/portal-kickoff/` | Symlink for Claude Code discovery |
 
 If your agent does not support skills, paste the prompt from
 [Start With AI](#start-with-ai) and point it at

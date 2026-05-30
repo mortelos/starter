@@ -25,9 +25,9 @@ Run the `portal-kickoff` skill on a new portal request. It owns phases 0–6 of
 the MortelOS portal workflow (pre-flight, interview, package decisions,
 foundation review, build plan, vertical-slice loop, checkpoint).
 
-The skill lives at `.claude/skills/portal-kickoff/`. Because this repo is the
-host app (no `vendor/mortelos/starter` indirection anymore), the skill is
-already in the right place — no symlink needed.
+The canonical skill lives at `.agents/skills/portal-kickoff/`.
+`.claude/skills/portal-kickoff/` is a symlink for Claude Code discovery, so the
+skill has one source of truth.
 
 After that the skill triggers automatically on phrases like "build a customer
 portal", "customers should be able to upload documents", "set up a workspace".
@@ -43,7 +43,7 @@ If TALL helper skills are installed:
 - `tall-page` — scaffold a Livewire 4 SFC page
 
 Use them from inside phase [5] of the `portal-kickoff` workflow. Fall back to
-the headless recipe in `.claude/skills/portal-kickoff/references/build-loop.md`
+the headless recipe in `.agents/skills/portal-kickoff/references/build-loop.md`
 when these skills aren't callable.
 
 ## Communication conventions (project-wide)

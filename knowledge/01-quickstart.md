@@ -44,9 +44,10 @@ You build a portal by:
 9. Wiring **observability**
 10. Testing host wiring and capability behavior
 
-This is the method in `docs/building-portals.md`. The Claude
-[`portal-kickoff` skill](../.claude/skills/portal-kickoff/SKILL.md) runs it as
-a guided workflow; other agents follow the same phases manually.
+This is the method in `docs/building-portals.md`. The
+[`portal-kickoff` skill](../.agents/skills/portal-kickoff/SKILL.md) runs it as
+a guided workflow; agents without local skill support follow the same phases
+manually.
 
 ## Bootstrapping from zero
 
