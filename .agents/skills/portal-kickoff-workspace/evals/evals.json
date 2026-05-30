@@ -1,0 +1,26 @@
+{
+  "skill_name": "portal-kickoff",
+  "evals": [
+    {
+      "id": 1,
+      "name": "full-kickoff-document-review",
+      "prompt": "Ik wil een klantportal op mortelos/starter: klanten zien hun dossiers en uploaden documenten; account managers reviewen en keuren ze goed via de inbox. Richt het fundament in en lever een compleet bouwplan.",
+      "expected_output": "Runs pre-flight on the host context first; starts a deep, one-question-at-a-time interview that establishes portal name + goal + slug BEFORE detail; works capability-first; closes the coverage-map dimensions (roles, read/write, sources, approval, surface, audit, reuse, domain model, policy matrix, inbox workflow, tenancy, observability, packaging, non-functional, first slice); records a package decision; produces docs/portals/<slug>/capability-map.md, build-plan.md and progress.md with no TBDs; documents tenant identity as host-owned; seeds deny-by-default policy abilities; picks a first vertical slice and stops at a checkpoint instead of building everything autonomously.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "capability-only-with-connector",
+      "prompt": "Klanten moeten documenten kunnen uploaden en finance haalt omzetdata uit Moneybird op.",
+      "expected_output": "Recognizes this as a portal kickoff even though the word 'portal' is absent; begins the capability-first interview one question at a time; branches into the connector dimension for Moneybird (auth model, sync direction/frequency, failure/reauth, data classification) and into the approval/inbox dimension if document upload needs review; does not jump straight to writing code before the capability map is confirmed.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "resume-existing-portal",
+      "prompt": "Ik wil verder met het klantdossier-portal.",
+      "expected_output": "Pre-flight detects an existing portal under docs/portals/<slug>/ and reads progress.md; offers to RESUME at the first open item rather than restarting the interview or clobbering existing work; summarizes what is already done (foundation, completed capabilities) and proposes the next slice.",
+      "files": []
+    }
+  ]
+}

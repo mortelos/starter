@@ -1,0 +1,23 @@
+[
+  {"query": "ik wil een klantportal opzetten op mortelos/starter waar klanten hun dossiers zien en documenten uploaden, en account managers die reviewen en goedkeuren. waar begin ik?", "should_trigger": true},
+  {"query": "we starten een nieuwe MortelOS workspace voor een accountantskantoor — klanten moeten facturen kunnen inzien en goedkeuren, finance haalt omzetdata uit Moneybird. hoe richt ik dit in?", "should_trigger": true},
+  {"query": "klanten moeten documenten kunnen uploaden en finance haalt omzetdata uit een extern boekhoudsysteem op", "should_trigger": true},
+  {"query": "build a customer portal on mortelos starter for a logistics client: drivers update delivery status, planners approve routes through the inbox", "should_trigger": true},
+  {"query": "ik heb net mortelos/starter geinstalleerd in een verse Laravel app, hoe zet ik nu een portal op voor mijn klant?", "should_trigger": true},
+  {"query": "maak een portal voor zorginstelling X: behandelaars zien clientdossiers, uploaden documenten en geven akkoord op wijzigingen", "should_trigger": true},
+  {"query": "kick off a new MortelOS customer extension where tenants see dossiers, upload files, and we sync invoices from a finance connector", "should_trigger": true},
+  {"query": "we need a workspace where account managers review uploaded compliance documents and approve them, plus operators approve AI-proposed policy changes", "should_trigger": true},
+  {"query": "I want to start building a customer portal but I'm not sure which capabilities to define yet — can you walk me through setting it up?", "should_trigger": true},
+  {"query": "bouw een nieuw klantenportaal bovenop de starter waar klanten hun project-status volgen en facturen downloaden", "should_trigger": true},
+
+  {"query": "voeg een nieuwe Livewire 4 SFC component toe aan de bestaande orders-pagina in deze TALL app", "should_trigger": false},
+  {"query": "schrijf Pest tests voor app/Models/Dossier.php", "should_trigger": false},
+  {"query": "de sidebar-resolver geeft een lege array terug voor finance-gebruikers, kun je deze bug fixen?", "should_trigger": false},
+  {"query": "ik wil een marketing landingspagina bouwen met een mooie hero, pricing-tabel en testimonials", "should_trigger": false},
+  {"query": "convert the sqlite database to mysql for our portal staging environment", "should_trigger": false},
+  {"query": "maak een nieuw Laravel project met Jetstream voor een klantenportaal", "should_trigger": false},
+  {"query": "update config/starter.php om de roi-overview widget aan de primary dashboard widgets toe te voegen", "should_trigger": false},
+  {"query": "schrijf SEO-productpaginatekst voor onze nieuwe webshop", "should_trigger": false},
+  {"query": "we hebben al een portal live; voeg alleen een nieuwe connector voor Exact Online toe aan de bestaande finance-pagina", "should_trigger": false},
+  {"query": "help me een architectuurdiagram van ons portal tekenen in figma", "should_trigger": false}
+]
