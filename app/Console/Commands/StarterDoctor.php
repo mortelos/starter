@@ -28,7 +28,7 @@ final class StarterDoctor extends Command
         foreach ($required as $key) {
             $value = config($key);
 
-            if (! filled($value)) {
+            if (! is_string($value) || $value === '') {
                 $missing[] = $key;
                 $this->components->error($key.' is empty');
 

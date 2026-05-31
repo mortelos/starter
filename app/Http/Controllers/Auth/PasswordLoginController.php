@@ -14,6 +14,7 @@ final class PasswordLoginController extends Controller
 {
     public function __invoke(Request $request): RedirectResponse
     {
+        /** @var array<string, mixed> $credentials */
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
