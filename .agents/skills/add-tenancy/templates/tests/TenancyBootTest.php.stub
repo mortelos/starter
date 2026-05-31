@@ -3,22 +3,24 @@
 declare(strict_types=1);
 
 use App\Models\Tenant;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 /**
  * Boot coverage for BOTH framework states (the resolver-autoload trap).
  *
  * A generated portal has mortelos/framework under composer "suggest" — absent —
- * so the present-state tests skip there and run in operate-mode CI where the
- * framework is installed. The absent-state tests are the ones that catch a
- * regression in the guarded binding.
+ * so the present-state test skips there and runs in operate-mode CI where the
+ * framework is installed. The absent-state test is the one that catches a
+ * regression in the guarded binding: if the binding had autoloaded
+ * StanclTenantResolver (which references the framework-only interface), the app
+ * would have fataled on boot and this suite would not run at all.
+ *
+ * It deliberately does NOT render a view — view rendering pulls in the Vite
+ * manifest, which is an asset-build concern, not a tenancy concern (the
+ * starter's BootSmokeTest already covers the login page).
  */
-it('boots without the framework installed and never autoloads the guarded resolver', function (): void {
-    // Framework absent by default. The guard in StarterServiceProvider must mean
-    // StanclTenantResolver (which references the framework-only interface) is
-    // never autoloaded — if it were, this request would fatal.
-    $this->get(route('login'))->assertOk();
-})->skip(fn (): bool => interface_exists(\Mortel\Contracts\TenantResolver::class), 'framework present');
-
 it('does not bind the TenantResolver contract when the framework is absent', function (): void {
     expect(app()->bound(\Mortel\Contracts\TenantResolver::class))->toBeFalse();
 })->skip(fn (): bool => interface_exists(\Mortel\Contracts\TenantResolver::class), 'framework present');
@@ -35,7 +37,7 @@ it('flips tenancy()->initialized around initialize/end', function (): void {
 
     tenancy()->initialize($tenant);
     expect(tenancy()->initialized)->toBeTrue();
-    expect(tenant()->getTenantKey())->toBe($tenant->getTenantKey());
+    expect((string) tenant()->getTenantKey())->toBe((string) $tenant->getTenantKey());
 
     tenancy()->end();
     expect(tenancy()->initialized)->toBeFalse();

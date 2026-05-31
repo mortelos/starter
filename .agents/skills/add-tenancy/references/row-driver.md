@@ -41,10 +41,13 @@ removing `DatabaseTenancyBootstrapper`. Use `templates/row/tenancy.php.stub`:
 ],
 ```
 
-`row` also does **not** use the database-lifecycle `TenancyServiceProvider` from
-the `database` driver. Either skip that provider, or register it with empty
-`TenantCreated`/`DeletingTenant` job lists — there is no per-tenant database to
-create or drop.
+`row` uses its **own** `TenancyServiceProvider` (`templates/row/`): it drops the
+per-tenant database JobPipelines (no database to create or drop) but keeps the
+`TenancyInitialized`/`Ended` listeners so cache/filesystem/queue tagging still
+run on a switch. Register its FQCN in `bootstrap/providers.php`:
+`\App\Providers\TenancyServiceProvider::class` (use the FQCN or a `use` import;
+a bare `TenancyServiceProvider::class` in that non-namespaced file resolves to a
+nonexistent global class and is silently not loaded).
 
 ## 3. Files this driver wires
 
@@ -53,8 +56,10 @@ create or drop.
 | `templates/shared/Tenant.php.stub` | `app/Models/Tenant.php` | Slug-keyed tenant (shared) |
 | `templates/shared/create_tenants_table.php.stub` | `database/migrations/<ts>_create_tenants_table.php` | Central `tenants` table (shared) |
 | `templates/row/tenancy.php.stub` | `config/tenancy.php` | stancl config **without** DatabaseTenancyBootstrapper |
+| `templates/row/TenancyServiceProvider.php.stub` | `app/Providers/TenancyServiceProvider.php` | No DB lifecycle; keeps init/end listeners |
 | `templates/row/BelongsToTenant.php.stub` | `app/Models/Concerns/BelongsToTenant.php` | Trait: auto-fill `tenant_id` + apply scope + `tenant()` relation |
 | `templates/row/TenantScope.php.stub` | `app/Models/Scopes/TenantScope.php` | Global scope filtering by the active tenant |
+| `templates/row/Note.php.stub` | `app/Models/Note.php` | Example scoped model using the trait |
 | `templates/row/example_scoped_migration.php.stub` | `database/migrations/<ts>_create_notes_table.php` | Example scoped table with `tenant_id` |
 
 ## 4. Shared vs scoped tables (`--shared`)

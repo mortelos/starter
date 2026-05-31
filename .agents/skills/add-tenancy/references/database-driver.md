@@ -34,7 +34,11 @@ runs (the published defaults assume domain identification; we use slug).
 | `templates/database/example_tenant_migration.php.stub` | `database/migrations/tenant/<ts>_create_example_table.php` | Proves tenant migrations run on the tenant connection |
 
 Register `TenancyServiceProvider` in `bootstrap/providers.php` (Laravel 11+
-uses that array, not `config/app.php`).
+uses that array, not `config/app.php`). Add the **FQCN**
+`\App\Providers\TenancyServiceProvider::class` (or a `use` import) — a bare
+`TenancyServiceProvider::class` in that non-namespaced file resolves to a
+nonexistent global class and is silently skipped, which leaves the tenant
+database lifecycle and the connection swap unwired.
 
 ## 3. The isolation switch — bootstrappers
 

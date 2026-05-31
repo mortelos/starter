@@ -3,7 +3,17 @@
 declare(strict_types=1);
 
 use App\Models\Tenant;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+
+uses(RefreshDatabase::class);
+
+// sqlite-per-tenant leaves a file per tenant; clean them up between tests.
+afterEach(function (): void {
+    foreach (glob(database_path('tenant*.sqlite')) as $file) {
+        @unlink($file);
+    }
+});
 
 /**
  * Isolation proof for the DATABASE driver: separate connections.

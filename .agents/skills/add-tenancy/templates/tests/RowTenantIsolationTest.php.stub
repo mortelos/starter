@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Models\Note;
 use App\Models\Tenant;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 /**
  * Isolation proof for the ROW driver: scoped queries in one shared database.
