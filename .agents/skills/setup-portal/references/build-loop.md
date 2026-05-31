@@ -259,7 +259,7 @@ Once the whole portal is built, verify and hand off, once:
 
 1. Summarize what was built, in a short list (not a walkthrough).
 2. State the verification you ran and its result: full suite green, policy denies
-   by default, app still boots `login → tenant-select → dashboard`, observability
+   by default, app still boots `login → dashboard`, observability
    present. Evidence before claims.
 3. Write `docs/portals/<slug>/handoff.md` from `references/handoff-template.md`:
    built · deferred/fast-follows · how to add the next capability · where things

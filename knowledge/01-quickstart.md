@@ -45,7 +45,7 @@ You build a portal by:
 10. Testing host wiring and capability behavior
 
 This is the method in `docs/building-portals.md`. The
-[`portal-kickoff` skill](../.agents/skills/portal-kickoff/SKILL.md) runs it as
+[`setup-portal` skill](../.agents/skills/setup-portal/SKILL.md) runs it as
 a guided workflow; agents without local skill support follow the same phases
 manually.
 

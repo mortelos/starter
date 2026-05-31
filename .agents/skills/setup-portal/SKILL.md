@@ -1,9 +1,9 @@
 ---
-name: portal-kickoff
+name: setup-portal
 description: Use this FIRST whenever someone wants to set up, start, bootstrap, or build a customer portal on MortelOS / mortelos-starter, even when they only describe a capability ("customers should be able to upload documents", "account managers approve invoices", "show clients their dossiers") without saying the word "portal". This skill interviews for the capability map one question at a time, wires the Starter foundation correctly, records package decisions, produces one complete standalone build plan, gets the user's approval on that plan once, then builds the entire portal in a single pass with full test coverage and hands off to the partner to continue development, leaning on the TALL skills for implementation. Trigger it for any new MortelOS portal, workspace, or customer-extension kickoff. Do NOT trigger when the portal is built on a different stack such as Jetstream, Filament, or plain Laravel without mortelos/starter.
 ---
 
-# Portal Kickoff
+# Setup Portal
 
 The first skill a user runs when building a customer portal on MortelOS. It turns
 the design handbook in `docs/building-portals.md` into a guided, goal-directed
@@ -27,16 +27,16 @@ here only add *how to ask*, *how to wire*, *how to plan*, and *how to build*.
 
 ## Availability in a host app
 
-This skill ships inside the host app at `.agents/skills/portal-kickoff/`.
+This skill ships inside the host app at `.agents/skills/setup-portal/`.
 Portal work writes into the host app (`App\...`, `config/starter.php`,
 `routes/web.php`, host policies), so run the skill from the host-app working
-directory. `.claude/skills/portal-kickoff/` is a symlink for Claude Code
-discovery. Treat `.agents/skills/portal-kickoff/` as the single source of truth.
+directory. `.claude/skills/setup-portal/` is a symlink for Claude Code
+discovery. Treat `.agents/skills/setup-portal/` as the single source of truth.
 
 ## Workflow
 
 ```text
-portal-kickoff  ("ik wil een klantportal voor ...")
+setup-portal  ("ik wil een klantportal voor ...")
         |
         v
 [0] PRE-FLIGHT, host context & idempotency
@@ -64,7 +64,10 @@ portal-kickoff  ("ik wil een klantportal voor ...")
      route bridge · layout delegation · config/starter.php (auth contracts +
      navigation/search/governance/users/onboarding resolvers) ·
      deny-by-default policy scaffold · document host-owned tenant identity
-     -> verify the app boots login -> tenant-select -> dashboard.
+     TENANCY FORK (from the interview): one customer -> nothing (single-tenant
+     default); many customers in one deployment -> run the `add-tenancy` skill
+     (database | row) before planning, so call-sites bind onto its seam.
+     -> verify the app boots login -> dashboard.
         the base is assumed sound; only fill gaps. A non-booting base is the
         one hard stop before the plan gate; otherwise carry the status forward.
         |
@@ -115,7 +118,7 @@ work nor re-ask answered questions.
   with at least one ticked `[x]` item, you are in **RESUME mode**. Default action:
   print a status block (foundation status, completed capabilities, the next
   capability from the build order, any prior-run deviations or fast-follows),
-  append a one-line entry `- <YYYY-MM-DD>, resume detected by portal-kickoff` to
+  append a one-line entry `- <YYYY-MM-DD>, resume detected by setup-portal` to
   `progress.md`'s Log, and ask the user how to proceed before any further action.
   Do NOT re-run the phase [1] interview. Do NOT resume the build without an
   explicit go-ahead.
@@ -144,6 +147,10 @@ driven by a coverage map so it is both thorough and gap-free.
   most relevant open one; listen for answers that open new sub-dimensions.
 - If the request spans several independent subsystems, stop and decompose before
   refining details. Pick the first portal; give the rest their own kickoffs.
+- Establish the **tenancy mode** early: does this portal serve one customer, or
+  several customers from one deployment? The default is single-tenant; "many
+  customers / organisations / clients in one install" routes to the `add-tenancy`
+  skill in phase [3]. Capture it as a coverage answer, it drives the foundation.
 - Record unknowns as explicit assumptions; confirm them before planning. The bar
   is higher here than in a phased build: there is no per-slice loop downstream to
   catch a gap, so the map must be complete enough to plan and build the whole
@@ -178,14 +185,26 @@ contract tables plus §7 (deny-by-default policies) and §9 (tenant identity).
 Assume the base is sound: in a project from `mortelos/starter` most of this is
 pre-wired. Your job is to verify and fill gaps, not to rebuild. The required-to-
 boot part is the five `auth` contracts; everything else is optional and degrades
-silently. Tenant, membership, and role models are **host-owned**: you document
-them as a requirement and seed safe policy defaults, you do not invent a tenant
-model.
+silently. The starter is **single-tenant by default**; role/policy models are
+host-owned, you seed safe deny-by-default defaults rather than invent them.
 
-End the phase by verifying `login → tenant-select → dashboard` works. A
-non-booting base is the **one hard stop** before the plan gate: report the
-blocker and fix the foundation before continuing. If it boots, carry that status
-into phase [5] rather than asking for a separate approval here.
+**Tenancy fork.** Act on the single-vs-multi-customer answer from phase [1]:
+
+- **One customer (default):** do nothing. The starter is already single-tenant;
+  the dashboard/governance gates run through the host policy seam.
+- **Many customers in one deployment:** run the **`add-tenancy`** skill here,
+  before the build plan, so every later capability binds onto its seam rather
+  than being retrofitted. add-tenancy picks one isolation driver
+  (`database` default, `row` alternative), wires identification + the tenant
+  switcher, and generates isolation tests. It is opt-in on purpose: do not run
+  it for a single-customer portal. Note add-tenancy's own one-way door (the
+  `row` driver forecloses framework operate-mode) when you record the decision.
+
+End the phase by verifying the app boots `login → dashboard` (single-tenant) or,
+after add-tenancy, that its generated isolation test is green. A non-booting
+base is the **one hard stop** before the plan gate: report the blocker and fix
+the foundation before continuing. If it boots, carry that status into phase [5]
+rather than asking for a separate approval here.
 
 ## Phase [4]: Complete build plan
 
@@ -213,8 +232,7 @@ whole build. If the map was just confirmed, keep this gate light, the user is
 approving the plan and the build order, not re-litigating the requirements.
 Present, in a compact form:
 
-1. **Foundation status** from phase [3]: the app boots `login → tenant-select →
-   dashboard`, deny-by-default scaffold seeded, tenant identity documented.
+1. **Foundation status** from phase [3]: the app boots `login → dashboard`, deny-by-default scaffold seeded, tenant identity documented.
 2. **The complete plan**: a short summary of the capability map and build plan
    (entities, surfaces, policies, connectors/inbox if any, test targets).
 3. **The build order**: the full ordered list of capabilities that will be built
@@ -256,7 +274,7 @@ kickoff when every capability the goal requires is built and green; from here th
 partner continues development.
 
 1. **Verify.** Run the full test suite (evidence before claims): all green. The
-   app still boots `login → tenant-select → dashboard`. Deny-by-default holds.
+   app still boots `login → dashboard`. Deny-by-default holds.
 2. **Write `docs/portals/<slug>/handoff.md`** from
    `references/handoff-template.md` so the partner can continue without re-reading
    the whole history: what was built (capabilities, entities, surfaces, policies,

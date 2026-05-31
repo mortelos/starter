@@ -26,7 +26,7 @@ Default to **build mode**: assemble portals from MortelOS primitives.
 1. `README.md` — installation, contract tables, agent prompts that work
 2. `docs/building-portals.md` — the design method (§1–§11)
 3. `knowledge/` — short, AI-first notes per topic (start at `knowledge/README.md`)
-4. `.agents/skills/portal-kickoff/` — guided kickoff for agents that support local skills
+4. `.agents/skills/setup-portal/` — guided kickoff for agents that support local skills
 5. This file — the rules below
 
 If the user asks "build a portal for X" and gives only that, **do not invent the
@@ -197,8 +197,8 @@ Details: `knowledge/06-mcp-runtime.md`.
 
 | Agent | Entry | Notes |
 | --- | --- | --- |
-| Claude Code | `CLAUDE.md` → here + `.claude/skills/portal-kickoff/` | `.claude` is a symlink to the canonical `.agents` skill |
-| Codex (OpenAI) | `AGENTS.md` (this file) + `.agents/skills/portal-kickoff/` when supported | Use the `portal-kickoff` skill first on any new portal request |
+| Claude Code | `CLAUDE.md` → here + `.claude/skills/setup-portal/` | `.claude` is a symlink to the canonical `.agents` skill |
+| Codex (OpenAI) | `AGENTS.md` (this file) + `.agents/skills/setup-portal/` when supported | Use the `setup-portal` skill first on any new portal request |
 | Cursor | `.cursor/rules/mortelos.mdc` → here | Always-on rule pointing at this file |
 | Windsurf | `.windsurfrules` → here | Same as Cursor |
 | Generic LLM via README | `README.md` → "For AI agents" section → here | When a user pastes the README into a fresh chat |
@@ -208,7 +208,7 @@ Details: `knowledge/06-mcp-runtime.md`.
 Every change that touches host behavior gets a verification checklist (see
 `knowledge/07-test-and-verify.md`):
 
-1. **Boot smoke test** — `login → tenant-select → dashboard` returns 200 for
+1. **Boot smoke test** — `login → dashboard` returns 200 for
    the seeded admin
 2. **Doctor command** — `php artisan starter:doctor` reports green
 3. **Pest** — `vendor/bin/pest` is green (16+ baseline assertions, growing

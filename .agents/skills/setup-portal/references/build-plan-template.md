@@ -120,7 +120,7 @@ below that the goal requires is built, tested, and green; from there the partner
 continues development.
 
 ## Foundation
-- [ ] Starter wired, app boots login -> tenant-select -> dashboard
+- [ ] Starter wired, app boots login -> dashboard
 - [ ] Deny-by-default policy scaffold seeded
 - [ ] Tenant identity documented as host requirement
 

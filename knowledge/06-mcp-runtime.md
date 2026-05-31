@@ -4,7 +4,7 @@ MortelOS has **two AI surfaces**:
 
 | Surface | What it does | Tools |
 | --- | --- | --- |
-| **Build mode** (this repo) | Coding agent assembles the host app from primitives | File edits, artisan, composer, the `portal-kickoff` skill |
+| **Build mode** (this repo) | Coding agent assembles the host app from primitives | File edits, artisan, composer, the `setup-portal` skill |
 | **Operate mode** (MortelOS MCP) | Runtime agent operates the live workspace: search entities, run skills, trigger workflows, approve proposals, launch sub-agents | OAuth-authenticated MCP tools served from the host |
 
 **The MCP server is not used for portal bootstrap.** Bootstrap is artisan +

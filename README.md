@@ -30,10 +30,10 @@ Open `http://127.0.0.1:8000` and sign in with:
 ## Start With AI
 
 Open the project in your AI coding agent. If your agent supports local skills,
-start with the `portal-kickoff` skill:
+start with the `setup-portal` skill:
 
 ```text
-Use the portal-kickoff skill.
+Use the setup-portal skill.
 I want to build a customer portal for: [describe the customer, user group or process].
 ```
 
@@ -47,7 +47,7 @@ If your agent does not support local skills, paste this prompt instead:
 You are working in a MortelOS Starter host app.
 
 Read AGENTS.md, README.md and docs/building-portals.md first.
-If the portal-kickoff skill is available, use it now.
+If the setup-portal skill is available, use it now.
 Use a capability-first interview before writing code.
 
 I want to build a customer portal for: [describe the customer, user group or process].
@@ -158,7 +158,7 @@ planning is `mortelos/framework`.
 | Seed account | `admin@example.test` / `password` |
 | Diagnostics | `php artisan starter:doctor` |
 | Tests | Pest boot smoke and config shape tests |
-| Agent guidance | `AGENTS.md`, `docs/building-portals.md`, `knowledge/`, `portal-kickoff` skill |
+| Agent guidance | `AGENTS.md`, `docs/building-portals.md`, `knowledge/`, `setup-portal` skill |
 
 The template boots immediately. Portal-specific behavior is added through host
 bindings, resolvers, actions, policies, projections and packages.
@@ -279,7 +279,7 @@ If the command is not available, record the same fields in
 
 ## Agent Skill
 
-This repository ships a `portal-kickoff` skill for agents that support local
+This repository ships a `setup-portal` skill for agents that support local
 skills. It runs the MortelOS method as a guided workflow:
 
 1. Interview for the capability map
@@ -293,8 +293,8 @@ Skill locations:
 
 | Path | Purpose |
 | --- | --- |
-| `.agents/skills/portal-kickoff/` | Canonical skill source |
-| `.claude/skills/portal-kickoff/` | Symlink for Claude Code discovery |
+| `.agents/skills/setup-portal/` | Canonical skill source |
+| `.claude/skills/setup-portal/` | Symlink for Claude Code discovery |
 
 If your agent does not support skills, paste the prompt from
 [Start With AI](#start-with-ai) and point it at

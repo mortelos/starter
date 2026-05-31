@@ -30,7 +30,7 @@ now, what was left, and where do I plug in next?*
 ## Verification (evidence)
 
 - Test suite: `<command>` -> **<n/n green>** (<framework>).
-- App boots `login → tenant-select → dashboard`: <yes>.
+- App boots `login → dashboard`: <yes>.
 - Deny-by-default holds: <how confirmed, e.g. policy test asserts deny with no grant>.
 
 ## Deferred / fast-follows

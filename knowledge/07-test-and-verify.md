@@ -11,7 +11,7 @@ Before claiming any change is done. Source method:
 | `php artisan starter:doctor` | Five auth contracts filled, route bridge, layout, namespaces | seconds |
 | `vendor/bin/pest` | Boot smoke + config-shape + capability tests pass | seconds |
 | `vendor/bin/pest --filter=Architecture` | Architecture-only suite (when present) | seconds |
-| Manual smoke: `login → tenant-select → dashboard` | The user can actually sign in | minute |
+| Manual smoke: `login → dashboard` | The user can actually sign in | minute |
 | Capability-level Pest test in `tests/Feature/<Capability>/` | The capability you built actually works | minutes |
 
 **Never** claim "works" based on `composer validate` alone. Always do at least

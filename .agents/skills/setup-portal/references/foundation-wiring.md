@@ -57,7 +57,7 @@ Controllers\Auth\…`, `App\Actions\Auth\…`). If a required key is empty, the 
 file throws `LogicException: Missing starter route class config [...]`
 (`routes/starter.php:13`), that means an `auth.controllers.*` key is still null.
 
-**Verify:** confirm `login → tenant-select → dashboard` works before continuing.
+**Verify:** confirm `login → dashboard` works before continuing.
 A non-booting base is the one hard stop before the plan gate (phase [5]); fix it,
 then carry the boot status into the gate rather than asking for a separate
 approval here.
