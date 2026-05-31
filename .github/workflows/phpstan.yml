@@ -21,9 +21,11 @@ jobs:
           tools: composer:v2
 
       - name: Install dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
+        run: |
+          composer config --global github-oauth.github.com "$MORTELOS_CI_TOKEN"
+          composer install --no-interaction --no-progress --prefer-dist
         env:
-          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.MORTELOS_CI_TOKEN }}"}}'
+          MORTELOS_CI_TOKEN: ${{ secrets.MORTELOS_CI_TOKEN }}
 
       - name: Run PHPStan (level max)
         run: composer analyse
