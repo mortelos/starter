@@ -3,12 +3,15 @@
 Phase [4]. Two files, both under `docs/portals/<slug>/`:
 
 - `build-plan.md`: the standalone build plan (this template), derived entirely
-  from the confirmed capability map. Self-contained: no GSD dependency, no `TBD`.
-- `progress.md`: the goal-tracking checklist the build loop updates; its goal line
-  is the loop's stop condition.
+  from the confirmed capability map. Self-contained and **complete**: no GSD
+  dependency, no `TBD`. The build runs in one pass with no per-slice review, so a
+  gap here becomes a gap in the portal.
+- `progress.md`: the goal-tracking checklist the build pass updates; its goal line
+  is the build's stop condition.
 
-Order capabilities by value and dependency. The first vertical slice (capability
-map §13) is capability #1.
+Order **every** capability by value and dependency into a single build order;
+capability #1 is the most foundational (capability map "Build order"). The whole
+list is built in phase [6], not just the first.
 
 ## N/A markers (read this first)
 
@@ -98,12 +101,13 @@ agent/widget runs, audit trail; per capability>.
 
 ## Build order
 
-1. **<Capability #1, first vertical slice>**, <why first>
+1. **<Capability #1, most foundational>**, <why first>
 2. <Capability #2>
 3. <…>
 
-Each capability is built end to end per references/build-loop.md, with a review
-checkpoint before the next.
+Every capability is built end to end in a single pass per references/build-loop.md.
+There is no review checkpoint between capabilities; the plan is approved once, at
+the plan gate (phase [5]), then the whole order is built.
 ```
 
 ## progress.md
@@ -111,22 +115,27 @@ checkpoint before the next.
 ```markdown
 # Portal Progress, <Portal name>
 
-**Goal:** <north star>. The portal is done when every capability below that the
-goal requires is built, tested, and reviewed.
+**Goal:** <north star>. The portal is done for this kickoff when every capability
+below that the goal requires is built, tested, and green; from there the partner
+continues development.
 
 ## Foundation
 - [ ] Starter wired, app boots login -> tenant-select -> dashboard
 - [ ] Deny-by-default policy scaffold seeded
 - [ ] Tenant identity documented as host requirement
 
-## Capabilities
-- [ ] 1. <capability #1, first slice>  (entity · projection · policy · surface · tests)
+## Capabilities (build order)
+- [ ] 1. <capability #1, most foundational>  (entity · projection · policy · surface · tests)
 - [ ] 2. <capability #2>
 - [ ] 3. <…>
 
+## Deviations
+- <YYYY-MM-DD>, <what diverged from build-plan.md and the choice made>
+
 ## Log
-- <YYYY-MM-DD>, <what was built / reviewed / changed>
+- <YYYY-MM-DD>, <what was built / changed>
 ```
 
-Update `progress.md` at every checkpoint: tick items, append to the log, and note
-any deviations from the plan so the build stays auditable.
+Update `progress.md` as the build pass runs: tick each capability as it goes
+green (the resume anchor), append deviations as they happen, and add a closing
+log entry at handoff so the build stays auditable.

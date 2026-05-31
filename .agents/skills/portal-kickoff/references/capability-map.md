@@ -72,10 +72,14 @@ policy denials · agent/widget runs · audit trail, pick what applies>.
 - **GDPR/retention:** <personal data, retention period, deletion>
 - **Trust level / data classification:** <…>
 
-## First vertical slice
+## Build order
 
-- **Capability:** <chosen first capability>
-- **Why:** <foundational / highest value / unblocks the most>
+The full value-and-dependency order for the one-pass build (phase [6]); #1 is the
+most foundational.
+
+1. **<capability #1>**, <why first: foundational / unblocks the most>
+2. <capability #2>
+3. <…>
 
 ## Assumptions (confirm before building)
 

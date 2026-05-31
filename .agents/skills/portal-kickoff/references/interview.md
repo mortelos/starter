@@ -46,7 +46,7 @@ an answer can open, and the bar for "covered".
 ### 1. Portal identity + goal, ask first
 
 - Intent: a name → `<slug>` (kebab-case, used in every path) and the **goal** that
-  becomes the north star for the build loop.
+  becomes the north star for the one-pass build.
 - Questions: "What is this portal called, and in one sentence, what is it for?" ·
   "When it is working, what is the single most important thing it lets people do?"
 - Covered when: you have a slug and a one-sentence goal you can put at the top of
@@ -173,13 +173,15 @@ Ask this cluster *per capability*, but conversationally, not as a form:
 - Covered when: volume, consistency need, GDPR/retention, and trust level are
   captured (even if just "low volume, standard retention").
 
-### 13. First vertical slice
+### 13. Build order
 
-- Intent: pick where to start building.
-- Questions: "Of everything we mapped, which capability proves the portal works and
-  unblocks the most other work?"
-- Covered when: one capability is chosen as the first slice (usually the most
-  foundational entity + its primary surface).
+- Intent: sequence the capabilities for the one-pass build. The whole portal gets
+  built, so this is about order, not about picking one and stopping.
+- Questions: "Of everything we mapped, which capability is the foundation the rest
+  build on, the one to build first?" · "Then what depends on it, and what can come
+  later?"
+- Covered when: every capability sits in a value-and-dependency order, with the
+  most foundational one (usually the core entity + its primary surface) as #1.
 
 ## Protocol rules
 

@@ -107,6 +107,14 @@ do not wait until the end:
   surface the capability map listed (entity visibility/data access, navigation
   visibility, widget access, agent-tool access, connector setup/data access,
   governance changes).
+- **Scaffold standalone gates, not policy-backed ones, with a false closure.**
+  `Gate::define($ability, fn () => false)` is right for abilities with no model
+  (nav visibility, widget/agent-tool access, connector setup). For an ability a
+  **model policy** answers, make the policy itself deny-by-default instead. The
+  trap is dotted ability names: a `invoice.view` seeded false never reaches
+  `InvoicePolicy::view()`, so the closure denies and the policy never runs (surprise
+  403s). Either check the bare ability or alias the dotted name to the policy
+  method. See `references/build-loop.md` -> Policies for the exact rule and why.
 - Route visibility checks through the central access resolver
   (`governance.access_resolver`), not component-level conditionals.
 - Seed safe defaults during tenant onboarding; expose changes through proposal /
@@ -120,7 +128,13 @@ host must provide: users, tenant memberships, roles, invitations, tenant
 selection, super-admin behavior, data isolation, optional branding. Keep tenant
 selection and membership host-owned unless a reusable package boundary is proven.
 
-## F. Assets, Vite and the Herd `.test` domain (required)
+## F. Assets, Vite and the Herd `.test` domain (browser delivery only)
+
+This section is about how the shell looks in a real browser. Skip it when you are
+verifying the portal through the **test suite** (headless): pest renders views
+server-side and never loads the Vite dev/build assets, so none of the `.test`
+domain or Flux-CSS issues below affect a green test run. Come back to it only when
+a human will open the portal in a browser.
 
 On a Herd-served `.test` domain the layout silently breaks (no CSS, blank or
 unstyled shell) when the asset wiring assumes a different URL/protocol than the

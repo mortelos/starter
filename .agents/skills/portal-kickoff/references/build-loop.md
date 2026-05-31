@@ -1,14 +1,17 @@
 # Build Loop
 
-Phases [5] and [6]. Build one capability end to end as a vertical slice, checkpoint
-with the user, update `progress.md`, then move to the next. This skill owns the
-MortelOS-specific shape; the **TALL skills own the Laravel/Livewire implementation**
-when available. When they are not callable, use the [headless fallback](#headless-fallback)
-below.
+Phase [6]. Build **every** capability end to end, in the planned dependency order,
+in a single pass. No per-capability review stops, the user already approved the
+whole plan at the gate (phase [5]). Keep `progress.md` ticking as you go so an
+interrupted run can resume, then verify and hand off once at the end (phase [7]).
+This skill owns the MortelOS-specific shape; the **TALL skills own the
+Laravel/Livewire implementation** when available. When they are not callable, use
+the [headless fallback](#headless-fallback) below.
 
-## The slice (build one capability fully)
+## Build each capability fully (in order)
 
-Build in this order so each layer rests on a tested one below it:
+For each capability, build in this order so each layer rests on a tested one
+below it, then move to the next capability without stopping for review:
 
 1. **Entity plus links.** The domain object(s) for this capability and their
    relationships. Use the **`tall-model`** skill for the model plus migration plus
@@ -93,9 +96,15 @@ goal is parity with what `tall-feature` would produce.
 ### State machines
 
 If an entity has a lifecycle (for example `pending_review → approved | rejected`),
-use `spatie/laravel-model-states` with a State base class plus concrete States
-plus a `StateConfig::default(...)->allowTransition(...)`. Never store the state
-as a free-text string column.
+model the states and their allowed transitions explicitly, do not let any string
+flow into the column. When `spatie/laravel-model-states` is already in the host,
+use it: a State base class plus concrete States plus a
+`StateConfig::default(...)->allowTransition(...)`. When it is **not** installed,
+do not add a dependency just for this, use a backed PHP enum cast on the column
+plus a guarded transition method on the model (or in the Action) that rejects
+illegal moves and emits the transition event. Either way the rule is the same:
+the set of states and the legal transitions are enforced in code, never an
+unconstrained string.
 
 ### Actions
 
@@ -123,17 +132,58 @@ action. No business logic in Livewire components, controllers, or Blade.
 
 - One policy per primary entity in `Policies/`, plus a service provider
   registration `Gate::policy(<Model>::class, <Policy>::class)`.
-- Each ability also seeded with `Gate::define($ability, fn () => false)` in the
-  portal provider, so the deny-by-default scaffold is provable when no policy is
-  resolved.
 - Tenant scoping in every policy method; do not trust controller-level tenant
   filtering alone.
+- **Deny-by-default scaffold, two kinds of abilities, do not conflate them.**
+  Seed `Gate::define($ability, fn () => false)` ONLY for **standalone gates** that
+  have no model policy, navigation visibility, widget access, connector setup/sync,
+  agent-tool access. For an ability a **model policy** answers, make the **policy
+  itself** deny-by-default instead (every method returns false unless a rule grants
+  access); do not also scaffold it with a false closure. Provability then comes
+  from a test that asserts the policy denies with no grant.
+- **Why, and the real trap: dotted ability names.** Laravel resolves a matching
+  **policy method before** any `Gate::define`d ability, so a false closure on a
+  *bare* name like `view` does not shadow `InvoicePolicy::view()`, the policy still
+  wins (the false define is just dead code there). The bite comes with **dotted**
+  ability names. The capability map usually writes `invoice.view` / `invoice.download`,
+  but the policy has methods `view` / `download`, so `Gate::allows('invoice.view',
+  $invoice)` finds **no** matching policy method, falls through, and lands on the
+  `Gate::define('invoice.view', fn () => false)` you seeded, which denies and your
+  policy never runs. That is the surprise 403 on policy-backed surfaces. Fix it one
+  of two ways, and never seed a dotted policy ability false:
+  - check the **bare** ability against the model (`Gate::allows('view', $invoice)` /
+    `$user->can('download', $invoice)`) and keep the dotted name only as documentation, or
+  - register an explicit alias so the dotted name reaches the policy method:
+    `Gate::define('invoice.view', [InvoicePolicy::class, 'view'])`.
 
 ### Surfaces
 
-- Livewire 4 SFC pages following the host's existing `tall-conventions` layout.
-- For each route, define it in the portal provider's `boot()` via a `Route::group`
-  with the `auth` middleware (and tenancy middleware when the host enforces it).
+A surface is only built when it actually **renders over its route**. Registering a
+Livewire component class is not enough, the most common failure here is a page
+that 500s with `No hint path defined for [...]` because the component's Blade view
+was never made discoverable. Wire all three pieces:
+
+- **Component + its view.** Livewire 4 SFC pages following the host's existing
+  `tall-conventions` layout. If the portal keeps its views in its own tree
+  (`resources/views/livewire/portals/<portal_slug>/` or the host's page path),
+  **register that path as a view namespace in the portal provider's `boot()`**
+  with `$this->loadViewsFrom(__DIR__.'/../resources/views', '<portal_slug>')` (or
+  the host's equivalent) so `view('<portal_slug>::...')` resolves. Mirror an
+  existing host page to copy the exact SFC shape, do not invent one.
+- **Data the host's way.** Follow the host's SFC data pattern rather than assuming
+  a classic `render()` method, modern Livewire 4 SFC hosts expose data through
+  `#[Computed]` properties and an inline view, and a stray `render()` can fight the
+  host's page mechanism. Check `tall-conventions` (or an existing page) for the
+  pattern this host uses before writing the component.
+- **Route.** Define each route in the portal provider's `boot()` via a
+  `Route::group` with the `auth` middleware (and tenancy middleware when the host
+  enforces it). Register navigation/search resolver entries if the capability adds
+  them.
+- **Prove it renders.** Add a feature test that hits the route and asserts a real
+  render (`get('/<route>')->assertOk()` for an allowed user, `assertForbidden()`
+  for a denied one). See the Tests section, this is mandatory coverage, not
+  optional, precisely because a green policy/action suite can otherwise hide a
+  500-ing page.
 
 ### Inbox flow
 
@@ -147,7 +197,7 @@ action. No business logic in Livewire components, controllers, or Blade.
 
 - Define a `Connectors/<System>/<System>Client` PHP contract (interface) for the
   HTTP boundary. Implement `Http<System>Client` for production (only if you
-  actually call the API in this slice) and `Fake<System>Client` for tests, both
+  actually call the API for this capability) and `Fake<System>Client` for tests, both
   bound in the portal provider behind the contract.
 - Wrap the connector in a `<System>Connector` class with `setup`, `triggerSync`,
   `health` methods. Handle 5xx with exponential backoff and 401/403 by marking
@@ -164,8 +214,10 @@ action. No business logic in Livewire components, controllers, or Blade.
   it.
 - Cover at minimum: deny-by-default policy enforcement, the happy-path action
   flow (upload to inbox to approve, or sync to projection update), projection
-  rebuild idempotency, tenant isolation, and (when present) connector
-  failure/reauth.
+  rebuild idempotency, tenant isolation, **every surface renders over its route**
+  (`assertOk` for an allowed user, `assertForbidden` for a denied one), and (when
+  present) connector failure/reauth. The surface-render assertion is non-negotiable:
+  without it a fully green policy/action suite can still ship pages that 500.
 
 ### Symlinked vendor caveat
 
@@ -185,25 +237,42 @@ And, when needed, prepend a worktree-local PSR-4 autoloader entry in
 `bootstrap/app.php` so the portal namespace resolves locally. This is only
 relevant in symlinked layouts; ignore it in normal composer installs.
 
-## Checkpoint protocol (director/reviewer)
+## During the build pass (no per-capability stop)
 
-After each slice, **stop** and hand control back to the user:
+The user approved the whole plan at the gate (phase [5]), so the build runs
+straight through. Between capabilities you do **not** hand control back; you keep
+the build honest instead:
+
+1. **Tick `progress.md`** as each capability goes green (entity · projection ·
+   policy · surface · tests). This is the resume anchor, not a review request.
+2. **Keep tests green as you go.** Run the capability's tests before moving on; a
+   red suite is a build problem to fix now, not something to defer to the user.
+3. **Log deviations, keep building.** See [Deviations](#deviations) below.
+
+The portal goal in `progress.md` is the stop condition: when every capability the
+goal requires is built and green, the build pass is done, move to handoff
+(phase [7]).
+
+## Handoff (phase [7])
+
+Once the whole portal is built, verify and hand off, once:
 
 1. Summarize what was built, in a short list (not a walkthrough).
-2. State the verification you ran and its result: tests green/red, policy denies
-   by default, app still boots, observability present. Evidence before claims.
-3. Update `progress.md`: tick the capability, append to the log, note any
-   deviation from `build-plan.md`.
-4. Ask whether to proceed to the next capability, adjust the plan, or stop.
-
-Never chain into the next slice without the user's go-ahead. The goal in
-`progress.md` is the stop condition for the whole loop: when every capability the
-goal requires is built, tested, and reviewed, the portal is done. Report that
-and stop.
+2. State the verification you ran and its result: full suite green, policy denies
+   by default, app still boots `login → tenant-select → dashboard`, observability
+   present. Evidence before claims.
+3. Write `docs/portals/<slug>/handoff.md` from `references/handoff-template.md`:
+   built · deferred/fast-follows · how to add the next capability · where things
+   live. Tick the final items in `progress.md` and append a closing log entry.
+4. Hand the portal to the partner: state what they should pick up first. Stop.
 
 ## Deviations
 
 If reality diverges from the plan (a capability needs an entity the map missed,
-a connector behaves differently than assumed), do not silently improvise. Note
-it at the checkpoint, update `build-plan.md` and `capability-map.md`, and confirm
-before building on the change. The plan stays the source of truth.
+a connector behaves differently than assumed), do not silently improvise and do
+not stop the build to ask. Make the smallest sound choice that keeps the plan's
+intent, update `build-plan.md` and `capability-map.md` to match what you built,
+and append a one-line note to the deviations log in `progress.md`. Surface every
+deviation together at the handoff so the partner inherits an accurate picture.
+Only stop mid-build if a deviation changes the portal's scope or contradicts a
+confirmed assumption, that is a plan decision the user owns, not a build detail.
