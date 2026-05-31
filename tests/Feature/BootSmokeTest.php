@@ -2,12 +2,17 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\View;
+
+use function Pest\Laravel\artisan;
+use function Pest\Laravel\get;
+
 it('redirects the root to the login page for guests', function (): void {
-    $this->get('/')->assertRedirect('/login');
+    get('/')->assertRedirect('/login');
 });
 
 it('serves the login page', function (): void {
-    $this->get('/login')->assertOk();
+    get('/login')->assertOk();
 });
 
 it('throws LogicException when an auth controller is missing', function (): void {
@@ -18,10 +23,8 @@ it('throws LogicException when an auth controller is missing', function (): void
 });
 
 it('exposes the starter view namespaces and shell pages', function (): void {
-    $views = $this->app['view'];
-
-    expect($views->exists('mortelos-starter::layouts.app'))->toBeTrue();
-    expect($views->exists('layouts.guest'))->toBeTrue();
+    expect(View::exists('mortelos-starter::layouts.app'))->toBeTrue();
+    expect(View::exists('layouts.guest'))->toBeTrue();
 
     expect(is_file(resource_path('views/components/auth/password-form.blade.php')))->toBeTrue();
     expect(is_file(resource_path('views/livewire/pages/dashboard/dashboard.blade.php')))->toBeTrue();
@@ -30,5 +33,10 @@ it('exposes the starter view namespaces and shell pages', function (): void {
 });
 
 it('reports the doctor command as green for the default config', function (): void {
-    $this->artisan('starter:doctor')->assertSuccessful();
+    $command = artisan('starter:doctor');
+
+    expect($command)->toBeInstanceOf(\Illuminate\Testing\PendingCommand::class);
+    assert($command instanceof \Illuminate\Testing\PendingCommand);
+
+    $command->assertSuccessful();
 });

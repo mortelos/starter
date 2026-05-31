@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 it('exposes the complete auth contract surface', function (): void {
+    /** @var array<string, mixed> $auth */
     $auth = config('starter.auth');
 
     expect($auth)->toHaveKeys([
@@ -12,7 +13,10 @@ it('exposes the complete auth contract surface', function (): void {
         'controllers',
     ]);
 
-    expect($auth['controllers'])->toHaveKeys([
+    /** @var array<string, mixed> $controllers */
+    $controllers = $auth['controllers'];
+
+    expect($controllers)->toHaveKeys([
         'accept_invitation',
         'passkey_authenticated',
         'passkey_authentication_options',
@@ -22,7 +26,9 @@ it('exposes the complete auth contract surface', function (): void {
 });
 
 it('exposes the optional layout, navigation, governance, users, dashboard, inbox and chat surfaces', function (string $key, array $expectedSubkeys): void {
-    expect(config("starter.{$key}"))->toHaveKeys($expectedSubkeys);
+    /** @var list<string> $keys */
+    $keys = $expectedSubkeys;
+    expect(config("starter.{$key}"))->toHaveKeys($keys);
 })->with([
     ['layout',     ['sidebar_nav_component', 'topbar_component', 'universal_search_component']],
     ['navigation', ['sidebar_resolver', 'universal_search_resolver']],

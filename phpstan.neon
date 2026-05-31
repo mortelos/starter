@@ -1,0 +1,18 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+    - vendor/pestphp/pest/extension.neon
+    - vendor/pestphp/pest/phpstan-pest-extension.neon
+
+parameters:
+    level: max
+    paths:
+        - app
+        - database/factories
+        - database/seeders
+        - tests
+    databaseMigrationsPath:
+        - database/migrations
+    checkModelProperties: true
+    checkModelAppends: true
+    parseModelCastsMethod: true
