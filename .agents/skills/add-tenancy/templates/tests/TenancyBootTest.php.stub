@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\Tenant;
+
+/**
+ * Boot coverage for BOTH framework states (the resolver-autoload trap).
+ *
+ * A generated portal has mortelos/framework under composer "suggest" — absent —
+ * so the present-state tests skip there and run in operate-mode CI where the
+ * framework is installed. The absent-state tests are the ones that catch a
+ * regression in the guarded binding.
+ */
+it('boots without the framework installed and never autoloads the guarded resolver', function (): void {
+    // Framework absent by default. The guard in StarterServiceProvider must mean
+    // StanclTenantResolver (which references the framework-only interface) is
+    // never autoloaded — if it were, this request would fatal.
+    $this->get(route('login'))->assertOk();
+})->skip(fn (): bool => interface_exists(\Mortel\Contracts\TenantResolver::class), 'framework present');
+
+it('does not bind the TenantResolver contract when the framework is absent', function (): void {
+    expect(app()->bound(\Mortel\Contracts\TenantResolver::class))->toBeFalse();
+})->skip(fn (): bool => interface_exists(\Mortel\Contracts\TenantResolver::class), 'framework present');
+
+it('binds StanclTenantResolver when the framework interface is present', function (): void {
+    expect(app(\Mortel\Contracts\TenantResolver::class))
+        ->toBeInstanceOf(\App\Support\StanclTenantResolver::class);
+})->skip(fn (): bool => ! interface_exists(\Mortel\Contracts\TenantResolver::class), 'framework absent (suggest)');
+
+it('flips tenancy()->initialized around initialize/end', function (): void {
+    $tenant = Tenant::create(['slug' => 'acme']);
+
+    expect(tenancy()->initialized)->toBeFalse();
+
+    tenancy()->initialize($tenant);
+    expect(tenancy()->initialized)->toBeTrue();
+    expect(tenant()->getTenantKey())->toBe($tenant->getTenantKey());
+
+    tenancy()->end();
+    expect(tenancy()->initialized)->toBeFalse();
+});
