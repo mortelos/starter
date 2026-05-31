@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Contracts\GovernanceGate;
+use App\Models\Policy;
+use App\Models\Role;
+use App\Models\Tenant;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
+// End tenancy so the next test's RefreshDatabase migrates the CENTRAL connection,
+// not the swapped tenant one (otherwise: "migrations already exists" / VACUUM).
+afterEach(function (): void {
+    if (tenancy()->initialized) {
+        tenancy()->end();
+    }
+
+    foreach (glob(database_path('tenant*.sqlite')) as $file) {
+        @unlink($file);
+    }
+});
+
+/**
+ * Validates the role/policy hook the isolation test cannot reach (UTEQ-528).
+ *
+ * The gate spans both connections under the database driver: the central pivot
+ * (User -> tenant_user) and the tenant-database Role/Policy. It only works if
+ * User is pinned to the central connection (User.tenants.snippet step 2). If the
+ * pin is missing, the User write below throws `no such table: users`.
+ *
+ * Adjust placement for the row driver: Role/Policy are scoped tables there, but
+ * the canManage assertions are identical.
+ */
+function ownerInTenant(): array
+{
+    $tenant = Tenant::create(['slug' => 'acme']);
+    $user = User::create(['name' => 'Owner', 'email' => 'owner@acme.test', 'password' => bcrypt('secret')]);
+    $user->tenants()->attach($tenant->getTenantKey(), ['role_id' => 'owner']);
+
+    tenancy()->initialize($tenant);
+    Role::create(['id' => 'owner', 'name' => 'Owner', 'trust_config' => []]);
+
+    return [$user, $tenant];
+}
+
+it('allows an owner whose role has an explicit allow policy', function (): void {
+    [$user] = ownerInTenant();
+    Policy::create(['id' => 'p1', 'role_id' => 'owner', 'action' => 'governance.manage', 'effect' => 'allow']);
+
+    expect(app(GovernanceGate::class)->canManage($user))->toBeTrue();
+});
+
+it('denies by default when no allow policy exists', function (): void {
+    [$user] = ownerInTenant();
+
+    expect(app(GovernanceGate::class)->canManage($user))->toBeFalse();
+});
+
+it('denies a user with no membership in the active tenant', function (): void {
+    ownerInTenant();
+    $stranger = User::create(['name' => 'X', 'email' => 'x@acme.test', 'password' => bcrypt('secret')]);
+
+    expect(app(GovernanceGate::class)->canManage($stranger))->toBeFalse();
+});
+
+it('reads and writes central User records under tenant context (central-pin regression)', function (): void {
+    ownerInTenant(); // tenancy initialized, default connection swapped to the tenant DB
+
+    // Throws "no such table: users" if User is not pinned to the central connection.
+    $created = User::create(['name' => 'Central', 'email' => 'central@acme.test', 'password' => bcrypt('secret')]);
+
+    expect(User::whereKey($created->getKey())->exists())->toBeTrue();
+});

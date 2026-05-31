@@ -14,6 +14,7 @@ match it. Copy the templates that fit the chosen driver:
 | `templates/tests/TenancyBootTest.php.stub` | `tests/Feature/TenancyBootTest.php` | both |
 | `templates/tests/DatabaseTenantIsolationTest.php.stub` | `tests/Feature/TenantIsolationTest.php` | `database` |
 | `templates/tests/RowTenantIsolationTest.php.stub` | `tests/Feature/TenantIsolationTest.php` | `row` |
+| `templates/tests/GovernanceGateTest.php.stub` | `tests/Feature/GovernanceGateTest.php` | both |
 
 What they prove:
 
@@ -25,6 +26,11 @@ What they prove:
 - **Isolation.** `database`: two tenants → two databases → A's row invisible in
   B. `row`: `tenant_id` auto-filled on create, reads scoped to the active
   tenant, central context unscoped.
+- **Governance gate (the cross-connection path).** `canManage()` allow→true,
+  deny-by-default→false, no-membership→false, and a `User` read/write under
+  tenant context — the central-pin regression. This is the part the isolation
+  test cannot reach: it spans the central pivot and the tenant-DB role/policy,
+  so it fails loudly if `User` is not pinned to the central connection.
 
 Test-DB notes:
 - `database` driver: sqlite-per-tenant keeps the isolation test self-contained

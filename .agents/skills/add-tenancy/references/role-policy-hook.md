@@ -95,3 +95,29 @@ The partial renders nothing unless the user belongs to >1 tenant, so a
 single-tenant user sees no switcher — exactly the stripped-starter behaviour,
 restored only where it is earned. With slug-keyed identification, switching is a
 link to the other tenant's `/{slug}` home.
+
+## 5. Central vs tenant connection — the placement that makes the gate work
+
+This is the decision that silently breaks the gate and switcher if you skip it.
+Under the **database** driver, `DatabaseTenancyBootstrapper` makes a separate
+`tenant` connection the **default** during a tenant request. So a model's home
+connection decides which database it reads:
+
+| Model / table | Connection (database driver) | Why |
+|---------------|------------------------------|-----|
+| `User`, `tenant_user` | **central** (pin via `getConnectionName()`) | users + membership are global; unpinned they hit the tenant DB and throw `no such table: users` |
+| `Tenant` | central (already, via stancl) | the registry of tenants is central |
+| `Role`, `Policy` | **tenant** (default during request) | roles/policies live per tenant; their migration is in `database/migrations/tenant/` |
+
+So `roleFor()` is a deliberate **cross-connection read**: the central pivot
+(`$user->tenants()`, which resolves on `Tenant`'s central connection) yields a
+`role_id`, and `Role`/`Policy` are read from the tenant database. Both halves
+work *only* because `User` is pinned central (see the `getConnectionName()` half
+of `User.tenants.snippet`) — without the pin, the first `User` query in tenant
+context (auth, the users page, the switcher's `$user->tenants()`) throws.
+
+The **row** driver is one database with no swap: omit the pin, and `Role`/`Policy`
+become scoped tables (`tenant_id` + `BelongsToTenant`) instead of tenant-DB
+tables. Verify this path with the generated `GovernanceGateTest`
+(`templates/tests/`), which exercises `canManage()` end to end and a `User`
+write under tenant context — the assertion the isolation test cannot make.

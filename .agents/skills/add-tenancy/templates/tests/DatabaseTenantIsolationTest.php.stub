@@ -8,8 +8,13 @@ use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
-// sqlite-per-tenant leaves a file per tenant; clean them up between tests.
+// End tenancy + clean per-tenant sqlite files so the next test's RefreshDatabase
+// migrates the CENTRAL connection, not the swapped tenant one.
 afterEach(function (): void {
+    if (tenancy()->initialized) {
+        tenancy()->end();
+    }
+
     foreach (glob(database_path('tenant*.sqlite')) as $file) {
         @unlink($file);
     }
