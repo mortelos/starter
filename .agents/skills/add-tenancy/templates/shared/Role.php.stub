@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+/**
+ * Tenant-scoped role (owner-editable DB data, D11).
+ *
+ * Mirrors the subset of Mortel\Models\Role the gate needs (name + trust_config),
+ * with a string primary key so role ids are portable to the framework. Lives in
+ * the TENANT database under the `database` driver; under `row` it is a scoped
+ * table (add the BelongsToTenant trait + a tenant_id column).
+ */
+class Role extends Model
+{
+    public $incrementing = false;
+
+    protected $keyType = 'string';
+
+    protected $table = 'roles';
+
+    protected $fillable = [
+        'id',
+        'name',
+        'description',
+        'trust_config',
+    ];
+
+    protected $casts = [
+        'trust_config' => 'array',
+    ];
+
+    /**
+     * @return HasMany<Policy, $this>
+     */
+    public function policies(): HasMany
+    {
+        return $this->hasMany(Policy::class);
+    }
+}

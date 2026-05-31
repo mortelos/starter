@@ -1,0 +1,58 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Middleware;
+
+use App\Models\Tenant;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+/**
+ * Token tenant identification (R3) — for MCP / API routes.
+ *
+ * Framework is ambient and never parses the request; it reads the already
+ * initialized tenant. So the host supplies it. For non-browser callers there is
+ * no slug in the URL, so the active tenant comes from a `tenant_id` claim on the
+ * authenticated token.
+ *
+ * ADAPT POINT: how you read the claim depends on the portal's token stack
+ * (Sanctum personal-access-token abilities, Passport JWT claims, a custom
+ * guard). The default below reads a `tenant_id` ability/attribute off the
+ * current access token; replace the `claimedTenantId()` body to match your
+ * issuance. The middleware contract — resolve a tenant, initialize tenancy,
+ * order before framework's ResolveRole/EnforcePolicy — does not change.
+ */
+final class IdentifyTenantByToken
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        $tenantId = $this->claimedTenantId($request);
+
+        if ($tenantId !== null) {
+            $tenant = Tenant::query()->whereKey($tenantId)->first();
+
+            abort_if($tenant === null, 403, 'Token tenant not found.');
+
+            tenancy()->initialize($tenant);
+        }
+
+        return $next($request);
+    }
+
+    private function claimedTenantId(Request $request): ?string
+    {
+        $user = $request->user();
+
+        if ($user === null || ! method_exists($user, 'currentAccessToken')) {
+            return null;
+        }
+
+        $token = $user->currentAccessToken();
+
+        $claim = $token?->tenant_id ?? null;
+
+        return is_string($claim) && $claim !== '' ? $claim : null;
+    }
+}

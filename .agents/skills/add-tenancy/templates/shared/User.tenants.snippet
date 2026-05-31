@@ -1,0 +1,18 @@
+// === Merge into app/Models/User.php ===
+//
+// Add these imports:
+//   use App\Models\Tenant;
+//   use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+//
+// Add this relation. The pivot carries the per-tenant role_id the gate reads.
+// A user with >1 tenant here is what reinstates the switcher.
+
+/**
+ * @return BelongsToMany<Tenant, $this>
+ */
+public function tenants(): BelongsToMany
+{
+    return $this->belongsToMany(Tenant::class, 'tenant_user')
+        ->withPivot('role_id')
+        ->withTimestamps();
+}
