@@ -13,11 +13,6 @@ new class extends Component {
 
     public bool $sidebar = false;
 
-    /** @var list<array{id: string, name: string, is_current: bool}> */
-    public array $tenants = [];
-
-    public string $currentTenantId = '';
-
     public function mount(): void
     {
         $user = auth()->user();
@@ -28,15 +23,6 @@ new class extends Component {
 
         $this->userName = $user->name;
         $this->userEmail = $user->email;
-        $this->currentTenantId = (string) session('tenant_id', '');
-
-        if (method_exists($user, 'tenants')) {
-            $this->tenants = $user->tenants()->get()->map(fn ($tenant) => [
-                'id' => $tenant->id,
-                'name' => $tenant->name ?? $tenant->id,
-                'is_current' => $tenant->id === $this->currentTenantId,
-            ])->all();
-        }
     }
 }; ?>
 
@@ -60,29 +46,6 @@ new class extends Component {
         </flux:menu.heading>
 
         <flux:menu.separator />
-
-        @if (count($tenants) > 1)
-            <flux:menu.heading>Organisaties</flux:menu.heading>
-
-            @foreach ($tenants as $tenant)
-                <form method="POST" action="{{ route('auth.tenant-store') }}">
-                    @csrf
-                    <input type="hidden" name="tenant_id" value="{{ $tenant['id'] }}">
-                    <flux:menu.item type="submit">
-                        <div class="flex items-center gap-2">
-                            @if ($tenant['is_current'])
-                                <flux:icon.check variant="mini" class="size-4 text-accent" />
-                            @else
-                                <span class="size-4"></span>
-                            @endif
-                            {{ $tenant['name'] }}
-                        </div>
-                    </flux:menu.item>
-                </form>
-            @endforeach
-
-            <flux:menu.separator />
-        @endif
 
         <flux:menu.item icon="cog-6-tooth" href="{{ route('settings') }}" wire:navigate>
             Instellingen

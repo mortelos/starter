@@ -19,7 +19,6 @@ final class StarterDoctor extends Command
             'starter.auth.controllers.password_login',
             'starter.auth.controllers.passkey_authenticated',
             'starter.auth.controllers.accept_invitation',
-            'starter.auth.controllers.tenant_select',
         ];
 
         $missing = [];
@@ -53,7 +52,7 @@ final class StarterDoctor extends Command
 
         $webRoutes = file_get_contents(base_path('routes/web.php')) ?: '';
         if (! str_contains($webRoutes, "require __DIR__.'/starter.php'")) {
-            $this->components->warn("routes/web.php does not require routes/starter.php");
+            $this->components->warn('routes/web.php does not require routes/starter.php');
         } else {
             $this->components->info('routes/web.php requires starter.php');
         }

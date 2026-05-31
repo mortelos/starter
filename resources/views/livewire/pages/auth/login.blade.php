@@ -11,7 +11,7 @@ class extends Component {
     public function mount(): void
     {
         if (auth()->check()) {
-            $this->redirect(route('auth.tenant-select'), navigate: true);
+            $this->redirect(route('home'), navigate: true);
         }
     }
 }; ?>

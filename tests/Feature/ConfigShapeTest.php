@@ -21,7 +21,6 @@ it('exposes the complete auth contract surface', function (): void {
         'passkey_authenticated',
         'passkey_authentication_options',
         'password_login',
-        'tenant_select',
     ]);
 });
 

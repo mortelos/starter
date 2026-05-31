@@ -6,7 +6,6 @@ use App\Actions\Auth\ResolvePostLoginRedirect;
 use App\Http\Controllers\Auth\AcceptInvitationController;
 use App\Http\Controllers\Auth\PasskeyAuthenticatedController;
 use App\Http\Controllers\Auth\PasswordLoginController;
-use App\Http\Controllers\Auth\TenantSelectController;
 
 return [
 
@@ -20,7 +19,6 @@ return [
             'passkey_authenticated' => PasskeyAuthenticatedController::class,
             'passkey_authentication_options' => null,
             'password_login' => PasswordLoginController::class,
-            'tenant_select' => TenantSelectController::class,
         ],
     ],
 

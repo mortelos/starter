@@ -21,7 +21,7 @@ it('serves the login page', function (): void {
     get('/login')->assertOk();
 });
 
-it('completes the default password login tenant select dashboard flow', function (): void {
+it('completes the default password login to dashboard flow', function (): void {
     $user = User::factory()->create([
         'email' => 'admin@example.test',
     ]);
@@ -29,9 +29,9 @@ it('completes the default password login tenant select dashboard flow', function
     post('/auth/login', [
         'email' => $user->email,
         'password' => 'password',
-    ])->assertRedirect('/auth/tenant-select');
+    ])->assertRedirect(route('home'));
 
-    get('/auth/tenant-select')->assertRedirect('/dashboard');
+    get('/')->assertRedirect('/dashboard');
 
     get('/dashboard')->assertOk();
 });

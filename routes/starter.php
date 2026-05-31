@@ -20,14 +20,8 @@ Route::get('/', function () use ($starterClass) {
         return redirect()->route('login');
     }
 
-    $tenantId = session('tenant_id');
-
-    if ($tenantId === null) {
-        return redirect()->route('auth.tenant-select');
-    }
-
     return redirect(app($starterClass('starter.auth.post_login_redirect_resolver'))
-        ->execute(Auth::user(), $tenantId));
+        ->execute(Auth::user()));
 })->name('home');
 
 Route::middleware(['web'])->group(function () use ($starterClass): void {
@@ -53,18 +47,13 @@ Route::middleware(['web'])->group(function () use ($starterClass): void {
         ->middleware('throttle:auth')
         ->name('invite.store');
 
-    Route::middleware('auth')->group(function () use ($starterClass): void {
+    Route::middleware('auth')->group(function (): void {
         Route::livewire('/onboarding', 'starter::pages.onboarding.onboarding')->name('onboarding');
         Route::livewire('/dashboard', 'starter::pages.dashboard.dashboard')->name('dashboard');
         Route::livewire('/inbox', 'starter::pages.inbox.inbox')->name('inbox');
         Route::livewire('/governance', 'starter::pages.governance.governance')->name('governance');
         Route::livewire('/users', 'starter::pages.users.users')->name('users');
         Route::livewire('/settings', 'starter::pages.settings.settings')->name('settings');
-
-        Route::get('/auth/tenant-select', [$starterClass('starter.auth.controllers.tenant_select'), 'show'])
-            ->name('auth.tenant-select');
-        Route::post('/auth/tenant-select', [$starterClass('starter.auth.controllers.tenant_select'), 'store'])
-            ->name('auth.tenant-store');
 
         Route::post('/logout', function () {
             Auth::logout();

@@ -73,7 +73,7 @@ class extends Component {
             throw new LogicException("Starter governance access resolver [{$resolver}] must implement canManage().");
         }
 
-        return (bool) $service->canManage(auth()->user(), session('tenant_id'));
+        return (bool) $service->canManage(auth()->user());
     }
 
     private function configuredComponent(string $key): ?string

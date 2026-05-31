@@ -28,6 +28,6 @@ final class PasswordLoginController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->route('auth.tenant-select');
+        return redirect()->route('home');
     }
 }
