@@ -61,19 +61,9 @@ return [
     'dashboard' => [
         'proud_message_resolver' => null,
 
-        'primary_widgets' => [
-            'dashboard.ai-performance',
-            'dashboard.team-activity',
-            'dashboard.overdue-items',
-            'dashboard.roi-overview',
-        ],
+        'primary_widgets' => [],
 
-        'secondary_widgets' => [
-            'dashboard.pending-proposals',
-            'dashboard.notification-list',
-            'dashboard.recent-activity',
-            'dashboard.deadline-list',
-        ],
+        'secondary_widgets' => [],
     ],
 
     'inbox' => [

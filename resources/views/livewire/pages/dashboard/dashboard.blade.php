@@ -8,24 +8,12 @@ new
 #[Layout('layouts::app')]
 #[Title('Dashboard')]
 class extends Component {
-    public string $role = 'member';
-
     public string $proudMessage = '';
 
     public function mount(): void
     {
         if (! auth()->check()) {
             $this->redirect(route('login'), navigate: true);
-            return;
-        }
-
-        $tenantId = session('tenant_id');
-        $this->role = auth()->user()->tenants()
-            ->wherePivot('tenant_id', $tenantId)
-            ->first()?->pivot?->role ?? 'member';
-
-        if (! in_array($this->role, ['owner', 'admin'])) {
-            $this->redirect(route('inbox'), navigate: true);
             return;
         }
 

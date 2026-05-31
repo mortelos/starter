@@ -2,10 +2,16 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\View;
+use Illuminate\Testing\PendingCommand;
 
 use function Pest\Laravel\artisan;
 use function Pest\Laravel\get;
+use function Pest\Laravel\post;
+
+uses(RefreshDatabase::class);
 
 it('redirects the root to the login page for guests', function (): void {
     get('/')->assertRedirect('/login');
@@ -13,6 +19,21 @@ it('redirects the root to the login page for guests', function (): void {
 
 it('serves the login page', function (): void {
     get('/login')->assertOk();
+});
+
+it('completes the default password login tenant select dashboard flow', function (): void {
+    $user = User::factory()->create([
+        'email' => 'admin@example.test',
+    ]);
+
+    post('/auth/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ])->assertRedirect('/auth/tenant-select');
+
+    get('/auth/tenant-select')->assertRedirect('/dashboard');
+
+    get('/dashboard')->assertOk();
 });
 
 it('throws LogicException when an auth controller is missing', function (): void {
@@ -35,8 +56,8 @@ it('exposes the starter view namespaces and shell pages', function (): void {
 it('reports the doctor command as green for the default config', function (): void {
     $command = artisan('starter:doctor');
 
-    expect($command)->toBeInstanceOf(\Illuminate\Testing\PendingCommand::class);
-    assert($command instanceof \Illuminate\Testing\PendingCommand);
+    expect($command)->toBeInstanceOf(PendingCommand::class);
+    assert($command instanceof PendingCommand);
 
     $command->assertSuccessful();
 });

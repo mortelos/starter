@@ -30,11 +30,13 @@ new class extends Component {
         $this->userEmail = $user->email;
         $this->currentTenantId = (string) session('tenant_id', '');
 
-        $this->tenants = $user->tenants()->get()->map(fn ($tenant) => [
-            'id' => $tenant->id,
-            'name' => $tenant->name ?? $tenant->id,
-            'is_current' => $tenant->id === $this->currentTenantId,
-        ])->all();
+        if (method_exists($user, 'tenants')) {
+            $this->tenants = $user->tenants()->get()->map(fn ($tenant) => [
+                'id' => $tenant->id,
+                'name' => $tenant->name ?? $tenant->id,
+                'is_current' => $tenant->id === $this->currentTenantId,
+            ])->all();
+        }
     }
 }; ?>
 

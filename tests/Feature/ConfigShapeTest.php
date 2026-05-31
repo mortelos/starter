@@ -45,12 +45,10 @@ it('defaults the password form component to the package blade', function (): voi
         ->toBe('mortelos-starter::auth.password-form');
 });
 
-it('lists default dashboard widgets', function (): void {
+it('leaves dashboard widgets empty until the host registers real components', function (): void {
     expect(config('starter.dashboard.primary_widgets'))
-        ->toContain('dashboard.ai-performance')
-        ->toContain('dashboard.team-activity');
+        ->toBe([]);
 
     expect(config('starter.dashboard.secondary_widgets'))
-        ->toContain('dashboard.pending-proposals')
-        ->toContain('dashboard.notification-list');
+        ->toBe([]);
 });
