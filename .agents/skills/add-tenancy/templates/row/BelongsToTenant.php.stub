@@ -1,0 +1,56 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models\Concerns;
+
+use App\Models\Scopes\TenantScope;
+use App\Models\Tenant;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+/**
+ * Apply to any tenant-scoped model under the ROW driver.
+ *
+ * Responsibilities:
+ *  - register the TenantScope global scope (read isolation);
+ *  - auto-fill `tenant_id` from the active tenant on create (write isolation),
+ *    so application code never sets it by hand in tenant context;
+ *  - expose a `tenant()` relation.
+ *
+ * Override getTenantKeyName() on a model if its foreign key is not `tenant_id`.
+ *
+ * @property string $tenant_id
+ */
+trait BelongsToTenant
+{
+    public static function bootBelongsToTenant(): void
+    {
+        static::addGlobalScope(new TenantScope);
+
+        static::creating(function ($model): void {
+            if ($model->getAttribute($model->getTenantKeyName()) !== null) {
+                return;
+            }
+
+            if (! tenancy()->initialized) {
+                return;
+            }
+
+            $tenant = tenant();
+
+            if ($tenant !== null) {
+                $model->setAttribute($model->getTenantKeyName(), $tenant->getTenantKey());
+            }
+        });
+    }
+
+    public function getTenantKeyName(): string
+    {
+        return 'tenant_id';
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class, $this->getTenantKeyName());
+    }
+}
