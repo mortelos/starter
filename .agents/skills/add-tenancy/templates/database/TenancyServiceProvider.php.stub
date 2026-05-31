@@ -1,0 +1,89 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Providers;
+
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
+use Stancl\Tenancy\Events;
+use Stancl\Tenancy\Jobs;
+use Stancl\Tenancy\Listeners;
+use Stancl\Tenancy\Middleware;
+
+/**
+ * Wires stancl's tenant database lifecycle (DATABASE driver only).
+ *
+ * Creating a Tenant row fires TenantCreated -> CreateDatabase -> MigrateDatabase
+ * (-> SeedDatabase). Deleting fires DeleteDatabase. Never create tenant
+ * databases by hand; let these events do it.
+ *
+ * Register this provider in bootstrap/providers.php.
+ *
+ * The `row` driver does NOT use this provider (it has no per-tenant database
+ * lifecycle); delete it when scaffolding row.
+ */
+final class TenancyServiceProvider extends ServiceProvider
+{
+    /**
+     * @return array<class-string, array<int, class-string|callable>>
+     */
+    public function events(): array
+    {
+        return [
+            Events\CreatingDatabase::class => [],
+            Events\DatabaseCreated::class => [],
+
+            Events\TenantCreated::class => [
+                Jobs\CreateDatabase::class,
+                Jobs\MigrateDatabase::class,
+                // Jobs\SeedDatabase::class, // enable once you have a tenant seeder
+            ],
+
+            Events\SavingTenant::class => [],
+            Events\TenantSaved::class => [],
+            Events\UpdatingTenant::class => [],
+            Events\TenantUpdated::class => [],
+
+            Events\DeletingTenant::class => [
+                Jobs\DeleteDatabase::class,
+            ],
+            Events\TenantDeleted::class => [],
+
+            // Tenancy bootstrap / cleanup around an initialized tenant.
+            Events\TenancyInitialized::class => [
+                Listeners\BootstrapTenancy::class,
+            ],
+            Events\TenancyEnded::class => [
+                Listeners\RevertToCentralContext::class,
+            ],
+
+            Events\TenancyBootstrapped::class => [],
+            Events\RevertingToCentralContext::class => [],
+            Events\RevertedToCentralContext::class => [],
+        ];
+    }
+
+    public function register(): void
+    {
+        //
+    }
+
+    public function boot(): void
+    {
+        $this->bootEvents();
+    }
+
+    private function bootEvents(): void
+    {
+        foreach ($this->events() as $event => $listeners) {
+            foreach ($listeners as $listener) {
+                if ($listener instanceof \Closure) {
+                    \Illuminate\Support\Facades\Event::listen($event, $listener);
+                } else {
+                    \Illuminate\Support\Facades\Event::listen($event, $listener);
+                }
+            }
+        }
+    }
+}

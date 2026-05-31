@@ -1,0 +1,35 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * Example TENANT migration (DATABASE driver).
+ *
+ * Lives in database/migrations/tenant/ and runs ONLY against a tenant's own
+ * database when tenancy is initialized (via `php artisan tenants:migrate`).
+ * Because each tenant has its own database, there is NO tenant_id column here —
+ * the database itself is the isolation boundary.
+ *
+ * Replace this with your real per-tenant tables. It exists so the isolation
+ * test has something to write and read per tenant.
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('notes', function (Blueprint $table): void {
+            $table->id();
+            $table->string('body');
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('notes');
+    }
+};

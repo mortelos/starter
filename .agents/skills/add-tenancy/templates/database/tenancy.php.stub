@@ -1,0 +1,81 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\Tenant;
+
+/**
+ * stancl/tenancy config — DATABASE driver (database-per-tenant).
+ *
+ * The single line that makes this database-per-tenant is
+ * DatabaseTenancyBootstrapper in `bootstrappers`. The `row` driver ships an
+ * otherwise-identical file with that one bootstrapper removed.
+ *
+ * This is a trimmed, opinionated version of stancl's published config. If you
+ * need a knob that is not here, publish the full vendor config and diff.
+ */
+return [
+    'tenant_model' => Tenant::class,
+    'id_generator' => Stancl\Tenancy\UUIDGenerator::class,
+
+    // Slug-keyed identification (R3). The route/path key column is `slug`.
+    'tenant_key_column' => 'slug',
+
+    'central_domains' => [
+        // The host's own domain(s). Requests to these are NOT tenant requests.
+        env('CENTRAL_DOMAIN', 'localhost'),
+    ],
+
+    /*
+     | The driver. DatabaseTenancyBootstrapper performs the connection swap.
+     | Drop ONLY that line to turn this into the `row` driver.
+     */
+    'bootstrappers' => [
+        Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper::class,
+        Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper::class,
+        Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper::class,
+        Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper::class,
+    ],
+
+    'database' => [
+        'central_connection' => env('DB_CONNECTION', 'central'),
+
+        // Connection whose settings stancl clones for each tenant database.
+        'template_tenant_connection' => null,
+
+        // Tenant database name = prefix + tenant id + suffix.
+        // For sqlite-per-tenant tests, suffix '.sqlite' yields one file each.
+        'prefix' => 'tenant',
+        'suffix' => '',
+
+        'managers' => [
+            'sqlite' => Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager::class,
+            'mysql' => Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager::class,
+            'pgsql' => Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager::class,
+        ],
+    ],
+
+    'cache' => [
+        'tag_base' => 'tenant',
+    ],
+
+    'filesystem' => [
+        'suffix_base' => 'tenant',
+        'disks' => ['local', 'public'],
+        'root_override' => [
+            'local' => '%storage_path%/app/',
+            'public' => '%storage_path%/app/public/',
+        ],
+        'suffix_storage_path' => true,
+    ],
+
+    'migration_parameters' => [
+        '--force' => true,
+        '--path' => [database_path('migrations/tenant')],
+        '--realpath' => true,
+    ],
+
+    'seeder_parameters' => [
+        '--class' => 'DatabaseSeeder',
+    ],
+];
