@@ -6,6 +6,14 @@ is the README contract tables plus `config/starter.php` defaults and
 `routes/starter.php`. Detect what is already done in phase [0] and only fill
 gaps; do not clobber an already-wired host.
 
+**Two host shapes.** Normally you build a portal in a project *created from*
+`mortelos/starter`, so the package lives in `vendor/mortelos/starter` and section A
+below applies as written. If instead you are working *inside the starter template
+itself* (rare, e.g. an eval host), there is no `vendor/mortelos/starter`, the
+bridge, layout and config are already the local source, so section A is "confirm
+it boots", not "require a vendor bridge". In both cases the rule is the same: the
+base is assumed sound, verify and fill gaps, do not rebuild what already boots.
+
 ## A. Make the app boot (required)
 
 These three edits + the five auth contracts are the minimum. The app boots as
@@ -49,7 +57,10 @@ Controllers\Auth\…`, `App\Actions\Auth\…`). If a required key is empty, the 
 file throws `LogicException: Missing starter route class config [...]`
 (`routes/starter.php:13`), that means an `auth.controllers.*` key is still null.
 
-**Checkpoint:** confirm `login → tenant-select → dashboard` works before moving on.
+**Verify:** confirm `login → tenant-select → dashboard` works before continuing.
+A non-booting base is the one hard stop before the plan gate (phase [5]); fix it,
+then carry the boot status into the gate rather than asking for a separate
+approval here.
 
 ## B. Navigation, search, shell (optional, fill as the portal needs)
 
@@ -129,6 +140,22 @@ degrade to unstyled stacked blocks (sidebar on top, content flowing below it)
 even though plain Tailwind utilities still work. `npm run build` will not reveal
 this; only a real browser shows the broken shell. Mirror a known-good host's
 `resources/css/app.css`.
+
+**Second silent killer: Livewire is never started, so every button is dead.**
+The starter layout uses `@livewireScriptConfig` (config-only, manual mode) and
+ships an empty `resources/js/app.js`. The Livewire runtime is then never loaded:
+pages render fine but `wire:click` / `wire:model` do nothing, no
+`/livewire/update` request fires, and there is no console error (`window.Livewire`
+is `undefined`). Fix in `resources/js/app.js`:
+
+```js
+import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
+window.Alpine = Alpine;
+Livewire.start();
+```
+
+then `npm run build`. Verify in a real browser that `window.Livewire` is an
+object and a `wire:click` button fires `POST /livewire/update` (200).
 
 Checklist:
 
