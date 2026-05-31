@@ -109,6 +109,57 @@ host must provide: users, tenant memberships, roles, invitations, tenant
 selection, super-admin behavior, data isolation, optional branding. Keep tenant
 selection and membership host-owned unless a reusable package boundary is proven.
 
+## F. Assets, Vite and the Herd `.test` domain (required)
+
+On a Herd-served `.test` domain the layout silently breaks (no CSS, blank or
+unstyled shell) when the asset wiring assumes a different URL/protocol than the
+browser actually uses. `npm run build` does **not** fix any of these. Verify in a
+real browser, not just `artisan serve` (which serves http on a port and hides the
+problem).
+
+**Most common cause, and the one to check first: the Flux stylesheet is not
+imported.** `resources/css/app.css` must contain
+`@import '../../vendor/livewire/flux/dist/flux.css';` directly after
+`@import 'tailwindcss';`, plus `@source` globs for the blade views
+(`@source '../**/*.blade.php';`, the Flux stubs, and package views) and the
+surface theme vars the shell uses (`--color-surface`, `--color-surface-alt`,
+`--color-surface-hover`, `--color-surface-active`). Without the Flux import,
+Tailwind compiles without Flux's component CSS, so `flux:sidebar` / `flux:main`
+degrade to unstyled stacked blocks (sidebar on top, content flowing below it)
+even though plain Tailwind utilities still work. `npm run build` will not reveal
+this; only a real browser shows the broken shell. Mirror a known-good host's
+`resources/css/app.css`.
+
+Checklist:
+
+1. **Secure the site in Herd.** A parked-but-unsecured site has no https vhost and
+   no cert, yet the browser still resolves `https://<slug>.test` (typed-URL default
+   or HSTS) and falls through to Herd's default handler: a cert error and, in
+   practice, a 500 (the default handler can route to a different PHP runtime than
+   the one your dependencies require). Run `herd secure <slug>`. This is a
+   Herd-environment change (a generated nginx vhost + cert), not a repo change, so
+   it is not committed with the portal. Confirm
+   `~/Library/Application Support/Herd/config/valet/Nginx/<slug>.test` exists and
+   uses `fastcgi_pass $herd_sock;` (routes to the active PHP, e.g. 8.4).
+2. **Set `APP_URL=https://<slug>.test`.** Laravel generates in-request asset URLs
+   (`@vite`/`asset()`) from the incoming request scheme, so a stale
+   `http://localhost` does **not** by itself break CSS on a secured https domain —
+   the page still renders once the site is secured. Set it anyway as hygiene for
+   absolute URLs built outside a request context (mail, queued jobs, redirects,
+   signed URLs), which fall back to `APP_URL`. (`ASSET_URL` only when assets live on
+   a separate host; leave unset otherwise.)
+3. **No stale `public/hot`.** If a `public/hot` file exists (left by a previous
+   `npm run dev`), `@vite` loads every asset from the Vite dev-server
+   (`https://<slug>.test:<port>`); when that server is not running you get no CSS.
+   `npm run build` does **not** delete it. Stop the dev-server and `rm public/hot`,
+   or keep `npm run dev` running. (A running dev-server with a `public/hot` is fine
+   — that is the normal hot-reload mode.)
+4. **Verify assets load over `/build/`.** `curl -sk https://<slug>.test/login` and
+   confirm the `<link>`/`<script>` tags point at `https://<slug>.test/build/...`
+   (built files), not at a dev-server port; then confirm each returns `200`
+   (`text/css` / `text/javascript`). Flux serves its own assets at
+   `https://<slug>.test/flux/flux.js` — that must be `200` too.
+
 ## Troubleshooting (from the README)
 
 | Symptom | Cause |
