@@ -24,7 +24,8 @@ its section numbers (§1–§11) as the source of truth; the references here onl
 This skill ships inside the host app at `.agents/skills/portal-kickoff/`.
 Portal work writes into the host app (`App\...`, `config/starter.php`,
 `routes/web.php`, host policies), so run the skill from the host-app working
-directory. No symlink is needed in projects created from `mortelos/starter`.
+directory. `.claude/skills/portal-kickoff/` is a symlink for Claude Code
+discovery. Treat `.agents/skills/portal-kickoff/` as the single source of truth.
 
 ## Workflow
 
