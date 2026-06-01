@@ -22,6 +22,22 @@ mechanical find-replace `App\Access → Mortel\Access` (and, inside `ActorContex
 interfaces: framework maps `Mortel\* → src/` via PSR-4, so a host shim under
 `Mortel\*` would fatal on a duplicate class once framework installs (R4).
 
+> **Detect-and-extend, don't regenerate (UTEQ-522 baseline).** Newer starters
+> ship this access seam already, as the *single-tenant* baseline: `App\Access\*`,
+> `App\Contracts\GovernanceGate`, `App\Enums\TrustLevel`, `App\Models\Role` +
+> `App\Models\Policy`, a `StarterGovernanceGate` bound in `StarterServiceProvider`,
+> a `role_user` pivot, and the roles/policies migration in
+> `database/migrations/` (no `tenant_id`). When these exist, **extend** them into
+> the multi-tenant shape rather than overwriting:
+> swap `role_user` for the central `tenant_user` pivot (membership carries
+> `role_id`), add the central/tenant connection split (pin `User` central, move
+> the roles/policies migration to `database/migrations/tenant/` for the database
+> driver or add `tenant_id` + `BelongsToTenant` for the row driver), and replace
+> the bound `StarterGovernanceGate` with `TenantGovernanceGate`. The `App\Access\*`
+> + `TrustLevel` + `GovernanceGate` contract + `Role`/`Policy` models are already
+> framework-aligned 1:1, so leave them untouched. Only generate from scratch when
+> the host has none of these.
+
 ## 2. The page gate (R7)
 
 | Template | Destination |

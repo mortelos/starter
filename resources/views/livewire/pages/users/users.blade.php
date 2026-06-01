@@ -26,7 +26,7 @@ class extends Component {
             return;
         }
 
-        if (! $this->usersResolver()->canManage()) {
+        if (! $this->canManageUsers()) {
             $this->redirect(route('dashboard'), navigate: true);
 
             return;
@@ -37,19 +37,60 @@ class extends Component {
 
     public function loadData(): void
     {
-        $resolver = $this->usersResolver();
+        // The users resolver is an optional host integration. Until the portal
+        // wires one, there is no member/invite data source — render empty rather
+        // than fatal. Access is already gated by canManageUsers() above.
+        $resolver = $this->optionalUsersResolver();
+
+        if ($resolver === null) {
+            $this->members = [];
+            $this->pendingInvites = [];
+
+            return;
+        }
 
         $this->members = $resolver->members();
         $this->pendingInvites = $resolver->pendingInvites();
     }
 
+    private function canManageUsers(): bool
+    {
+        $resolver = $this->optionalUsersResolver();
+
+        if ($resolver !== null && method_exists($resolver, 'canManage')) {
+            return (bool) $resolver->canManage();
+        }
+
+        // No users resolver configured: fall back to the deny-by-default
+        // governance gate's `users.manage` ability (keeps config untouched).
+        if (app()->bound(\App\Contracts\GovernanceGate::class)) {
+            $gate = app(\App\Contracts\GovernanceGate::class);
+
+            if (method_exists($gate, 'allows')) {
+                return (bool) $gate->allows(auth()->user(), 'users.manage');
+            }
+        }
+
+        return false;
+    }
 
     private function usersResolver(): object
+    {
+        $resolver = $this->optionalUsersResolver();
+
+        if ($resolver === null) {
+            throw new LogicException('Missing starter users resolver config [starter.users.resolver].');
+        }
+
+        return $resolver;
+    }
+
+    private function optionalUsersResolver(): ?object
     {
         $resolver = config('starter.users.resolver');
 
         if (! is_string($resolver) || $resolver === '') {
-            throw new LogicException('Missing starter users resolver config [starter.users.resolver].');
+            return null;
         }
 
         return app($resolver);

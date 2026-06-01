@@ -34,7 +34,12 @@ class extends Component {
             abort(403);
         }
 
-        $this->roles = $this->governanceResolver()->roles();
+        // The governance resolver is an optional host integration. Until the
+        // portal wires one there is no AI-role data source, so render the empty
+        // state rather than fatal (the owner still reaches the roles screen via
+        // the header link). A configured-but-invalid resolver still throws.
+        $resolver = $this->optionalGovernanceResolver();
+        $this->roles = $resolver !== null ? $resolver->roles() : [];
         $this->selectedRoleId = $this->roles[0]['id'] ?? '';
         $this->proposalQueueComponent = $this->configuredComponent('starter.governance.proposal_queue_component');
         $this->statsComponent = $this->configuredComponent('starter.governance.stats_component');
@@ -50,10 +55,21 @@ class extends Component {
 
     private function governanceResolver(): object
     {
+        $resolver = $this->optionalGovernanceResolver();
+
+        if ($resolver === null) {
+            throw new LogicException('Missing starter governance resolver config [starter.governance.resolver].');
+        }
+
+        return $resolver;
+    }
+
+    private function optionalGovernanceResolver(): ?object
+    {
         $resolver = config('starter.governance.resolver');
 
         if (! is_string($resolver) || $resolver === '') {
-            throw new LogicException('Missing starter governance resolver config [starter.governance.resolver].');
+            return null;
         }
 
         return app($resolver);
@@ -64,6 +80,13 @@ class extends Component {
         $resolver = config('starter.governance.access_resolver');
 
         if (! is_string($resolver) || $resolver === '') {
+            // No explicit resolver configured: fall back to the deny-by-default
+            // governance gate when the host binds one (keeps config/starter.php
+            // untouched). Absence of a binding stays deny-by-default.
+            if (app()->bound(\App\Contracts\GovernanceGate::class)) {
+                return app(\App\Contracts\GovernanceGate::class)->canManage(auth()->user());
+            }
+
             return false;
         }
 
@@ -91,6 +114,10 @@ class extends Component {
             <h1 class="mt-1 text-2xl font-semibold text-gray-900">Governance</h1>
             <p class="mt-1 text-sm text-gray-500">Ontwerp, review en trace policy voorstellen voordat ze actief worden.</p>
         </div>
+        <a href="{{ route('governance.roles') }}" wire:navigate
+            class="inline-flex items-center gap-1.5 self-start rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 lg:self-auto">
+            Rollen &amp; policies
+        </a>
         @if($roles !== [])
             <select wire:model.live="selectedRoleId" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                 @foreach($roles as $role)
