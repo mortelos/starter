@@ -172,11 +172,9 @@ class extends Component {
             <h1 class="mt-1 text-2xl font-semibold text-zinc-900">Rollen &amp; policies</h1>
             <p class="mt-1 text-sm text-zinc-500">Beheer wie wat mag. Toegang is deny-by-default: niemand mag iets totdat een rol een expliciete <span class="font-medium text-zinc-700">allow</span>-policy krijgt.</p>
         </div>
-        <a href="{{ route('governance') }}" wire:navigate
-            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50">
-            <flux:icon name="arrow-left" variant="micro" />
+        <flux:button :href="route('governance')" wire:navigate icon="arrow-left" variant="ghost" size="sm" class="shrink-0">
             Terug naar Governance
-        </a>
+        </flux:button>
     </div>
 
     <flux:callout class="mb-6" icon="shield-check" variant="secondary">
@@ -253,8 +251,9 @@ class extends Component {
                                     @endif
                                     <code class="text-sm text-zinc-700">{{ $policy['action'] }}</code>
                                 </div>
-                                <button type="button" wire:click="deletePolicy('{{ $policy['id'] }}')"
-                                    class="text-sm font-medium text-red-600 transition hover:text-red-700">Verwijderen</button>
+                                <flux:button type="button" variant="ghost" size="sm"
+                                    wire:click="deletePolicy('{{ $policy['id'] }}')"
+                                    class="text-red-600 hover:text-red-700">Verwijderen</flux:button>
                             </div>
                         @endforeach
                     </div>
