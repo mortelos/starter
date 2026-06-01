@@ -97,6 +97,44 @@ DB engine.
 
 ---
 
+## 3.2 W1 pilot findings (verified on branch, 2026-06-01)
+
+W1 was piloted before fanning out W2-W4. `composer require mortelos/framework ^0.4`
+(via VCS repo) installed v0.4.2 + `laravel/mcp` + `stancl/tenancy` +
+`spatie/laravel-event-sourcing`; the starter still boots on SQLite. A
+discriminating governance spike (single-tenant resolver → seed framework role +
+`tenant_user` pivot → real `EntitySearch` visibility path) returned a
+**non-denied `ActorContext` and a visible entity on SQLite — PASS**. So the
+operate-node shape is provable single-tenant. The spike surfaced four spec
+corrections:
+
+- **F1 — single-tenant needs its OWN resolver, not the uteqos middleware.**
+  `InitializeTenancyFromMcpToken` is the multi-tenant/stancl path (connection
+  swap, Passport token `tenant_id`). Ported verbatim to a single-tenant starter
+  it yields `TenantResolver::id() === null`, and `ContextAccessResolver::resolve`
+  returns null when tenant is null (`mortelos-framework` `ActorContextResolver.php:66`)
+  → every actor becomes `DeniedActor` → tools connect but **silently deny
+  everything** (no exception). The starter must bind a trivial single-tenant
+  `TenantResolver` returning one fixed tenant id. New wire point **W10**. (W4's
+  MCP-token middleware is only added later by `add-tenancy` for multi-tenant.)
+- **F2 — `tenant_user` is missing entirely.** It lives in framework's *landlord*
+  migrations, not the tenant set the host publishes. The host must ship it (W3),
+  and `user_id` must be a **string** (framework expects `string(26)`; the bare
+  starter's `users.id` is an auto-increment integer — reconcile in W3).
+- **F3 — framework migrations do not auto-load.** They are published via
+  `php artisan vendor:publish --tag=os-core-migrations` into
+  `database/migrations/tenant`. The host must run this and migrate them. W1
+  substep / W3.
+- **F4 — roles/policies collision (decided: framework wins).** Framework ships
+  `roles`/`policies` tables (with `org_id`, `branch_id`, audit cols) that collide
+  with the starter's own UTEQ-522 mirror (`roles`/`policies` + `app/Models/Role`,
+  `Policy`, the 290-line `app/Access/*` layer + governance/roles admin screens).
+  Remove the starter mirror, rebind the policy layer onto framework's
+  `Mortel\Models\Role` + `ContextAccessResolver`. New wire point **W11**;
+  amends/depends on UTEQ-522.
+
+---
+
 ## 4. Architecture — the MCP seam
 
 The host owns three things; the framework owns the rest. Mirror of the verified
@@ -189,6 +227,9 @@ framework (`src/Access/TenantTokenResolver.php`) and is host-agnostic.
 | W7 | Embeddings toggle | `config/mortel.php` | `embeddings.enabled` default false; on = pgsql + pgvector. Semantic tools (`AskTool`) degrade gracefully when off |
 | W8 | Doctor + smoke coverage | `StarterDoctor`, `tests/Feature` | Smoke: `login → dashboard` (SQLite); MCP boot smoke; doctor checks framework bound + MCP route registered |
 | W9 | `AgentRun` graceful degrade | `mortelos/framework` `AgentRunTool` | Return "agent runtime not enabled" when no queue worker, instead of queueing a dead job (§7.1). Framework-side tweak |
+| W10 | Single-tenant `TenantResolver` binding | `app/Access` + provider | **Load-bearing (F1).** Bind a trivial resolver returning one fixed tenant id so governance yields a non-denied actor. Without it every tool silently denies. Replaces the null-resolver in single-tenant; `add-tenancy` later swaps in the stancl-backed resolver |
+| W11 | Remove starter roles/policies mirror; rebind onto framework | `app/Access`, `app/Models`, migrations, governance/roles screens | **F4.** Delete the UTEQ-522 mirror (`roles`/`policies` migrations, `App\Models\Role`/`Policy`, 290-line `app/Access/*`); rebind dashboard/governance gates onto `Mortel\Models\Role` + `ContextAccessResolver`. Amends UTEQ-522 |
+| W1b | Publish + migrate framework migrations | `database/migrations/tenant` | **F3.** `vendor:publish --tag=os-core-migrations`, then migrate. Substep of the foundation |
 
 ### 5.1 Test vs production matrix
 
@@ -238,23 +279,32 @@ never runs. Small framework-side tweak; tracked as a new wire point (W9).
 ## 8. Sequencing (no code until this spec is approved)
 
 ```
-approve spec
+spec approved · Linear UTEQ-538 + W1-W9 created · W1 piloted (done)
    │
    ▼
-Linear: amend UTEQ-518 (or new sub-project) with W1-W8
+FOUNDATION (revised by F1-F4)
+  W1   require framework            ✅ done (branch)
+  W1b  publish+migrate framework migrations          (F3)
+  W3   App\Models\Tenant + tenant_user (string user_id) (F2)
+  W11  remove roles/policies mirror, rebind on framework (F4)
+  W10  single-tenant TenantResolver binding          (F1, load-bearing)
+  W2   Passport (api guard, oauth, tenant_id on token)
+  W4   InitializeTenancyFromMcpToken (multi-tenant path, add-tenancy)
    │
    ▼
-W1-W4  baseline deps + tenant model + Passport        (foundation)
+W5    routes/ai.php + bootstrap mount                 (the seam)
    │
    ▼
-W5     routes/ai.php + bootstrap mount                 (the seam)
+W6    default seeder: 1 tenant + pivot + framework roles (unblocks tools)
    │
    ▼
-W6     default seeder (tenant + roles)                 (unblocks tools)
-   │
-   ▼
-W7-W8  embeddings toggle + doctor/smoke                (verify dual-engine)
+W7-W8 embeddings toggle + doctor/smoke + MCP smoke    (verify dual-engine)
+W9    AgentRun graceful degrade (framework-side, parallel)
    │
    ▼
 re-run setup-portal tests on framework baseline
 ```
+
+Note: W10 (single-tenant resolver) supersedes the spec's original assumption that
+W4's MCP-token middleware covers the baseline. W4 is now multi-tenant-only,
+deferred into `add-tenancy`. The single-tenant baseline binds W10 instead.
