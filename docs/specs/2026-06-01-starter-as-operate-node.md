@@ -2,7 +2,7 @@
 
 - **Date:** 2026-06-01
 - **Status:** Draft (awaiting review)
-- **Owner:** Nathan Jansen (UTEQ)
+- **Owner:** MortelOS team
 - **Scope:** `mortelos/starter` host app baseline + MCP runtime wiring
 - **Amends:** `docs/specs/2026-05-31-tenancy-strip-and-add-tenancy-skill-design.md`
   (the "framework is opt-in" premise; see §2)
@@ -29,7 +29,7 @@ Outcomes:
    the framework"*. The `add-tenancy` skill still owns the step from one tenant
    to many.
 
-Non-goal: turning the starter into the full uteqos monolith. We ship the
+Non-goal: turning the starter into the full reference OS host monolith. We ship the
 framework + MCP seam and one seeded tenant, not the channel/widget/chat packages.
 
 ---
@@ -69,7 +69,7 @@ The dual-engine path is not aspirational; the framework already implements it.
   (`…2026_03_27_195144_add_ivfflat_index_to_entities_embedding.php:12`).
 - **framework's own tests run on SQLite in-memory:** `phpunit.xml` sets
   `DB_CONNECTION=testing` / `DB_DATABASE=:memory:`; 34 test files pass that way.
-- **uteqos (the live OS host) runs Postgres** (`.env DB_CONNECTION=pgsql`).
+- **reference OS host (the live OS host) runs Postgres** (`.env DB_CONNECTION=pgsql`).
 
 Conclusion: the framework is already dual-engine. The starter inherits that for
 free. The earlier "Postgres-by-default kills the SQLite promise" concern was
@@ -108,7 +108,7 @@ discriminating governance spike (single-tenant resolver → seed framework role 
 operate-node shape is provable single-tenant. The spike surfaced four spec
 corrections:
 
-- **F1 — single-tenant needs its OWN resolver, not the uteqos middleware.**
+- **F1 — single-tenant needs its OWN resolver, not the reference OS host middleware.**
   `InitializeTenancyFromMcpToken` is the multi-tenant/stancl path (connection
   swap, Passport token `tenant_id`). Ported verbatim to a single-tenant starter
   it yields `TenantResolver::id() === null`, and `ContextAccessResolver::resolve`
@@ -127,18 +127,18 @@ corrections:
   substep / W3.
 - **F4 — roles/policies collision (decided: framework wins).** Framework ships
   `roles`/`policies` tables (with `org_id`, `branch_id`, audit cols) that collide
-  with the starter's own UTEQ-522 mirror (`roles`/`policies` + `app/Models/Role`,
+  with the starter's own internal tracking mirror (`roles`/`policies` + `app/Models/Role`,
   `Policy`, the 290-line `app/Access/*` layer + governance/roles admin screens).
   Remove the starter mirror, rebind the policy layer onto framework's
   `Mortel\Models\Role` + `ContextAccessResolver`. New wire point **W11**;
-  amends/depends on UTEQ-522.
+  amends/depends on internal tracking.
 
 ---
 
 ## 4. Architecture — the MCP seam
 
 The host owns three things; the framework owns the rest. Mirror of the verified
-uteqos mount (`uteqos/routes/ai.php:13-24`), rebranded for the starter.
+reference OS host mount, rebranded for the starter.
 
 ```
 ┌─ mortelos/framework (baseline dep) ─────────────────────────┐
@@ -219,16 +219,16 @@ framework (`src/Access/TenantTokenResolver.php`) and is host-agnostic.
 | # | Item | Where | Notes |
 |---|------|-------|-------|
 | W1 | Add `mortelos/framework` to require | `composer.json` | Baseline dep; pulls `laravel/mcp`, `stancl/tenancy`, event-sourcing |
-| W2 | Add Passport | `composer.json` + `config/auth.php` | New `api` guard (driver=passport); publish oauth migrations; `tenant_id` on `oauth_access_tokens` (mirror uteqos migration) |
+| W2 | Add Passport | `composer.json` + `config/auth.php` | New `api` guard (driver=passport); publish oauth migrations; `tenant_id` on `oauth_access_tokens` (mirror reference OS host migration) |
 | W3 | `App\Models\Tenant` + `tenant_user` pivot | `app/Models` + migration | Host-owned tenant model; `User::tenants()` belongsToMany |
-| W4 | `InitializeTenancyFromMcpToken` middleware | `app/Http/Middleware` | Port from uteqos; resolves seeded tenant when token carries none |
+| W4 | `InitializeTenancyFromMcpToken` middleware | `app/Http/Middleware` | Port from reference OS host; resolves seeded tenant when token carries none |
 | W5 | `routes/ai.php` + register in bootstrap | `routes/`, `bootstrap/app.php` | Mount server + middleware chain (§4.1) |
 | W6 | Default seeder: 1 tenant + admin pivot + roles/policies | `database/seeders` | **Load-bearing** (§3.1): without it every tool throws. Deny-by-default per D11 |
 | W7 | Embeddings toggle | `config/mortel.php` | `embeddings.enabled` default false; on = pgsql + pgvector. Semantic tools (`AskTool`) degrade gracefully when off |
 | W8 | Doctor + smoke coverage | `StarterDoctor`, `tests/Feature` | Smoke: `login → dashboard` (SQLite); MCP boot smoke; doctor checks framework bound + MCP route registered |
 | W9 | `AgentRun` graceful degrade | `mortelos/framework` `AgentRunTool` | Return "agent runtime not enabled" when no queue worker, instead of queueing a dead job (§7.1). Framework-side tweak |
 | W10 | Single-tenant `TenantResolver` binding | `app/Access` + provider | **Load-bearing (F1).** Bind a trivial resolver returning one fixed tenant id so governance yields a non-denied actor. Without it every tool silently denies. Replaces the null-resolver in single-tenant; `add-tenancy` later swaps in the stancl-backed resolver |
-| W11 | Remove starter roles/policies mirror; rebind onto framework | `app/Access`, `app/Models`, migrations, governance/roles screens | **F4.** Delete the UTEQ-522 mirror (`roles`/`policies` migrations, `App\Models\Role`/`Policy`, 290-line `app/Access/*`); rebind dashboard/governance gates onto `Mortel\Models\Role` + `ContextAccessResolver`. Amends UTEQ-522 |
+| W11 | Remove starter roles/policies mirror; rebind onto framework | `app/Access`, `app/Models`, migrations, governance/roles screens | **F4.** Delete the internal tracking mirror (`roles`/`policies` migrations, `App\Models\Role`/`Policy`, 290-line `app/Access/*`); rebind dashboard/governance gates onto `Mortel\Models\Role` + `ContextAccessResolver`. Amends internal tracking |
 | W1b | Publish + migrate framework migrations | `database/migrations/tenant` | **F3.** `vendor:publish --tag=os-core-migrations`, then migrate. Substep of the foundation |
 
 ### 5.1 Test vs production matrix
@@ -250,7 +250,7 @@ The framework's guarded migrations (§3) make this matrix work with one codebase
 |---|---|
 | Tenancy-strip spec (2026-05-31) | Premise amended (§2); strip + policy layer (D11/D12) stand |
 | Research-gate R1-R7 | R1 re-decided (framework = direct dep); R2-R7 still hold |
-| `add-tenancy` skill (UTEQ-526..529) | Intent unchanged (one→many tenants). The "install framework + stancl" step it does today becomes baseline; skill keeps the isolation-driver + switcher + tests |
+| `add-tenancy` skill (internal tracking) | Intent unchanged (one→many tenants). The "install framework + stancl" step it does today becomes baseline; skill keeps the isolation-driver + switcher + tests |
 | Smoke-portals (v028..v0212) | Re-baseline on framework dep; still SQLite, so create-project smoke stays viable |
 | `setup-portal` tests (35) | Re-run on framework baseline (SQLite); expect green, verify |
 | `composer create-project` promise | Preserved: boots on SQLite, no Postgres required for dev/test |
@@ -279,7 +279,7 @@ never runs. Small framework-side tweak; tracked as a new wire point (W9).
 ## 8. Sequencing (no code until this spec is approved)
 
 ```
-spec approved · Linear UTEQ-538 + W1-W9 created · W1 piloted (done)
+spec approved · Linear internal tracking + W1-W9 created · W1 piloted (done)
    │
    ▼
 FOUNDATION (revised by F1-F4)

@@ -22,7 +22,7 @@ mechanical find-replace `App\Access → Mortel\Access` (and, inside `ActorContex
 interfaces: framework maps `Mortel\* → src/` via PSR-4, so a host shim under
 `Mortel\*` would fatal on a duplicate class once framework installs (R4).
 
-> **Detect-and-extend, don't regenerate (UTEQ-522 baseline).** Newer starters
+> **Detect-and-extend, don't regenerate (internal tracking baseline).** Newer starters
 > ship this access seam already, as the *single-tenant* baseline: `App\Access\*`,
 > `App\Contracts\GovernanceGate`, `App\Enums\TrustLevel`, `App\Models\Role` +
 > `App\Models\Policy`, a `StarterGovernanceGate` bound in `StarterServiceProvider`,

@@ -24,7 +24,7 @@ afterEach(function (): void {
 });
 
 /**
- * Validates the role/policy hook the isolation test cannot reach (UTEQ-528).
+ * Validates the role/policy hook the isolation test cannot reach (internal tracking).
  *
  * The gate spans both connections under the database driver: the central pivot
  * (User -> tenant_user) and the tenant-database Role/Policy. It only works if

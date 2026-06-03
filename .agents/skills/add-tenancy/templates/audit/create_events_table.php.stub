@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
  * The `events` store (R6/D12) on the DEFAULT connection.
  *
  * Spatie's stored-event columns + the framework's extra audit columns, so the
- * host model and (later) Mortel\Models\UteqStoredEvent read the same shape. No
+ * host model and the framework stored-event model read the same shape. No
  * fixed connection: a plain `migrate` creates it centrally; under the database
  * driver, a copy in database/migrations/tenant/ gives each tenant DB its own.
  */

@@ -173,7 +173,7 @@ reinstate the switcher in the topbar **only when a user belongs to >1 tenant**.
 
 Only if the user wants an audit trail. Follow
 **`references/event-sourcing-audit.md`**. The store is connection-agnostic (no
-fixed `$connection`, like framework's `UteqStoredEvent`): it follows
+fixed `$connection`, like framework's `StoredEvent`): it follows
 `config('database.default')`, so it records into the central DB single-tenant
 and the tenant DB multi-tenant with the same code and no event migration. Wire
 it host-side (config + observer + events migration on the default connection);

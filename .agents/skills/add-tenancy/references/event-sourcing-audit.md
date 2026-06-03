@@ -6,8 +6,8 @@ tenancy still works. Its one defining property: it is **connection-agnostic**.
 
 ## Why connection-agnostic matters
 
-Framework's `Mortel\Models\UteqStoredEvent` sets **no `$connection`**, so it
-follows `config('database.default')`:
+The framework stored-event model sets **no `$connection`**, so it follows
+`config('database.default')`:
 
 - single-tenant / central context → records into the central `events` table;
 - multi-tenant, tenancy initialized → stancl has swapped the default
@@ -28,7 +28,7 @@ composer require "spatie/laravel-event-sourcing:^7.15"
 
 | Template | Destination | Purpose |
 |----------|-------------|---------|
-| `templates/audit/UteqStoredEvent.php.stub` | `app/Models/UteqStoredEvent.php` | Stored-event model, **no `$connection`**, table `events` |
+| `templates/audit/StoredEvent.php.stub` | `app/Models/StoredEvent.php` | Stored-event model, **no `$connection`**, table `events` |
 | `templates/audit/StoredEventObserver.php.stub` | `app/Observers/StoredEventObserver.php` | Fills actor/reason/aggregate columns on insert |
 | `templates/audit/event-sourcing.php.snippet` | `config/event-sourcing.php` | Point `stored_event_model` at the host model |
 | `templates/audit/create_events_table.php.stub` | `database/migrations/` | The `events` table on the **default** connection |
@@ -44,15 +44,14 @@ Placement rule (same logic as roles/policies):
 Register both observers in `StarterServiceProvider::boot()`:
 
 ```php
-\App\Models\UteqStoredEvent::observe(\App\Observers\StoredEventObserver::class);
+\App\Models\StoredEvent::observe(\App\Observers\StoredEventObserver::class);
 \App\Models\Role::observe(\App\Observers\RolePolicyAuditObserver::class);
 \App\Models\Policy::observe(\App\Observers\RolePolicyAuditObserver::class);
 ```
 
 ## Framework adoption
 
-When `mortelos/framework` is later installed it ships its own
-`Mortel\Models\UteqStoredEvent` against the **same `events` table**. Drop the
-host `stored_event_model` override (or point it at the framework model) and the
-existing history is read unchanged — that is the payoff of mirroring the
-convention rather than diverging.
+When `mortelos/framework` is later installed, point the host
+`stored_event_model` override at the framework model or drop the override when
+the framework owns it. The existing history is read unchanged — that is the
+payoff of mirroring the convention rather than diverging.

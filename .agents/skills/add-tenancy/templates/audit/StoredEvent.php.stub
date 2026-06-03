@@ -10,14 +10,14 @@ use Spatie\EventSourcing\StoredEvents\Models\EloquentStoredEvent;
 /**
  * Connection-agnostic stored-event model (R6/D12).
  *
- * Mirrors Mortel\Models\UteqStoredEvent: table `events`, string ULID key, and
- * crucially NO $connection — it follows config('database.default'), so it
+ * Mirrors the framework stored-event shape: table `events`, string ULID key,
+ * and crucially NO $connection — it follows config('database.default'), so it
  * records to the central DB single-tenant and to the tenant DB once stancl has
  * swapped the connection. Same code, no event migration at the transition.
  *
  * DO NOT set $connection. That single omission is the whole point.
  */
-class UteqStoredEvent extends EloquentStoredEvent
+class StoredEvent extends EloquentStoredEvent
 {
     protected $table = 'events';
 

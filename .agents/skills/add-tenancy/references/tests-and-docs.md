@@ -1,4 +1,4 @@
-# Generated tests & docs (UTEQ-529, spec §9)
+# Generated tests & docs (internal tracking, spec §9)
 
 Every run leaves the portal with proof of isolation and a note of which driver
 it is on. Tests are the contract; the docs note is so the partner is not

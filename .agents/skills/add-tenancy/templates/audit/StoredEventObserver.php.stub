@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
-use App\Models\UteqStoredEvent;
+use App\Models\StoredEvent;
 
 /**
  * Fills the framework audit columns before every event insert (R6/D12).
@@ -15,7 +15,7 @@ use App\Models\UteqStoredEvent;
  */
 final class StoredEventObserver
 {
-    public function creating(UteqStoredEvent $model): void
+    public function creating(StoredEvent $model): void
     {
         if ($model->aggregate_type === null && $model->event_class !== null) {
             $model->aggregate_type = $this->aggregateTypeFrom((string) $model->event_class);
