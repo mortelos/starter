@@ -1,0 +1,138 @@
+#!/usr/bin/env bash
+#
+# mortelos — scaffold a new MortelOS portal from the starter without
+# dragging the starter's git history into the new project.
+#
+# Flow:
+#   1. shallow-clone the starter        (only the latest commit)
+#   2. drop its .git                    (no upstream history)
+#   3. git init + initial commit        (a fresh, owned repository)
+#   4. composer setup                   (install · .env · key · migrate · seed · npm)
+#
+# Install once into a user-writable PATH directory, then run from anywhere:
+#   mkdir -p ~/.local/bin
+#   install -m 0755 bin/mortelos ~/.local/bin/mortelos
+#   mortelos --version
+#   mortelos new mijn-portal
+#
+set -euo pipefail
+
+VERSION="0.1.1"
+STARTER_REPO="${MORTELOS_STARTER_REPO:-https://github.com/mortelos/starter.git}"
+DEFAULT_BRANCH="${MORTELOS_STARTER_BRANCH:-main}"
+
+# --- pretty output -----------------------------------------------------------
+if [ -t 1 ]; then
+    BOLD=$(printf '\033[1m');   DIM=$(printf '\033[2m')
+    RED=$(printf '\033[31m');   GREEN=$(printf '\033[32m')
+    YELLOW=$(printf '\033[33m'); BLUE=$(printf '\033[34m')
+    RESET=$(printf '\033[0m')
+else
+    BOLD=""; DIM=""; RED=""; GREEN=""; YELLOW=""; BLUE=""; RESET=""
+fi
+
+step() { printf '%s▸%s %s\n' "$BLUE" "$RESET" "$1"; }
+ok()   { printf '%s✓%s %s\n' "$GREEN" "$RESET" "$1"; }
+warn() { printf '%s!%s %s\n' "$YELLOW" "$RESET" "$1" >&2; }
+die()  { printf '%s✗%s %s\n' "$RED" "$RESET" "$1" >&2; exit 1; }
+
+usage() {
+    cat <<EOF
+${BOLD}mortelos${RESET} ${DIM}v${VERSION}${RESET} — MortelOS portal installer
+
+${BOLD}Usage${RESET}
+  mortelos new <name> [options]
+
+${BOLD}Options${RESET}
+  --branch <branch>   Starter branch to clone (default: ${DEFAULT_BRANCH})
+  --no-setup          Only scaffold + git init, skip 'composer setup'
+  -h, --help          Show this help
+  -v, --version       Show version
+
+${BOLD}Environment${RESET}
+  MORTELOS_STARTER_REPO     Override the starter repo URL
+  MORTELOS_STARTER_BRANCH   Override the default branch
+
+${BOLD}Example${RESET}
+  mortelos new mijn-portal
+EOF
+}
+
+cmd_new() {
+    local name="" branch="$DEFAULT_BRANCH" run_setup=1
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --branch)   branch="${2:?--branch needs a value}"; shift 2 ;;
+            --branch=*) branch="${1#*=}"; shift ;;
+            --no-setup) run_setup=0; shift ;;
+            -h|--help)  usage; exit 0 ;;
+            -*)         die "Unknown option: $1" ;;
+            *)
+                [ -z "$name" ] || die "Unexpected argument: $1"
+                name="$1"; shift ;;
+        esac
+    done
+
+    [ -n "$name" ] || die "Missing portal name. Usage: mortelos new <name>"
+
+    command -v git >/dev/null 2>&1      || die "git is required but not found in PATH"
+    [ "$run_setup" -eq 1 ] && { command -v composer >/dev/null 2>&1 || die "composer is required but not found in PATH (or pass --no-setup)"; }
+
+    # Resolve target dir: absolute path stays as-is, otherwise relative to cwd.
+    local target
+    case "$name" in
+        /*) target="$name" ;;
+        *)  target="$PWD/$name" ;;
+    esac
+
+    [ -e "$target" ] && die "Target already exists: $target"
+
+    printf '\n%sCreating MortelOS portal%s %s%s%s\n\n' "$BOLD" "$RESET" "$BOLD" "$(basename "$target")" "$RESET"
+
+    step "Cloning starter ($branch) without history…"
+    git clone --quiet --depth 1 --branch "$branch" "$STARTER_REPO" "$target" \
+        || die "Clone failed. Check your access to $STARTER_REPO and that branch '$branch' exists."
+
+    step "Dropping upstream git history…"
+    rm -rf "$target/.git"
+    ok "Starter copied to $target"
+
+    step "Initialising a fresh repository…"
+    (
+        cd "$target"
+        git init -q
+        git add -A
+        if git commit -q -m "Initial commit from mortelos/starter" >/dev/null 2>&1; then
+            ok "Fresh git repository with initial commit"
+        else
+            warn "git repo initialised, but the initial commit failed (set git user.name/email, then commit)"
+        fi
+    )
+
+    if [ "$run_setup" -eq 1 ]; then
+        step "Running composer setup (install · .env · key · migrate · seed · npm)…"
+        if (cd "$target" && composer setup); then
+            ok "Setup complete"
+        else
+            warn "composer setup did not finish cleanly. Run it manually:  (cd $target && composer setup)"
+        fi
+    else
+        warn "Skipped setup (--no-setup). Finish with:  (cd $target && composer setup)"
+    fi
+
+    printf '\n%s✓ Portal ready%s  %s%s%s\n' "$GREEN" "$RESET" "$DIM" "$target" "$RESET"
+    printf '  %scd %s && composer dev%s\n\n' "$DIM" "$name" "$RESET"
+}
+
+main() {
+    [ $# -gt 0 ] || { usage; exit 0; }
+    case "$1" in
+        new)            shift; cmd_new "$@" ;;
+        -h|--help)      usage ;;
+        -v|--version)   printf 'mortelos v%s\n' "$VERSION" ;;
+        *)              die "Unknown command: $1 (try 'mortelos --help')" ;;
+    esac
+}
+
+main "$@"
