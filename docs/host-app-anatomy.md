@@ -93,10 +93,10 @@ mijn-portal/
 │   └── package-decisions.md                        — one entry per surface
 ├── .agents/
 │   └── skills/
-│       └── portal-kickoff/                         ✓ ships, canonical skill source
+│       └── setup-portal/                         ✓ ships, canonical skill source
 ├── .claude/
 │   └── skills/
-│       └── portal-kickoff -> ../../.agents/skills/portal-kickoff
+│       └── setup-portal -> ../../.agents/skills/setup-portal
 ├── AGENTS.md                                       ✓ ships
 ├── CLAUDE.md                                       ✓ ships
 ├── composer.json                                   ✓ ships
@@ -106,7 +106,7 @@ mijn-portal/
 ```
 
 Legend: `✓ ships` means the template provides it out of the box; the unmarked
-rows are what the portal-kickoff workflow grows.
+rows are what the setup-portal workflow grows.
 
 ## What lives where (cheat sheet)
 

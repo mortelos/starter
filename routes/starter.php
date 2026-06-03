@@ -52,6 +52,7 @@ Route::middleware(['web'])->group(function () use ($starterClass): void {
         Route::livewire('/dashboard', 'starter::pages.dashboard.dashboard')->name('dashboard');
         Route::livewire('/inbox', 'starter::pages.inbox.inbox')->name('inbox');
         Route::livewire('/governance', 'starter::pages.governance.governance')->name('governance');
+        Route::livewire('/governance/roles', 'starter::pages.governance.roles')->name('governance.roles');
         Route::livewire('/users', 'starter::pages.users.users')->name('users');
         Route::livewire('/settings', 'starter::pages.settings.settings')->name('settings');
 

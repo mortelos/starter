@@ -2,7 +2,7 @@
 
 - **Date:** 2026-05-31
 - **Status:** Draft (awaiting review)
-- **Owner:** Nathan Jansen (UTEQ)
+- **Owner:** MortelOS team
 - **Scope:** `mortelos/starter` host app + new `add-tenancy` skill
 
 ---
@@ -111,10 +111,10 @@ Verified by shallow-cloning `github.com/mortelos/framework`:
 | D6 | Tenancy engine | `stancl/tenancy ^3.10` (matches framework) |
 | D7 | Foundation | Align onto `Mortel\Contracts\TenantResolver`; do not invent a parallel tenancy |
 | D8 | Roles | Framework's `Role`/`ActorContext` shape; **no** `spatie/laravel-permission` |
-| D9 | Task tracking | New Linear project under team **Uteq**, parent issue + sub-issues |
+| D9 | Task tracking | New Linear project under project board, parent issue + sub-issues |
 | D10 | Spec location | `docs/specs/` (repo has no `.planning/`) |
 | D11 | Roles & policies | Manageable **data in the DB**, owner-editable via an admin screen, **deny-by-default**. Not hardcoded, not config-in-code. The dashboard/governance gates route through this policy layer (mirroring framework's `default_policies` shape), not hardcoded role names |
-| D12 | Audit / event-sourcing | **Optional, connection-agnostic capability**: it follows the active default connection (no fixed `$connection`, like framework's `UteqStoredEvent`), so it works single-tenant (central DB) and multi-tenant (tenant DB) with the same code. The roles/policy audit trail runs over it, reusing framework's event-store convention rather than a divergent store |
+| D12 | Audit / event-sourcing | **Optional, connection-agnostic capability**: it follows the active default connection (no fixed `$connection`, like framework's `StoredEvent`), so it works single-tenant (central DB) and multi-tenant (tenant DB) with the same code. The roles/policy audit trail runs over it, reusing framework's event-store convention rather than a divergent store |
 
 ### 3.1 Resolved decision (OPEN-1)
 
@@ -211,7 +211,7 @@ replaced by the policy layer (D11, §5.4).
 ### 5.3 Docs to update
 
 `AGENTS.md` (§3 boot baseline, §10 verification, §12 don'ts), `README.md`,
-`knowledge/` notes, and the `portal-kickoff` skill — all currently describe the
+`knowledge/` notes, and the `setup-portal` skill — all currently describe the
 `login -> tenant-select -> dashboard` flow.
 
 ### 5.4 Roles, policies & audit (config/data-driven)
@@ -275,12 +275,12 @@ finalization) and the skill (Part B) are locked.
 | R3 | How `mortelos/framework` initializes/identifies the tenant in operate mode (MCP, OAuth, subdomain?) | Tenant-identification contract |
 | R4 | `Mortel\Access\Role`/`ActorContext`/`ActorResolver`: how the host mirrors role-gating in single-tenant without spatie | Role seam shape |
 | R5 | Per-package audit (`chat`, `channel-*`, `widget-*`, `dev-tools`) for tenant assumptions that touch the host | Confirmed "no host impact" or exceptions |
-| R6 | Event-sourcing layer decoupled from the tenant-runtime: reuse framework's event-store convention (`UteqStoredEvent` follows the default connection) so one store works central (single-tenant) and tenant (multi-tenant) with no event migration. Mirror vs framework extraction? | Event-sourcing seam shape |
+| R6 | Event-sourcing layer decoupled from the tenant-runtime: reuse framework's event-store convention (`StoredEvent` follows the default connection) so one store works central (single-tenant) and tenant (multi-tenant) with no event migration. Mirror vs framework extraction? | Event-sourcing seam shape |
 | R7 | Is there a clean policy-check contract to mirror cheaply (like `TenantResolver`)? Inspect `ContextAccessResolver` / `CheckPolicy` / `AccessActor` | Policy-layer seam shape |
 
 ---
 
-## 8. Linear breakdown (under team Uteq)
+## 8. Linear breakdown (in the project board)
 
 Parent issue: **De-tenant starter + add-tenancy skill**. Sub-issues:
 

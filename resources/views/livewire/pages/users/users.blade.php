@@ -18,6 +18,10 @@ class extends Component {
 
     public ?string $errorMessage = null;
 
+    public bool $showUserAccessSlide = false;
+
+    public string $selectedUserAccessId = '';
+
     public function mount(): void
     {
         if (! auth()->check()) {
@@ -53,6 +57,35 @@ class extends Component {
         }
 
         return app($resolver);
+    }
+
+    private function accessResolver(): object
+    {
+        $resolver = config('starter.users.access_resolver');
+
+        if (! is_string($resolver) || $resolver === '') {
+            throw new LogicException('Missing starter users access resolver config [starter.users.access_resolver].');
+        }
+
+        return app($resolver);
+    }
+
+    public function openUserAccessSlide(string $userId): void
+    {
+        $userId = trim($userId);
+
+        if ($userId === '' || ! $this->accessResolver()->canInspect($userId)) {
+            return;
+        }
+
+        $this->selectedUserAccessId = $userId;
+        $this->showUserAccessSlide = true;
+    }
+
+    public function closeUserAccessSlide(): void
+    {
+        $this->showUserAccessSlide = false;
+        $this->selectedUserAccessId = '';
     }
 
     public function invite(): void
@@ -129,21 +162,32 @@ class extends Component {
                     <th class="px-6 py-3 text-left font-medium text-gray-500">E-mail</th>
                     <th class="px-6 py-3 text-left font-medium text-gray-500">Rol</th>
                     <th class="px-6 py-3 text-left font-medium text-gray-500">Lid sinds</th>
+                    <th class="px-6 py-3 text-right font-medium text-gray-500"></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse($members as $member)
-                    <tr>
+                    <tr class="transition hover:bg-gray-50/70">
                         <td class="px-6 py-3 text-gray-900">{{ $member['name'] }}</td>
                         <td class="px-6 py-3 text-gray-600">{{ $member['email'] }}</td>
                         <td class="px-6 py-3">
                             <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">{{ $member['role'] }}</span>
                         </td>
                         <td class="px-6 py-3 text-gray-500">{{ $member['joined_at'] }}</td>
+                        <td class="px-6 py-3 text-right">
+                            <button
+                                type="button"
+                                wire:click="openUserAccessSlide('{{ $member['id'] }}')"
+                                class="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-xs font-medium text-gray-700 ring-1 ring-gray-200 transition hover:bg-gray-50 hover:text-gray-950"
+                            >
+                                Bekijk toegang
+                                <flux:icon.arrow-up-right class="size-3.5 text-gray-400" />
+                            </button>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-8 text-center text-gray-500">Nog geen teamleden.</td>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">Nog geen teamleden.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -183,6 +227,27 @@ class extends Component {
                     @endforeach
                 </tbody>
             </table>
+        </div>
+    @endif
+
+    @if($showUserAccessSlide)
+        <div
+            class="fixed inset-0 z-50 flex justify-end bg-gray-950/20"
+            x-data
+            x-on:keydown.escape.window="$wire.closeUserAccessSlide()"
+        >
+            <button
+                type="button"
+                class="absolute inset-0 cursor-default"
+                wire:click="closeUserAccessSlide"
+                aria-label="Sluiten"
+            ></button>
+            <div class="relative h-full w-full max-w-3xl bg-white shadow-2xl">
+                <livewire:users.user-access-slide-over
+                    :user-id="$selectedUserAccessId"
+                    wire:key="users-access-slide-{{ $selectedUserAccessId }}"
+                />
+            </div>
         </div>
     @endif
 </div>

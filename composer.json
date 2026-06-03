@@ -9,6 +9,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/mortelos/ui.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/mortelos/framework.git"
         }
     ],
     "require": {
@@ -17,6 +21,7 @@
         "laravel/tinker": "^3.0",
         "livewire/flux": "^2.13",
         "livewire/livewire": "^4.0",
+        "mortelos/framework": "^0.4",
         "mortelos/ui": "^0.2"
     },
     "require-dev": {

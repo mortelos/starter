@@ -1,0 +1,29 @@
+## Multi-tenancy
+
+This portal is multi-tenant (wired by the `add-tenancy` skill).
+
+- **Isolation driver:** `<database | row>`.
+- **Engine:** `stancl/tenancy ^3.10`, identified by tenant **slug** (web) and a
+  `tenant_id` token claim (MCP).
+- **Framework binding:** `app/Support/StanclTenantResolver.php` fills
+  `Mortel\Contracts\TenantResolver`; `mortelos/framework` is a composer
+  `suggest`, bound only when installed.
+- **Roles & policies:** owner-editable DB data, deny-by-default, gated through
+  `App\Contracts\GovernanceGate` (`config('starter.governance.access_resolver')`).
+- **Switcher:** shown only to users who belong to more than one tenant.
+<!-- row driver only — keep this line, it is the one-way door: -->
+- **⚠ Foreclosure (row driver):** this portal uses row-scoped isolation. It
+  **cannot adopt `mortelos/framework` operate-mode** (database-per-tenant only)
+  without migrating every scoped table into per-tenant databases. Shared
+  (un-scoped) tables: `<users, ...>`.
+
+### Tenant lifecycle (database driver)
+
+```bash
+php artisan tenants:migrate      # run database/migrations/tenant on every tenant DB
+php artisan tenants:seed
+php artisan tenants:run "<cmd>"   # run a command in each tenant context
+```
+
+Creating a `Tenant` row provisions its database automatically (stancl events);
+deleting drops it. Never create tenant databases by hand.

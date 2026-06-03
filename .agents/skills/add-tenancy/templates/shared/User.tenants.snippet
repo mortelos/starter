@@ -1,0 +1,34 @@
+// === Merge into app/Models/User.php ===
+//
+// Add these imports:
+//   use App\Models\Tenant;
+//   use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+//
+// 1) The membership relation. The pivot carries the per-tenant role_id the gate
+//    reads. A user with >1 tenant here is what reinstates the switcher.
+
+/**
+ * @return BelongsToMany<Tenant, $this>
+ */
+public function tenants(): BelongsToMany
+{
+    return $this->belongsToMany(Tenant::class, 'tenant_user')
+        ->withPivot('role_id')
+        ->withTimestamps();
+}
+
+// 2) DATABASE DRIVER ONLY — pin User to the central connection.
+//
+//    Under the database driver, DatabaseTenancyBootstrapper makes a separate
+//    `tenant` connection the DEFAULT during a tenant request. `users` and
+//    `tenant_user` are CENTRAL tables, so an unpinned User would read/write the
+//    tenant database (where `users` does not exist) and throw. Pinning fixes
+//    every User query in tenant context — auth, the users page, the switcher.
+//    The tenant_user pivot follows User's connection, so pinning User pins it
+//    too. (Tenant is already central via stancl; Role/Policy stay on the tenant
+//    connection.) The ROW driver is one database — OMIT this method there.
+
+public function getConnectionName(): ?string
+{
+    return config('tenancy.database.central_connection');
+}

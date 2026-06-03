@@ -1,0 +1,61 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\Tenant;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+
+uses(RefreshDatabase::class);
+
+// End tenancy + clean per-tenant sqlite files so the next test's RefreshDatabase
+// migrates the CENTRAL connection, not the swapped tenant one.
+afterEach(function (): void {
+    if (tenancy()->initialized) {
+        tenancy()->end();
+    }
+
+    foreach (glob(database_path('tenant*.sqlite')) as $file) {
+        @unlink($file);
+    }
+});
+
+/**
+ * Isolation proof for the DATABASE driver: separate connections.
+ *
+ * Two tenants, two databases. A row written in tenant A's database is invisible
+ * in tenant B's. This is the regression the strip's missing test would have
+ * caught for tenancy.
+ *
+ * Assumes the example tenant migration (notes table) is in
+ * database/migrations/tenant/ and tenant databases are created+migrated on
+ * Tenant create (stancl events). With sqlite-per-tenant this is self-contained.
+ */
+it('isolates data per tenant via separate connections', function (): void {
+    $a = Tenant::create(['slug' => 'a']);
+    $b = Tenant::create(['slug' => 'b']);
+
+    tenancy()->initialize($a);
+    DB::table('notes')->insert([
+        'body' => 'a-secret',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    expect(DB::table('notes')->count())->toBe(1);
+    tenancy()->end();
+
+    tenancy()->initialize($b);
+    // B has its own database — it cannot see A's row.
+    expect(DB::table('notes')->count())->toBe(0);
+    tenancy()->end();
+});
+
+it('reports the active tenant id only while initialized', function (): void {
+    $a = Tenant::create(['slug' => 'solo']);
+
+    expect(tenancy()->initialized)->toBeFalse();
+
+    tenancy()->initialize($a);
+    expect((string) tenant()->getTenantKey())->toBe((string) $a->getTenantKey());
+    tenancy()->end();
+});

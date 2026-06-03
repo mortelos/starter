@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Observers;
+
+use App\Models\StoredEvent;
+
+/**
+ * Fills the framework audit columns before every event insert (R6/D12).
+ *
+ * Host version of Mortel\Observers\StoredEventObserver. Runs in the same insert
+ * as the stored event, so the actor/aggregate context is captured atomically.
+ * When framework is later adopted, swap this for the framework observer.
+ */
+final class StoredEventObserver
+{
+    public function creating(StoredEvent $model): void
+    {
+        if ($model->aggregate_type === null && $model->event_class !== null) {
+            $model->aggregate_type = $this->aggregateTypeFrom((string) $model->event_class);
+        }
+
+        $model->actor ??= $this->currentActor();
+        $model->org_id ??= tenancy()->initialized ? (string) tenant()?->getTenantKey() : null;
+        $model->timestamp ??= now()->toIso8601String();
+    }
+
+    private function aggregateTypeFrom(string $eventClass): string
+    {
+        $base = class_basename($eventClass);
+
+        return strtolower($base);
+    }
+
+    private function currentActor(): ?string
+    {
+        $id = auth()->id();
+
+        return is_scalar($id) ? (string) $id : null;
+    }
+}

@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\Note;
+use App\Models\Tenant;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
+/**
+ * Isolation proof for the ROW driver: scoped queries in one shared database.
+ *
+ * Assumes the example scoped model App\Models\Note uses the BelongsToTenant
+ * trait and its table has a tenant_id column (templates/row/*).
+ */
+it('auto-fills tenant_id and scopes reads to the active tenant', function (): void {
+    $a = Tenant::create(['slug' => 'a']);
+    $b = Tenant::create(['slug' => 'b']);
+
+    tenancy()->initialize($a);
+    $note = Note::create(['body' => 'a-secret']);
+    expect($note->tenant_id)->toBe((string) $a->getTenantKey()); // write isolation
+    expect(Note::count())->toBe(1);
+    tenancy()->end();
+
+    tenancy()->initialize($b);
+    expect(Note::count())->toBe(0); // read isolation: A's row is scoped out
+    tenancy()->end();
+});
+
+it('is unscoped in central context (admin/CLI sees all tenants)', function (): void {
+    $a = Tenant::create(['slug' => 'a']);
+
+    tenancy()->initialize($a);
+    Note::create(['body' => 'a-secret']);
+    tenancy()->end();
+
+    // No tenant initialized -> TenantScope is a deliberate no-op.
+    expect(Note::count())->toBe(1);
+});

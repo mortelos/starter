@@ -14,7 +14,7 @@ php artisan serve             # http://127.0.0.1:8000
 
 That's it. The `composer create-project` already ran `composer install`, set an
 `APP_KEY`, created `database/database.sqlite`, ran migrations, and seeded the
-admin account. The login → tenant-select → dashboard flow works immediately on
+admin account. The login → dashboard flow works immediately on
 the seeded admin, with the stubs under `app/Http/Controllers/Auth/` handling
 the auth contracts.
 
@@ -38,7 +38,7 @@ ssh -T git@github.com   # confirm SSH access
 
 Once the app boots and you see the dashboard:
 
-1. **Run the `portal-kickoff` skill** on the user's request, or
+1. **Run the `setup-portal` skill** on the user's request, or
 2. **Follow `docs/building-portals.md` §1** when your agent cannot use local skills to start the
    capability-first interview
 
