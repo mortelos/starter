@@ -16,9 +16,6 @@ final class PolicyFactory extends Factory
 {
     protected $model = Policy::class;
 
-    /**
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [

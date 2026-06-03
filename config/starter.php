@@ -19,6 +19,7 @@ return [
             'passkey_authenticated' => PasskeyAuthenticatedController::class,
             'passkey_authentication_options' => null,
             'password_login' => PasswordLoginController::class,
+            'tenant_select' => null,
         ],
     ],
 
@@ -54,6 +55,7 @@ return [
 
     'users' => [
         'resolver' => null,
+        'access_resolver' => null,
     ],
 
     'dashboard' => [

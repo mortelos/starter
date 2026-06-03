@@ -74,14 +74,17 @@ it('validates a required role name on create', function (): void {
 it('updates a role', function (): void {
     actingAs(ownerUser());
     $role = Role::factory()->create(['name' => 'Old name']);
+    $roleKey = modelKeyString($role);
 
     Livewire::test('pages.governance.roles')
-        ->call('startEditRole', $role->getKey())
+        ->call('startEditRole', $roleKey)
         ->set('editRoleName', 'New name')
         ->call('updateRole')
         ->assertHasNoErrors();
 
-    expect($role->fresh()->name)->toBe('New name');
+    $freshRole = Role::query()->whereKey($roleKey)->firstOrFail();
+
+    expect($freshRole->name)->toBe('New name');
 });
 
 it('deletes a role and its policies', function (): void {
@@ -99,11 +102,12 @@ it('deletes a role and its policies', function (): void {
 it('adds a policy to a role', function (): void {
     actingAs(ownerUser());
     $role = Role::factory()->create();
+    $roleKey = modelKeyString($role);
 
     Livewire::test('pages.governance.roles')
-        ->set("policyAction.{$role->getKey()}", 'inbox.manage')
-        ->set("policyEffect.{$role->getKey()}", 'allow')
-        ->call('addPolicy', $role->getKey())
+        ->set("policyAction.{$roleKey}", 'inbox.manage')
+        ->set("policyEffect.{$roleKey}", 'allow')
+        ->call('addPolicy', $roleKey)
         ->assertHasNoErrors();
 
     expect(Policy::query()
@@ -112,6 +116,17 @@ it('adds a policy to a role', function (): void {
         ->where('effect', 'allow')
         ->exists())->toBeTrue();
 });
+
+function modelKeyString(Role|Policy $model): string
+{
+    $key = $model->getKey();
+
+    if (! is_int($key) && ! is_string($key)) {
+        throw new RuntimeException('Expected a scalar model key.');
+    }
+
+    return (string) $key;
+}
 
 it('removes a policy from a role', function (): void {
     actingAs(ownerUser());

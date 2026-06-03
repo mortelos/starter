@@ -32,6 +32,8 @@ final readonly class ActorContext implements AccessActor
 
     public function roleId(): string
     {
-        return (string) $this->role->getKey();
+        $id = $this->role->getKey();
+
+        return is_scalar($id) ? (string) $id : '';
     }
 }

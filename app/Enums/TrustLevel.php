@@ -28,10 +28,10 @@ enum TrustLevel: string
 
     public function rank(): int
     {
-        return match ($this) {
-            self::Observe => 0,
-            self::Propose => 1,
-            self::Act => 2,
+        return match ($this->value) {
+            self::Observe->value => 0,
+            self::Propose->value => 1,
+            self::Act->value => 2,
         };
     }
 }
