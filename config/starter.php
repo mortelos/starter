@@ -6,6 +6,8 @@ use App\Actions\Auth\ResolvePostLoginRedirect;
 use App\Http\Controllers\Auth\AcceptInvitationController;
 use App\Http\Controllers\Auth\PasskeyAuthenticatedController;
 use App\Http\Controllers\Auth\PasswordLoginController;
+use App\Support\StarterUsersAccessResolver;
+use App\Support\StarterUsersResolver;
 
 return [
 
@@ -60,8 +62,8 @@ return [
     ],
 
     'users' => [
-        'resolver' => null,
-        'access_resolver' => null,
+        'resolver' => StarterUsersResolver::class,
+        'access_resolver' => StarterUsersAccessResolver::class,
     ],
 
     'dashboard' => [

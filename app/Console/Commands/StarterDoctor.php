@@ -25,6 +25,8 @@ final class StarterDoctor extends Command
             'starter.auth.controllers.password_login',
             'starter.auth.controllers.passkey_authenticated',
             'starter.auth.controllers.accept_invitation',
+            'starter.users.resolver',
+            'starter.users.access_resolver',
         ];
 
         $missing = [];
