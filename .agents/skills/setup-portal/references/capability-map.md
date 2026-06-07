@@ -35,6 +35,7 @@ For each capability:
 - **Surface:** <starter page | package route | dashboard widget | chat widget | page widget>
 - **Audit/reporting:** <what history/report is needed, or "none">
 - **Reuse:** <package-now | package-ready | workspace-only>, <one-line reason>
+- **Existing package fit:** <installed package used | package to extend | packages checked, none fit>
 
 ## Domain model
 

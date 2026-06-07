@@ -61,11 +61,25 @@ config, or customer data, give it a policy ability and cover it through Policy
 Studio. Prefer package registration for reusable widgets, config-only registration
 for local experiments.
 
-## Reference packages
+## Reference packages and existing solutions
 
+- `mortelos/framework`, owns entity registry, entity links, event sourcing,
+  projection plumbing, tenant primitives, MCP runtime, and Laravel AI integration.
+- `mortelos/starter`, owns the shell, auth route contracts, dashboard, inbox,
+  governance, users, settings, starter pages, and shell slots.
+- `mortelos/ui`, owns shared Flux-aligned UI primitives.
 - `mortelos/entity-graph`, owns API routes, views, a Livewire namespace,
   migrations, extension contracts, a chat widget, and an agent tool.
 - `mortelos/policy-studio`, owns governance widgets, routes, and proposal-first
   policy flows.
+- `mortelos/chat`, owns the chat shell and `WidgetRegistry`.
+- `mortelos/overviews`, owns flexible overview datasources, saved overview flows,
+  overview chat widget, and context integration.
+- `mortelos/channel-*`, owns external channel setup, sync, health, auth/reauth,
+  and data-request boundaries.
+- `mortelos/widget-*`, owns reusable chat widgets.
 
-Use them as worked examples of what a well-bounded package owns.
+Before custom code, inspect installed and sibling packages per
+`references/documentation-and-packages.md`. Use packages as implementation
+owners when they match; otherwise use them as worked examples of a bounded
+package.

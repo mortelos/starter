@@ -32,9 +32,12 @@ Empty sections read as oversight; explicit N/A reads as a confirmed decision.
 
 ## Package decisions (§2)
 
-| Surface | Decision | Reason |
-| --- | --- | --- |
-| <…> | <package-now / package-ready / workspace-only> | <…> |
+| Surface | Existing package fit | Decision | Reason |
+| --- | --- | --- | --- |
+| <…> | <installed package used | package extended | checked packages, none fit> | <package-now / package-ready / workspace-only> | <…> |
+
+For any custom implementation, name the installed or sibling MortelOS packages
+checked and why none owns the capability.
 
 ## Domain model (§3)
 
@@ -59,9 +62,9 @@ failure/reauth, classification, and which capabilities consume it.
 
 ## Surfaces & widgets (§6)
 
-| Capability | Surface type | Component / route | Policy ability |
-| --- | --- | --- | --- |
-| <…> | <…> | <…> | <…> |
+| Capability | Surface type | Owner/package | Component / route | Policy ability |
+| --- | --- | --- | --- | --- |
+| <…> | <…> | <existing package | package-ready boundary | host workspace-only> | <…> | <…> |
 
 ## Policies & governance (§7)
 

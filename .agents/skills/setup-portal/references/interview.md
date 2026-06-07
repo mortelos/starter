@@ -158,9 +158,15 @@ Ask this cluster *per capability*, but conversationally, not as a form:
 - Intent: choose the package boundary so reuse is governed.
 - Map: `package-now` (reusable across installs now) · `package-ready` (host wiring
   first, boundary explicit) · `workspace-only` (customer-specific by design).
-- Questions: "Earlier you said <capability> could be reused, should it be a real
-  package now, or workspace-only for this customer?"
-- Covered when: every new surface has a decision + a one-line reason.
+- Questions: "This sounds close to <existing package/capability>; should we use or
+  extend that, or is this truly new?" · "Earlier you said <capability> could be
+  reused, should it be a real package now, package-ready, or workspace-only for
+  this customer?"
+- Rule: use the package intelligence from phase [0]. Prefer installed packages,
+  sibling MortelOS packages, framework/starter/UI primitives, resolvers,
+  connectors, widgets, and policies before custom host code.
+- Covered when: every new surface has an existing-package fit, a decision, and a
+  one-line reason.
 
 ### 12. Non-functional
 

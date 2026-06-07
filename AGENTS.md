@@ -24,10 +24,11 @@ Default to **build mode**: assemble portals from MortelOS primitives.
 ## 1. Read this in order
 
 1. `README.md` — installation, contract tables, agent prompts that work
-2. `docs/building-portals.md` — the design method (§1–§11)
-3. `knowledge/` — short, AI-first notes per topic (start at `knowledge/README.md`)
-4. `.agents/skills/setup-portal/` — guided kickoff for agents that support local skills
-5. This file — the rules below
+2. `docs/ai-architecture.md` — AI build patterns for this starter
+3. `docs/building-portals.md` — the design method (§1–§11)
+4. `knowledge/` — short, AI-first notes per topic (start at `knowledge/README.md`)
+5. `.agents/skills/setup-portal/` — guided kickoff for agents that support local skills
+6. This file — the rules below
 
 If the user asks "build a portal for X" and gives only that, **do not invent the
 plan in your head**. Run the interview (capability-first) before writing any
@@ -146,6 +147,26 @@ When the dev tools are not installed, append the same fields to
 Worked examples: `knowledge/04-package-governance.md`,
 `knowledge/05-mortelos-ecosystem.md`.
 
+### Vendor package edit guard
+
+Treat Composer-installed MortelOS packages as read-only while working in a
+starter or host app. This includes `vendor/mortelos/*` and any local path repo
+or worktree for a `mortelos/*` package, unless the current task is explicitly a
+package PR.
+
+- Agents may inspect MortelOS package source to understand contracts,
+  extension points and bugs.
+- Portal implementation changes start host-side, preferably under `app/`.
+  Add host wiring in `config/`, `routes/`, `resources/`, `database/` or
+  `tests/` only when the capability needs it.
+- Do not patch `vendor/mortelos/*` or a checked-out `mortelos/*` package from
+  a starter task.
+- Change a MortelOS package only when the package truly owns the bug or missing
+  extension point, there is no reasonable host-side override or resolver, and
+  the change is made in the package's own branch with tests and a pull request.
+- If a package change is needed, stop the host edit path, explain why host-side
+  wiring is insufficient, then make or request a dedicated package PR.
+
 ## 6. TALL stack conventions (Livewire 4 SFC + Flux UI first)
 
 The starter ships Livewire **4 single-file components** under
@@ -243,6 +264,9 @@ Extended list: `knowledge/08-troubleshooting.md`.
 - Don't add a new feature without recording a package decision
 - Don't replace `mortelos-starter::layouts.app` with a custom layout; extend it
 - Don't bypass policies with component-level conditionals
+- Don't modify `vendor/mortelos/*` or local `mortelos/*` package worktrees from
+  a starter task; package changes require a dedicated package branch + PR and
+  only after host-side options are exhausted
 - Don't hardcode host-specific classes inside packages — use
   config and resolver contracts
 - Don't claim a portal "works" without the verification checklist (§10)

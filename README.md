@@ -10,6 +10,8 @@ turn a portal idea into capabilities, policies, workflows and reusable packages.
 Use it when you want a portal that is not just a set of pages, but an operating
 workspace with clear roles, approval flows, audit history and agent access.
 
+For public documentation, start at [mortelos.nl/docs](https://mortelos.nl/docs).
+
 ## The Short Version
 
 ```bash
@@ -441,7 +443,9 @@ Extended notes:
 
 | Document | Use when |
 | --- | --- |
+| [mortelos.nl/docs](https://mortelos.nl/docs) | Public MortelOS documentation |
 | [`AGENTS.md`](AGENTS.md) | Agent rules and project conventions |
+| [`docs/ai-architecture.md`](docs/ai-architecture.md) | AI build architecture for this starter |
 | [`docs/building-portals.md`](docs/building-portals.md) | Full portal design method |
 | [`docs/init-host-app.md`](docs/init-host-app.md) | Host setup details |
 | [`docs/host-app-anatomy.md`](docs/host-app-anatomy.md) | What a fleshed-out host app looks like |

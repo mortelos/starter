@@ -1,6 +1,6 @@
 ---
 name: setup-portal
-description: Use this FIRST whenever someone wants to set up, start, bootstrap, or build a customer portal on MortelOS / mortelos-starter, even when they only describe a capability ("customers should be able to upload documents", "account managers approve invoices", "show clients their dossiers") without saying the word "portal". This skill interviews for the capability map one question at a time, wires the Starter foundation correctly, records package decisions, produces one complete standalone build plan, gets the user's approval on that plan once, then builds the entire portal in a single pass with full test coverage and hands off to the partner to continue development, leaning on the TALL skills for implementation. Trigger it for any new MortelOS portal, workspace, or customer-extension kickoff. Do NOT trigger when the portal is built on a different stack such as Jetstream, Filament, or plain Laravel without mortelos/starter.
+description: Use this FIRST whenever someone wants to set up, start, bootstrap, or build a customer portal on MortelOS / mortelos-starter, even when they only describe a capability ("customers should be able to upload documents", "account managers approve invoices", "show clients their dossiers") without saying the word "portal". This skill interviews for the capability map one question at a time, loads local MortelOS documentation and package intelligence, wires the Starter foundation correctly, records package decisions, produces one complete standalone build plan, gets the user's approval on that plan once, then builds the entire portal in a single pass with full test coverage and hands off to the partner to continue development, leaning on existing MortelOS packages, primitives, resolvers, and TALL skills before custom code. Trigger it for any new MortelOS portal, workspace, or customer-extension kickoff. Do NOT trigger when the portal is built on a different stack such as Jetstream, Filament, or plain Laravel without mortelos/starter.
 ---
 
 # Setup Portal
@@ -23,7 +23,14 @@ do not rebuild it.
 `docs/building-portals.md` is the canonical method. This skill is the execution,
 interview, plan, build, and handoff layer on top of it. Read that document early
 and treat its section numbers (§1–§11) as the source of truth; the references
-here only add *how to ask*, *how to wire*, *how to plan*, and *how to build*.
+here only add *how to ask*, *how to discover docs and packages*, *how to wire*,
+*how to plan*, and *how to build*.
+
+Before inventing a custom portal surface, read
+`references/documentation-and-packages.md`. It tells you which host docs,
+knowledge notes, installed Composer packages, and sibling MortelOS package
+worktrees to inspect. The default decision is: use or extend an existing package
+or primitive first; build package-ready custom code only after that check.
 
 ## Availability in a host app
 
@@ -41,6 +48,7 @@ setup-portal  ("ik wil een klantportal voor ...")
         v
 [0] PRE-FLIGHT, host context & idempotency
      detect: is Starter wired? auth contracts filled? .mortelos/ present?
+     load: docs + package intelligence (installed + sibling MortelOS packages)
      existing portal plan under docs/portals/? -> fresh bootstrap OR resume
      detect host test framework (pest vs phpunit) for the build pass
         |
@@ -108,6 +116,12 @@ You may resume mid-way (see phase [0]); you do not always start at [1].
 Before asking anything, read the host context so you neither clobber existing
 work nor re-ask answered questions.
 
+- **Documentation and package intelligence.** Read
+  `references/documentation-and-packages.md` first. Use it to load the relevant
+  repo docs (`README.md`, `docs/building-portals.md`, `knowledge/*`) and detect
+  installed or sibling MortelOS packages before you decide package boundaries or
+  implementation shape. Do not assume a package is unavailable until this check
+  has run.
 - **Starter wiring check.** Look for the route bridge required from
   `routes/web.php`, a host `config/starter.php` that fills `auth.controllers.*`,
   and a layout that delegates to `mortelos-starter::layouts.app`. See
@@ -162,8 +176,18 @@ driven by a coverage map so it is both thorough and gap-free.
 ## Phase [2]: Package decisions
 
 For every surface the portal introduces, decide the package boundary
-(`package-now` / `package-ready` / `workspace-only`) per §2. Prefer the artisan
-command when the host has the MortelOS dev tools:
+(`package-now` / `package-ready` / `workspace-only`) per §2. Before recording
+the decision, use `references/documentation-and-packages.md` to answer:
+
+1. Does an installed or sibling MortelOS package already own this concept?
+2. Can the capability be composed from existing framework/starter/UI primitives,
+   resolvers, widgets, connectors, or policies?
+3. If not, should the new boundary be `package-now`, `package-ready`, or the rare
+   `workspace-only`?
+
+Prefer package or existing-solution reuse over custom host code. `workspace-only`
+requires a concrete customer-specific reason. Prefer the artisan command when
+the host has the MortelOS dev tools:
 
 ```bash
 php artisan mortelos:package-decision "<Surface>" --decision=<...> \
@@ -221,7 +245,9 @@ The plan is standalone and **complete**: self-contained, no GSD dependency, no
 plan becomes a gap in the portal. Sections that genuinely do not apply (for
 example, no connectors in v1) get an explicit `N/A, reason: <…>` marker; see
 `references/build-plan-template.md`. Use `references/primitives.md` to map each
-customer concept to the right MortelOS primitive.
+customer concept to the right MortelOS primitive. Include the package fit for
+each surface: existing package used, package extended, package-ready boundary, or
+workspace-only reason.
 
 ## Phase [5]: Plan approval gate
 
@@ -290,6 +316,10 @@ partner continues development.
 
 - **Capability-first, not page-first.** Start from what a role can do; assemble
   from governed primitives (handbook intro).
+- **Existing package first.** Inspect installed and sibling MortelOS packages,
+  then compose from `mortelos/framework`, `mortelos/starter`, `mortelos/ui`,
+  package resolvers, widgets, connectors, and policies before writing custom host
+  code. Custom code needs an explicit "no existing owner" note in the plan.
 - **Complete plan or it fails.** The build runs in one pass with no per-slice
   loop, so the plan must be gap-free before the gate. Record unknowns as confirmed
   assumptions during the interview; never leave a `TBD` in the plan.
