@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
+use Mortel\Contracts\TenantResolver;
 use Mortel\Models\UteqStoredEvent;
 use Mortel\Repositories\UteqStoredEventRepository;
 use Spatie\EventSourcing\StoredEvents\Repositories\EloquentStoredEventRepository;
@@ -71,6 +72,7 @@ final class StarterDoctor extends Command
         }
 
         $this->checkEventStore($missing, $invalid);
+        $this->checkSingleTenantFrameworkBaseline($missing, $invalid);
 
         return $missing === [] && $invalid === [] ? self::SUCCESS : self::FAILURE;
     }
@@ -122,6 +124,80 @@ final class StarterDoctor extends Command
 
         if ($repository instanceof EloquentStoredEventRepository) {
             $this->components->info('StoredEventRepository resolves to Mortel event store repository');
+        }
+    }
+
+    /**
+     * @param  list<string>  $missing
+     * @param  list<string>  $invalid
+     */
+    private function checkSingleTenantFrameworkBaseline(array &$missing, array &$invalid): void
+    {
+        try {
+            $resolver = app(TenantResolver::class);
+        } catch (\Throwable $exception) {
+            $invalid[] = 'tenancy.resolver';
+            $this->components->error('TenantResolver cannot be resolved: '.$exception->getMessage());
+
+            return;
+        }
+
+        $tenantId = $resolver->id();
+
+        if (! is_string($tenantId) || $tenantId === '') {
+            $invalid[] = 'tenancy.resolver.id';
+            $this->components->error('TenantResolver must return a non-empty tenant id');
+        } else {
+            $this->components->info('TenantResolver tenant id → '.$tenantId);
+        }
+
+        if (! $resolver->initialized()) {
+            $invalid[] = 'tenancy.resolver.initialized';
+            $this->components->error('TenantResolver must be initialized for the single-tenant baseline');
+        } else {
+            $this->components->info('TenantResolver is initialized');
+        }
+
+        foreach (['tenants', 'tenant_user', 'entities', 'entity_links', 'roles', 'policies'] as $table) {
+            if (! Schema::hasTable($table)) {
+                $missing[] = 'database.'.$table;
+                $this->components->error('database table '.$table.' is missing');
+
+                continue;
+            }
+
+            $this->components->info('database table '.$table.' present');
+        }
+
+        $requiredColumns = [
+            'roles' => ['org_id', 'branch_id', 'scope'],
+            'policies' => ['org_id', 'branch_id', 'scope', 'actions'],
+            'entities' => ['org_id', 'branch_id', 'field_classifications', 'owner_user_id', 'visibility', 'classification', 'access_metadata'],
+            'tenant_user' => ['tenant_id', 'user_id', 'role', 'role_id'],
+        ];
+
+        foreach ($requiredColumns as $table => $columns) {
+            if (! Schema::hasTable($table)) {
+                continue;
+            }
+
+            foreach ($columns as $column) {
+                if (! Schema::hasColumn($table, $column)) {
+                    $missing[] = 'database.'.$table.'.'.$column;
+                    $this->components->error('database column '.$table.'.'.$column.' is missing');
+                }
+            }
+        }
+
+        if (is_string($tenantId) && $tenantId !== '' && Schema::hasTable('tenants')) {
+            $exists = \DB::table('tenants')->where('id', $tenantId)->exists();
+
+            if (! $exists) {
+                $missing[] = 'database.tenants.default';
+                $this->components->error('default tenant row is missing');
+            } else {
+                $this->components->info('default tenant row present');
+            }
         }
     }
 }

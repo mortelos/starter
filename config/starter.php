@@ -23,6 +23,12 @@ return [
         ],
     ],
 
+    'tenancy' => [
+        'default_tenant_id' => env('STARTER_DEFAULT_TENANT_ID', 'default'),
+        'default_tenant_name' => env('STARTER_DEFAULT_TENANT_NAME', 'Default workspace'),
+        'default_branch_id' => env('STARTER_DEFAULT_BRANCH_ID', 'main'),
+    ],
+
     'chat' => [
         'settings_service' => null,
         'conversation_panel_component' => 'chat::conversation-panel',

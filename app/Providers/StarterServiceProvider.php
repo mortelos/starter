@@ -6,8 +6,10 @@ namespace App\Providers;
 
 use App\Access\StarterGovernanceGate;
 use App\Contracts\GovernanceGate;
+use App\Support\SingleTenantResolver;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Mortel\Contracts\TenantResolver;
 
 final class StarterServiceProvider extends ServiceProvider
 {
@@ -17,6 +19,8 @@ final class StarterServiceProvider extends ServiceProvider
         // surfaces fall back to this contract when no access_resolver is
         // configured, so config/starter.php stays untouched.
         $this->app->bind(GovernanceGate::class, StarterGovernanceGate::class);
+
+        $this->app->scoped(TenantResolver::class, SingleTenantResolver::class);
     }
 
     public function boot(): void

@@ -22,6 +22,9 @@ final class RoleFactory extends Factory
             'name' => fake()->unique()->jobTitle(),
             'description' => fake()->sentence(),
             'trust_config' => null,
+            'scope' => ['all_branches' => true],
+            'org_id' => config('starter.tenancy.default_tenant_id', 'default'),
+            'branch_id' => config('starter.tenancy.default_branch_id', 'main'),
         ];
     }
 }

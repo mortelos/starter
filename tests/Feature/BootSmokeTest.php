@@ -3,10 +3,15 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Support\SingleTenantResolver;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Testing\PendingCommand;
+use Mortel\Access\ActorContextResolver;
+use Mortel\Contracts\TenantResolver;
 use Mortel\Models\UteqStoredEvent;
 use Mortel\Repositories\UteqStoredEventRepository;
 use Spatie\EventSourcing\StoredEvents\Models\EloquentStoredEvent;
@@ -59,6 +64,8 @@ it('exposes the starter view namespaces and shell pages', function (): void {
 });
 
 it('reports the doctor command as green for the default config', function (): void {
+    $this->seed(DatabaseSeeder::class);
+
     $command = artisan('starter:doctor');
 
     expect($command)->toBeInstanceOf(PendingCommand::class);
@@ -71,6 +78,32 @@ it('ships the MortelOS event store baseline', function (): void {
     expect(Schema::hasTable('events'))->toBeTrue();
     expect(config('event-sourcing.stored_event_model'))->toBe(UteqStoredEvent::class);
     expect(config('event-sourcing.stored_event_repository'))->toBe(UteqStoredEventRepository::class);
+});
+
+it('ships a single-tenant framework baseline', function (): void {
+    $this->seed(DatabaseSeeder::class);
+
+    $resolver = app(TenantResolver::class);
+
+    expect($resolver)->toBeInstanceOf(SingleTenantResolver::class)
+        ->and($resolver->id())->toBe('default')
+        ->and($resolver->initialized())->toBeTrue()
+        ->and(Schema::hasTable('tenants'))->toBeTrue()
+        ->and(Schema::hasTable('tenant_user'))->toBeTrue()
+        ->and(Schema::hasTable('entities'))->toBeTrue()
+        ->and(Schema::hasTable('entity_links'))->toBeTrue()
+        ->and(DB::table('tenants')->where('id', 'default')->exists())->toBeTrue();
+});
+
+it('resolves a framework actor for the seeded admin', function (): void {
+    $this->seed(DatabaseSeeder::class);
+
+    $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+    $actor = app(ActorContextResolver::class)->resolve($admin);
+
+    expect($actor)->not->toBeNull()
+        ->and($actor?->tenantId)->toBe('default')
+        ->and($actor?->role->name)->toBe('owner');
 });
 
 it('fails the doctor command when the event store table is missing', function (): void {

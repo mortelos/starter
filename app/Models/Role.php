@@ -34,10 +34,16 @@ final class Role extends Model
         'name',
         'description',
         'trust_config',
+        'scope',
+        'org_id',
+        'branch_id',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
         'trust_config' => 'array',
+        'scope' => 'array',
     ];
 
     /**

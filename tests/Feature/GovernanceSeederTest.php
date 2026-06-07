@@ -27,6 +27,6 @@ it('is idempotent when re-seeding does not duplicate the owner role or policies'
     seed(DatabaseSeeder::class);
     seed(DatabaseSeeder::class);
 
-    expect(Role::query()->where('name', 'Owner')->count())->toBe(1);
+    expect(Role::query()->where('name', 'owner')->count())->toBe(1);
     expect(Policy::query()->where('action', 'governance.manage')->count())->toBe(1);
 });

@@ -33,9 +33,27 @@ final class Policy extends Model
 
     protected $fillable = [
         'id',
+        'name',
+        'description',
+        'scope',
+        'resource_type',
+        'resource_id',
         'role_id',
         'action',
+        'actions',
         'effect',
+        'priority',
+        'conditions',
+        'org_id',
+        'branch_id',
+        'created_by',
+        'updated_by',
+    ];
+
+    protected $casts = [
+        'actions' => 'array',
+        'conditions' => 'array',
+        'priority' => 'integer',
     ];
 
     /**

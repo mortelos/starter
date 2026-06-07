@@ -40,4 +40,17 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class);
     }
+
+    /**
+     * Single-tenant baseline membership compatible with framework access
+     * resolution. The add-tenancy skill turns this into real tenant switching.
+     *
+     * @return BelongsToMany<Tenant, $this>
+     */
+    public function tenants(): BelongsToMany
+    {
+        return $this->belongsToMany(Tenant::class, 'tenant_user')
+            ->withPivot(['role', 'role_id'])
+            ->withTimestamps();
+    }
 }
