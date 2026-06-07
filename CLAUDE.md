@@ -1,57 +1,9 @@
-# Claude Code instructions — mortelos/starter
+# Claude Code Instructions
 
-The single source of truth for all agents (Claude, Codex, Cursor, Windsurf,
-generic LLM) is [`AGENTS.md`](AGENTS.md). Read it first. This file only adds
-Claude-specific setup that other agents don't need.
+Read `AGENTS.md` first.
 
-## What this repo is
+The public MortelOS documentation is the source of truth:
 
-`mortelos/starter` is a **Laravel application template** for AI-driven portal
-builds on the TALL stack. New portals start with:
+https://mortelos.nl/docs
 
-```bash
-composer create-project mortelos/starter mijn-portal
-cd mijn-portal
-```
-
-…which yields a working Laravel app with the MortelOS shell already wired:
-login, tenant select, dashboard, inbox, governance, users, settings, plus
-seeded admin account. From there an AI agent assembles portal capabilities on
-top.
-
-## When building a portal
-
-Run the `setup-portal` skill on a new portal request. It owns phases 0–6 of
-the MortelOS portal workflow (pre-flight, interview, package decisions,
-foundation review, build plan, vertical-slice loop, checkpoint).
-
-The canonical skill lives at `.agents/skills/setup-portal/`.
-`.claude/skills/setup-portal/` is a symlink for Claude Code discovery, so the
-skill has one source of truth.
-
-After that the skill triggers automatically on phrases like "build a customer
-portal", "customers should be able to upload documents", "set up a workspace".
-See its `description` frontmatter for the full trigger list.
-
-## TALL stack helpers
-
-If TALL helper skills are installed:
-
-- `tall-model` — scaffold a model + migration + factory
-- `tall-feature` — TDD red-green-refactor of a capability
-- `tall-test` — write Pest tests for existing code
-- `tall-page` — scaffold a Livewire 4 SFC page
-
-Use them from inside phase [5] of the `setup-portal` workflow. Fall back to
-the headless recipe in `.agents/skills/setup-portal/references/build-loop.md`
-when these skills aren't callable.
-
-## Communication conventions (project-wide)
-
-These come from the user profile and apply across all repos:
-
-- Reply in **Dutch**; code, commits, PR descriptions and tech specs stay in **English**
-- Terse and direct; skip explanations unless asked "why"
-- No em-dashes (`—`) in Dutch prose — use commas, semicolons or full sentences
-- ASCII visualisations for UI layouts and complex workflows when useful
-- Always cite code with `path/to/file:line` so the user can jump
+For new portal work, use the local `setup-portal` skill when available. The skill points to the public docs and should not duplicate them locally.
