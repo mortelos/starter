@@ -95,8 +95,8 @@ Optional resolvers (`navigation.sidebar_resolver`,
 all `null` by default and degrade silently. Fill them as the capability map
 calls for them.
 
-Verify with `php artisan starter:doctor` — green means the boot baseline is
-intact.
+Verify with `php artisan starter:doctor`. Green means the boot baseline is
+intact, including the MortelOS `events` table and event-sourcing config.
 
 ## 4. Primitives (the only things you should be assembling)
 
@@ -210,7 +210,8 @@ Every change that touches host behavior gets a verification checklist (see
 
 1. **Boot smoke test** — `login → dashboard` returns 200 for
    the seeded admin
-2. **Doctor command** — `php artisan starter:doctor` reports green
+2. **Doctor command** — `php artisan starter:doctor` reports green, including
+   event-store wiring
 3. **Pest** — `vendor/bin/pest` is green (16+ baseline assertions, growing
    per capability)
 4. **Manual URL + test account** — paste URL + account credentials so the
@@ -225,6 +226,7 @@ If any of those is skipped, say so explicitly in the handoff. Do not claim
 | Symptom | Cause | Fix |
 | --- | --- | --- |
 | `LogicException: Missing starter route class config [...]` | An `auth.controllers.*` key is `null` in `config/starter.php` | Fill it; see §3 |
+| `database table events is missing` | Event-store migration did not run | Run `php artisan migrate` and check `database/migrations/2026_03_26_000003_create_events_table.php` |
 | Vite manifest not found | `npm install && npm run build` not run | `npm install --ignore-scripts && npm run build` |
 | `View [layouts.guest] not found` | `resources/views/layouts/guest.blade.php` got removed | Restore it from git; the login page expects it |
 | Sidebar/search/chat missing | Matching resolver still `null` in config | Optional; fill when the capability needs it |

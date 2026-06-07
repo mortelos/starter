@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Testing\PendingCommand;
+use Mortel\Models\UteqStoredEvent;
+use Mortel\Repositories\UteqStoredEventRepository;
+use Spatie\EventSourcing\StoredEvents\Models\EloquentStoredEvent;
+use Spatie\EventSourcing\StoredEvents\Repositories\EloquentStoredEventRepository;
 
 use function Pest\Laravel\artisan;
 use function Pest\Laravel\get;
@@ -60,4 +65,23 @@ it('reports the doctor command as green for the default config', function (): vo
     assert($command instanceof PendingCommand);
 
     $command->assertSuccessful();
+});
+
+it('ships the MortelOS event store baseline', function (): void {
+    expect(Schema::hasTable('events'))->toBeTrue();
+    expect(config('event-sourcing.stored_event_model'))->toBe(UteqStoredEvent::class);
+    expect(config('event-sourcing.stored_event_repository'))->toBe(UteqStoredEventRepository::class);
+});
+
+it('fails the doctor command when the event store table is missing', function (): void {
+    Schema::dropIfExists('events');
+
+    artisan('starter:doctor')->assertFailed();
+});
+
+it('fails the doctor command when event sourcing falls back to Spatie defaults', function (): void {
+    config()->set('event-sourcing.stored_event_model', EloquentStoredEvent::class);
+    config()->set('event-sourcing.stored_event_repository', EloquentStoredEventRepository::class);
+
+    artisan('starter:doctor')->assertFailed();
 });

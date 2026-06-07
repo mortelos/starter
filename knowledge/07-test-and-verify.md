@@ -8,7 +8,7 @@ Before claiming any change is done. Source method:
 | Level | What it proves | Effort |
 | --- | --- | --- |
 | `vendor/bin/pint --dirty` | Code style is clean on changed files | 1s |
-| `php artisan starter:doctor` | Five auth contracts filled, route bridge, layout, namespaces | seconds |
+| `php artisan starter:doctor` | Auth contracts, route bridge, layout, namespaces, event store | seconds |
 | `vendor/bin/pest` | Boot smoke + config-shape + capability tests pass | seconds |
 | `vendor/bin/pest --filter=Architecture` | Architecture-only suite (when present) | seconds |
 | Manual smoke: `login → dashboard` | The user can actually sign in | minute |
@@ -28,6 +28,7 @@ the smoke flow or run the baseline Pest suite.
 - `mortelos-starter::layouts.app` and `layouts.guest` views resolve
 - Shell page Blade files exist on disk under `resources/views/livewire/pages/`
 - `php artisan starter:doctor` returns success
+- The `events` table exists and event-sourcing config points at MortelOS classes
 
 `tests/Feature/ConfigShapeTest.php` covers the full contract surface for
 `auth`, `layout`, `navigation`, `governance`, `users`, `onboarding`,
@@ -43,6 +44,9 @@ this test.
 - `routes/starter.php` exists at the expected path
 - `routes/web.php` requires `routes/starter.php`
 - `resources/views/layouts/app.blade.php` is present
+- `events` exists on the default connection
+- `event-sourcing.stored_event_model` is `Mortel\Models\UteqStoredEvent`
+- `event-sourcing.stored_event_repository` is `Mortel\Repositories\UteqStoredEventRepository`
 
 Output is a green/red checklist. If red, the row tells you which key to fix.
 

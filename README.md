@@ -155,6 +155,7 @@ planning is `mortelos/framework`.
 | Layout | `mortelos-starter::layouts.app` and `layouts.guest` |
 | Livewire namespace | `starter::` pages and shared shell components |
 | Config contracts | `config/starter.php` with boot-safe defaults |
+| Event store | `events` table + MortelOS event-sourcing config |
 | Seed account | `admin@example.test` / `password` |
 | Diagnostics | `php artisan starter:doctor` |
 | Tests | Pest boot smoke and config shape tests |
@@ -204,6 +205,7 @@ Expected result:
 2. Login works with `admin@example.test` / `password`
 3. Tenant select auto-picks the single default tenant
 4. The user lands on `/dashboard`
+5. `events` exists and `event-sourcing.php` points at MortelOS stored events
 
 ## Requirements
 
@@ -419,6 +421,7 @@ For portal work, verify at least:
 3. Login -> tenant-select -> dashboard works manually
 4. The new capability has at least one focused feature test
 5. Permission-sensitive behavior is tested for allowed and denied roles
+6. Event-producing write paths persist auditable facts to `events`
 
 ## Troubleshooting
 

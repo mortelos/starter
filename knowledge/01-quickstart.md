@@ -23,8 +23,8 @@ agent assembles portal capabilities on top.
 | Shell pages | `/login`, `/dashboard`, `/inbox`, `/governance`, `/users`, `/settings`, `/onboarding`, `/auth/tenant-select`, `/logout` |
 | Views | Layouts (`mortelos-starter::layouts.app`, `layouts.guest`), all `starter::pages.*` Livewire SFCs, shared sidebar/topbar/universal-search |
 | Config | `config/starter.php` with full contract surface; required keys point at working stubs |
-| Diagnostic | `php artisan starter:doctor` reports wiring health |
-| Database | SQLite by default, migrations + `DatabaseSeeder` create `admin@example.test` / `password` |
+| Diagnostic | `php artisan starter:doctor` reports wiring health, including event-store wiring |
+| Database | SQLite by default, migrations create `events`, and `DatabaseSeeder` creates `admin@example.test` / `password` |
 | Tests | Pest baseline: boot smoke + full config-shape coverage |
 
 ## What "building a portal" means here
@@ -74,7 +74,7 @@ These are already decided; don't re-litigate them:
 - **TALL stack** (Tailwind, Alpine, Livewire 4, Laravel) — fixed
 - **Flux UI** as the design system — always check Flux first before custom
 - **Pest** as the test framework
-- **spatie/laravel-event-sourcing** under `mortelos/framework`'s events
+- **spatie/laravel-event-sourcing** under `mortelos/framework`'s `events` table
 - **OAuth 2.1 + Passport** for MCP
 - **Policy Studio** for governance review surfaces
 - **Capability-first, never page-first**

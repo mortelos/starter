@@ -40,7 +40,7 @@ relations.
 
 An **immutable record that something happened**. `DocumentUploaded`,
 `InvoiceSynced`, `PolicyProposed`, `MembershipInvited`. Under the hood:
-`spatie/laravel-event-sourcing` aggregates in `mortelos/framework`.
+`spatie/laravel-event-sourcing` stores MortelOS events in the `events` table.
 
 Use an event when:
 
