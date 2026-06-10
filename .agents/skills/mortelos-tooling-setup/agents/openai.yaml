@@ -1,0 +1,4 @@
+interface:
+  display_name: "MortelOS Tooling Setup"
+  short_description: "Prepare local tooling for MortelOS portals"
+  default_prompt: "Use $mortelos-tooling-setup to prepare my machine for creating a new MortelOS portal."

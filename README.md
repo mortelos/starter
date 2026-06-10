@@ -25,3 +25,10 @@ Local development:
 ```bash
 composer dev
 ```
+
+Agent workflows:
+
+| Situation | Skill |
+| --- | --- |
+| Clean machine, missing tooling, Herd, PHP, Composer, Node, GitHub access, MortelOS CLI, DBngin, TablePlus, or `mortelos new` setup | `mortelos-tooling-setup` |
+| New portal kickoff after a host app can boot and verify | `setup-portal` |
