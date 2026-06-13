@@ -7,6 +7,13 @@
     "license": "proprietary",
     "repositories": [
         {
+            "type": "path",
+            "url": "../*",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
             "type": "vcs",
             "url": "https://github.com/mortelos/ui.git"
         },
@@ -21,8 +28,9 @@
         "laravel/tinker": "^3.0",
         "livewire/flux": "^2.13",
         "livewire/livewire": "^4.0",
-        "mortelos/framework": "^0.5",
-        "mortelos/ui": "^0.2"
+        "mortelos/app-standards": "@dev",
+        "mortelos/framework": "@dev",
+        "mortelos/ui": "@dev"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -30,6 +38,8 @@
         "laravel/pail": "^1.2.5",
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",
+        "mortelos/agent-standards": "@dev",
+        "mortelos/dev-tools": "@dev",
         "nunomaduro/collision": "^8.6",
         "orchestra/testbench": "^11.0",
         "pestphp/pest": "^4.0",
@@ -72,7 +82,8 @@
         "doctor": "@php artisan starter:doctor",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php artisan mortelos:agent-rules:publish --target=AGENTS.md --no-interaction"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
@@ -104,5 +115,6 @@
             "php-http/discovery": true
         }
     },
+    "minimum-stability": "dev",
     "prefer-stable": true
 }
