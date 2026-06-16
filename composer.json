@@ -20,6 +20,18 @@
         {
             "type": "vcs",
             "url": "https://github.com/mortelos/framework.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/mortelos/app-standards.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/mortelos/agent-standards.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/mortelos/dev-tools.git"
         }
     ],
     "require": {
