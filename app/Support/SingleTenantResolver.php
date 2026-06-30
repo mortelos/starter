@@ -10,7 +10,7 @@ use Mortel\Contracts\TenantResolver;
 
 final class SingleTenantResolver implements TenantResolver
 {
-    public function id(): ?string
+    public function id(): string
     {
         $tenantId = config('starter.tenancy.default_tenant_id', 'default');
 
@@ -19,7 +19,8 @@ final class SingleTenantResolver implements TenantResolver
 
     public function initialized(): bool
     {
-        return $this->id() !== null;
+        // Single-tenant: a default tenant id always resolves.
+        return true;
     }
 
     public function data(string $key, mixed $default = null): mixed

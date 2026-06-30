@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Schema;
 use Mortel\Contracts\TenantResolver;
 use Mortel\Models\UteqStoredEvent;
 use Mortel\Repositories\UteqStoredEventRepository;
-use Spatie\EventSourcing\StoredEvents\Repositories\EloquentStoredEventRepository;
 use Spatie\EventSourcing\StoredEvents\Repositories\StoredEventRepository;
 
 final class StarterDoctor extends Command
@@ -109,6 +108,7 @@ final class StarterDoctor extends Command
         }
 
         try {
+            /** @var StoredEventRepository $repository */
             $repository = app(StoredEventRepository::class);
         } catch (\Throwable $exception) {
             $invalid[] = 'event-sourcing.repository_binding';
@@ -124,9 +124,7 @@ final class StarterDoctor extends Command
             return;
         }
 
-        if ($repository instanceof EloquentStoredEventRepository) {
-            $this->components->info('StoredEventRepository resolves to Mortel event store repository');
-        }
+        $this->components->info('StoredEventRepository resolves to Mortel event store repository');
     }
 
     /**
@@ -136,6 +134,7 @@ final class StarterDoctor extends Command
     private function checkSingleTenantFrameworkBaseline(array &$missing, array &$invalid): void
     {
         try {
+            /** @var TenantResolver $resolver */
             $resolver = app(TenantResolver::class);
         } catch (\Throwable $exception) {
             $invalid[] = 'tenancy.resolver';
