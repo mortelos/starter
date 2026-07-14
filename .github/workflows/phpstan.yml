@@ -22,10 +22,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer config --global github-oauth.github.com "$MORTELOS_CI_TOKEN"
+          composer config --global github-oauth.github.com "$MORTELOS_PACKAGE_REPOSITORY_TOKEN"
           composer install --no-interaction --no-progress --prefer-dist
         env:
-          MORTELOS_CI_TOKEN: ${{ secrets.MORTELOS_CI_TOKEN }}
+          MORTELOS_PACKAGE_REPOSITORY_TOKEN: ${{ secrets.MORTELOS_PACKAGE_REPOSITORY_TOKEN }}
 
       - name: Run PHPStan (level max)
         run: composer analyse
