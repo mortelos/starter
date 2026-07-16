@@ -1,0 +1,20 @@
+name: Trigger registry rebuild
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger packages.mortelos.com rebuild
+        env:
+          HOOK: ${{ secrets.MORTELOS_REGISTRY_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "MORTELOS_REGISTRY_DEPLOY_HOOK secret ontbreekt" >&2
+            exit 1
+          fi
+          curl -fsS "$HOOK"
