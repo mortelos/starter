@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Contracts\GovernanceGate;
-use App\Models\Role;
 use App\Models\User;
+use Carbon\CarbonImmutable;
+use DateTimeInterface;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Mortel\Contracts\TenantResolver;
 use RuntimeException;
 
 final readonly class StarterUsersResolver
@@ -17,11 +20,16 @@ final readonly class StarterUsersResolver
 
     public function __construct(
         private GovernanceGate $gate,
+        private TenantResolver $tenantResolver,
     ) {}
 
     public function canManage(): bool
     {
         $user = Auth::user();
+
+        if (! $user instanceof User || ! $this->hasMember($this->userKey($user))) {
+            return false;
+        }
 
         if (method_exists($this->gate, 'allows')) {
             return (bool) $this->gate->allows($user, self::MANAGE_USERS);
@@ -35,22 +43,46 @@ final readonly class StarterUsersResolver
      */
     public function members(): array
     {
+        $tenantId = $this->tenantId();
+
+        if ($tenantId === null) {
+            return [];
+        }
+
         $members = [];
 
         foreach (User::query()
-            ->with('roles')
-            ->orderBy('name')
+            ->select('users.*')
+            ->addSelect([
+                'tenant_user.role as membership_role',
+                'tenant_user.created_at as membership_created_at',
+            ])
+            ->join('tenant_user', 'tenant_user.user_id', '=', 'users.id')
+            ->where('tenant_user.tenant_id', $tenantId)
+            ->orderBy('users.name')
             ->get() as $user) {
             $members[] = [
                 'id' => $this->userKey($user),
                 'name' => $user->name,
                 'email' => $user->email,
-                'role' => $this->roleLabel($user),
-                'joined_at' => $user->created_at?->format('d-m-Y') ?? 'Onbekend',
+                'role' => $this->membershipRole($user->getAttribute('membership_role')),
+                'joined_at' => $this->membershipDate($user->getAttribute('membership_created_at')),
             ];
         }
 
         return $members;
+    }
+
+    public function hasMember(string $userId): bool
+    {
+        $tenantId = $this->tenantId();
+
+        return $tenantId !== null
+            && $userId !== ''
+            && DB::table('tenant_user')
+                ->where('tenant_id', $tenantId)
+                ->where('user_id', $userId)
+                ->exists();
     }
 
     /**
@@ -76,18 +108,24 @@ final readonly class StarterUsersResolver
         // No invitation store exists in the starter baseline.
     }
 
-    private function roleLabel(User $user): string
+    private function membershipRole(mixed $role): string
     {
-        $roles = $user->roles
-            ->map(fn (Role $role): string => $role->name)
-            ->filter(fn (string $role): bool => $role !== '')
-            ->values();
+        $role = is_scalar($role) ? trim((string) $role) : '';
 
-        if ($roles->isEmpty()) {
-            return 'Geen rol';
+        return $role !== '' ? $role : 'Geen rol';
+    }
+
+    private function membershipDate(mixed $date): string
+    {
+        if ($date instanceof DateTimeInterface) {
+            return $date->format('d-m-Y');
         }
 
-        return implode(', ', $roles->all());
+        if (is_string($date) && $date !== '') {
+            return CarbonImmutable::parse($date)->format('d-m-Y');
+        }
+
+        return 'Onbekend';
     }
 
     private function userKey(User $user): string
@@ -99,5 +137,12 @@ final readonly class StarterUsersResolver
         }
 
         return (string) $key;
+    }
+
+    private function tenantId(): ?string
+    {
+        $tenantId = $this->tenantResolver->id();
+
+        return is_string($tenantId) && $tenantId !== '' ? $tenantId : null;
     }
 }

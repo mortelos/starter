@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-use App\Models\User;
-
 final readonly class StarterUsersAccessResolver
 {
     public function __construct(
@@ -18,6 +16,6 @@ final readonly class StarterUsersAccessResolver
 
         return $userId !== ''
             && $this->usersResolver->canManage()
-            && User::query()->whereKey($userId)->exists();
+            && $this->usersResolver->hasMember($userId);
     }
 }
