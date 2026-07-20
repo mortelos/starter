@@ -42,7 +42,7 @@
     "livewire/flux": "^2.13",
     "livewire/livewire": "^4.0",
     "mortelos/app-standards": "^0.1",
-    "mortelos/framework": "^0.5",
+    "mortelos/framework": "^0.6",
     "mortelos/ui": "^0.2"
   },
   "require-dev": {
