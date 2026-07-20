@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Policy;
 use App\Models\Role;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -21,7 +22,16 @@ function ownerUser(): User
     $user = User::factory()->create();
     $role = Role::factory()->create(['name' => 'Owner']);
     Policy::factory()->for($role)->action('governance.manage')->allow()->create();
-    $user->roles()->attach($role);
+    $tenantId = 'default';
+
+    Tenant::query()->firstOrCreate(
+        ['id' => $tenantId],
+        ['data' => ['name' => 'Default workspace']],
+    );
+    $user->tenants()->attach($tenantId, [
+        'role' => 'admin',
+        'role_id' => modelKeyString($role),
+    ]);
 
     return $user;
 }
