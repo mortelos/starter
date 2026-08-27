@@ -15,24 +15,8 @@
   "license": "proprietary",
   "repositories": [
     {
-      "type": "vcs",
-      "url": "https://github.com/mortelos/ui.git"
-    },
-    {
-      "type": "vcs",
-      "url": "https://github.com/mortelos/framework.git"
-    },
-    {
-      "type": "vcs",
-      "url": "https://github.com/mortelos/app-standards.git"
-    },
-    {
-      "type": "vcs",
-      "url": "https://github.com/mortelos/agent-standards.git"
-    },
-    {
-      "type": "vcs",
-      "url": "https://github.com/mortelos/dev-tools.git"
+      "type": "composer",
+      "url": "https://packages.mortelos.com"
     }
   ],
   "require": {
