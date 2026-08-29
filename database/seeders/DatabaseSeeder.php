@@ -8,6 +8,7 @@ use App\Models\Policy;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -17,8 +18,8 @@ final class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $tenantId = (string) config('starter.tenancy.default_tenant_id', 'default');
-        $branchId = (string) config('starter.tenancy.default_branch_id', 'main');
+        $tenantId = is_string($t = config('starter.tenancy.default_tenant_id', 'default')) ? $t : 'default';
+        $branchId = is_string($b = config('starter.tenancy.default_branch_id', 'main')) ? $b : 'main';
 
         Tenant::query()->updateOrCreate(
             ['id' => $tenantId],
@@ -87,14 +88,21 @@ final class DatabaseSeeder extends Seeder
         DB::table('tenant_user')->updateOrInsert(
             [
                 'tenant_id' => $tenantId,
-                'user_id' => (string) $admin->getKey(),
+                'user_id' => $this->key($admin),
             ],
             [
                 'role' => 'admin',
-                'role_id' => (string) $owner->getKey(),
+                'role_id' => $this->key($owner),
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
         );
+    }
+
+    private function key(Model $model): string
+    {
+        $key = $model->getKey();
+
+        return is_scalar($key) ? (string) $key : '';
     }
 }

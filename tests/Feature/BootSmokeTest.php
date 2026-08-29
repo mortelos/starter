@@ -16,6 +16,7 @@ use Mortel\Models\UteqStoredEvent;
 use Mortel\Repositories\UteqStoredEventRepository;
 use Spatie\EventSourcing\StoredEvents\Models\EloquentStoredEvent;
 use Spatie\EventSourcing\StoredEvents\Repositories\EloquentStoredEventRepository;
+use Tests\TestCase;
 
 use function Pest\Laravel\artisan;
 use function Pest\Laravel\get;
@@ -64,6 +65,7 @@ it('exposes the starter view namespaces and shell pages', function (): void {
 });
 
 it('reports the doctor command as green for the default config', function (): void {
+    /** @var TestCase $this */
     $this->seed(DatabaseSeeder::class);
 
     $command = artisan('starter:doctor');
@@ -81,6 +83,7 @@ it('ships the MortelOS event store baseline', function (): void {
 });
 
 it('ships a single-tenant framework baseline', function (): void {
+    /** @var TestCase $this */
     $this->seed(DatabaseSeeder::class);
 
     $resolver = app(TenantResolver::class);
@@ -96,6 +99,7 @@ it('ships a single-tenant framework baseline', function (): void {
 });
 
 it('resolves a framework actor for the seeded admin', function (): void {
+    /** @var TestCase $this */
     $this->seed(DatabaseSeeder::class);
 
     $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
@@ -109,12 +113,16 @@ it('resolves a framework actor for the seeded admin', function (): void {
 it('fails the doctor command when the event store table is missing', function (): void {
     Schema::dropIfExists('events');
 
-    artisan('starter:doctor')->assertFailed();
+    $command = artisan('starter:doctor');
+    assert($command instanceof PendingCommand);
+    $command->assertFailed();
 });
 
 it('fails the doctor command when event sourcing falls back to Spatie defaults', function (): void {
     config()->set('event-sourcing.stored_event_model', EloquentStoredEvent::class);
     config()->set('event-sourcing.stored_event_repository', EloquentStoredEventRepository::class);
 
-    artisan('starter:doctor')->assertFailed();
+    $command = artisan('starter:doctor');
+    assert($command instanceof PendingCommand);
+    $command->assertFailed();
 });

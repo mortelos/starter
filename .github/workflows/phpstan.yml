@@ -22,10 +22,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer config --global github-oauth.github.com "$MORTELOS_CI_TOKEN"
+          composer config --global http-basic.packages.mortelos.com uteq "$MORTELOS_REGISTRY_TOKEN"
           composer install --no-interaction --no-progress --prefer-dist
         env:
-          MORTELOS_CI_TOKEN: ${{ secrets.MORTELOS_CI_TOKEN }}
+          MORTELOS_REGISTRY_TOKEN: ${{ secrets.MORTELOS_REGISTRY_TOKEN }}
 
       - name: Run PHPStan (level max)
         run: composer analyse

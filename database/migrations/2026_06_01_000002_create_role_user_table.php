@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Role assignment pivot (D11): which user holds which role.
  *
- * `user_id` is the bigint users PK; `role_id` is the string roles PK. In the
- * single-tenant baseline membership is global; the add-tenancy skill replaces
- * this with a tenant-scoped tenant_user pivot when multi-tenancy is added.
+ * `user_id` is the bigint users PK; `role_id` is the string roles PK. This is a
+ * legacy governance-role assignment. Tenant membership and its active role are
+ * authoritative in the tenant_user pivot created by the baseline migration.
  */
 return new class extends Migration
 {
