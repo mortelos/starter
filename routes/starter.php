@@ -55,6 +55,7 @@ Route::middleware(['web'])->group(function () use ($starterClass): void {
         Route::livewire('/governance/roles', 'starter::pages.governance.roles')->name('governance.roles');
         Route::livewire('/users', 'starter::pages.users.users')->name('users');
         Route::livewire('/settings', 'starter::pages.settings.settings')->name('settings');
+        Route::livewire('/entities/{entity}', 'starter::pages.entities.entity-detail')->name('entities.show');
 
         Route::post('/logout', function () {
             Auth::logout();
