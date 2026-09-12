@@ -25,7 +25,6 @@
     "laravel/tinker": "^3.0",
     "livewire/flux": "^2.13",
     "livewire/livewire": "^4.0",
-    "mortelos/agent-standards": "^0.1.2",
     "mortelos/app-standards": "^0.1",
     "mortelos/framework": "^0.6",
     "mortelos/ui": "^0.3"
@@ -36,6 +35,7 @@
     "laravel/pail": "^1.2.5",
     "laravel/pint": "^1.27",
     "mockery/mockery": "^1.6",
+    "mortelos/agent-standards": "^0.1.2",
     "mortelos/dev-tools": "^0.1",
     "nunomaduro/collision": "^8.6",
     "orchestra/testbench": "^11.0",
