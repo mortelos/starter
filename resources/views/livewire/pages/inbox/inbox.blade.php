@@ -166,14 +166,7 @@ class extends Component {
         x-cloak
     >
         <div class="border-b border-zinc-200 p-3 lg:hidden" x-show="showDetail">
-            <button
-                wire:click="$dispatch('item-selected', { itemId: '' })"
-                class="flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900 min-h-[44px]"
-                x-on:click="showDetail = false"
-            >
-                <x-mortel::icon name="arrow-left" class="size-4" />
-                Terug naar lijst
-            </button>
+            <x-mortel::button variant="ghost" size="sm" icon="arrow-left" wire:click="$dispatch('item-selected', { itemId: '' })" x-on:click="showDetail = false">Terug naar lijst</x-mortel::button>
         </div>
         @if ($this->isIntakeType())
             <livewire:inbox.intake-detail

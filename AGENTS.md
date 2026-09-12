@@ -27,6 +27,7 @@ Read these pages before portal work:
 6. Record package decisions before adding new surfaces.
 7. Verify host behavior with `php artisan starter:doctor`, `vendor/bin/pest` and `vendor/bin/pint --dirty` when applicable.
 8. Do not use em-dashes in Dutch user-facing prose.
+9. Build UI only from `<x-mortel::…>` components; the catalogue is `vendor/mortelos/ui/COMPONENTS.md`. `tests/Feature/UiGuardTest.php` fails on `<flux:` and on raw `<select>`, `<table>`, `<button>`, `<input>` or `<textarea>`.
 
 For current contracts, routes, install steps and troubleshooting, use the documentation site instead of this repository.
 

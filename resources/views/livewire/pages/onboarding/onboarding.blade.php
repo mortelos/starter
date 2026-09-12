@@ -207,18 +207,16 @@ class extends Component {
         <div class="mt-6 flex items-center justify-between">
             <div>
                 @if ($step > 1)
-                    <button wire:click="previous" class="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50">
-                        ← Vorige
-                    </button>
+                    <x-mortel::button wire:click="previous">← Vorige</x-mortel::button>
                 @endif
             </div>
-            <button wire:click="next" class="rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800">
+            <x-mortel::button wire:click="next" variant="primary">
                 @if ($step === 3)
                     Aan de slag →
                 @else
                     Volgende →
                 @endif
-            </button>
+            </x-mortel::button>
         </div>
     </div>
 </div>
