@@ -206,7 +206,7 @@ class extends Component {
             x-data
             x-on:keydown.escape.window="$wire.closeUserAccessSlide()"
         >
-            <div class="absolute inset-0" wire:click="closeUserAccessSlide" aria-hidden="true"></div>
+            <x-mortel::button variant="ghost" class="absolute! inset-0! h-auto! w-auto! rounded-none!" wire:click="closeUserAccessSlide" aria-label="Sluiten" />
             <div class="relative h-full w-full max-w-3xl bg-white shadow-2xl">
                 <livewire:users.user-access-slide-over
                     :user-id="$selectedUserAccessId"
