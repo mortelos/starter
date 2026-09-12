@@ -192,7 +192,7 @@ new class extends Component {
     <div class="hidden" x-ref="icons">
         @foreach ($iconNames as $icon)
             <div data-icon="{{ $icon }}">
-                <x-dynamic-component :component="'flux::icon.' . $icon" variant="mini" class="size-4 text-zinc-400" />
+                <x-dynamic-component component="mortel::icon" :name="$icon" variant="mini" class="size-4 text-zinc-400" />
             </div>
         @endforeach
     </div>
@@ -203,7 +203,7 @@ new class extends Component {
         @click="doOpen()"
         class="flex w-full items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-400 transition hover:border-zinc-300 hover:text-zinc-500"
     >
-        <flux:icon.magnifying-glass variant="mini" class="size-4" />
+        <x-mortel::icon name="magnifying-glass" variant="mini" class="size-4" />
         <span class="flex-1 text-left">Stel een vraag of zoek...</span>
         <kbd class="hidden rounded border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 sm:inline-block">⌘K</kbd>
     </button>
@@ -232,7 +232,7 @@ new class extends Component {
             >
                 {{-- Input --}}
                 <div class="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">
-                    <flux:icon.magnifying-glass variant="mini" class="size-5 text-zinc-400" />
+                    <x-mortel::icon name="magnifying-glass" variant="mini" class="size-5 text-zinc-400" />
                     <input
                         x-ref="searchInput"
                         x-model="query"
@@ -367,7 +367,7 @@ new class extends Component {
                                 @click="askFreeSearch()"
                                 class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-teal-600 hover:bg-teal-50"
                             >
-                                <flux:icon.chat-bubble-left-right class="size-5 shrink-0" />
+                                <x-mortel::icon name="chat-bubble-left-right" class="size-5 shrink-0" />
                                 <span>Stel een vraag over '<span x-text="query" class="font-medium"></span>'</span>
                             </button>
                         </div>
@@ -383,7 +383,7 @@ new class extends Component {
                                 @click="showSaveForm = true; $nextTick(() => $refs.saveNameInput?.focus())"
                                 class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-zinc-400 transition hover:bg-zinc-50 hover:text-zinc-600"
                             >
-                                <flux:icon.bookmark-square variant="mini" class="size-3.5" />
+                                <x-mortel::icon name="bookmark-square" variant="mini" class="size-3.5" />
                                 Bewaar als overzicht
                             </button>
                         </template>

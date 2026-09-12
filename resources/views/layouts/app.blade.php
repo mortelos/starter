@@ -16,16 +16,16 @@
         $universalSearchComponent = config('starter.layout.universal_search_component');
     @endphp
 
-    <flux:sidebar sticky collapsible class="border-r border-zinc-200 bg-surface-alt">
-        <flux:sidebar.header>
-            <flux:sidebar.brand
+    <x-mortel::sidebar sticky collapsible class="border-r border-zinc-200 bg-surface-alt">
+        <x-mortel::sidebar.header>
+            <x-mortel::sidebar.brand
                 href="{{ route('dashboard') }}"
                 wire:navigate
                 name="{{ config('app.name') }}"
             />
-            <flux:sidebar.toggle class="lg:hidden min-h-[44px] -me-2" icon="x-mark" />
-            <flux:sidebar.collapse class="max-lg:hidden min-h-[44px] in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
-        </flux:sidebar.header>
+            <x-mortel::sidebar.toggle class="lg:hidden min-h-[44px] -me-2" icon="x-mark" />
+            <x-mortel::sidebar.collapse class="max-lg:hidden min-h-[44px] in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
+        </x-mortel::sidebar.header>
 
         @if (is_string($sidebarNavComponent))
             <livewire:dynamic-component
@@ -33,19 +33,19 @@
                 wire:key="starter-sidebar-nav" />
         @endif
 
-        <flux:sidebar.spacer />
+        <x-mortel::sidebar.spacer />
 
         @if (is_string($topbarComponent))
-            <flux:sidebar.nav class="max-lg:hidden">
+            <x-mortel::sidebar.nav class="max-lg:hidden">
                 <livewire:dynamic-component
                     :is="$topbarComponent"
                     :sidebar="true"
                     position="top"
                     align="start"
                     wire:key="starter-sidebar-topbar" />
-            </flux:sidebar.nav>
+            </x-mortel::sidebar.nav>
         @endif
-    </flux:sidebar>
+    </x-mortel::sidebar>
 
     {{-- Connection loss banner --}}
     <div
@@ -61,20 +61,20 @@
         Verbinding verbroken. Herverbinden...
     </div>
 
-    <flux:header class="lg:hidden">
-        <flux:sidebar.toggle class="lg:hidden min-h-[44px]" icon="bars-2" inset="left" />
-        <flux:spacer />
+    <x-mortel::header class="lg:hidden">
+        <x-mortel::sidebar.toggle class="lg:hidden min-h-[44px]" icon="bars-2" inset="left" />
+        <x-mortel::spacer />
 
         @if (is_string($topbarComponent))
             <livewire:dynamic-component
                 :is="$topbarComponent"
                 wire:key="starter-mobile-topbar" />
         @endif
-    </flux:header>
+    </x-mortel::header>
 
-    <flux:main>
+    <x-mortel::main>
         {{ $slot }}
-    </flux:main>
+    </x-mortel::main>
 
     @if (is_string($universalSearchComponent))
         <div class="hidden">

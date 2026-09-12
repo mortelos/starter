@@ -181,7 +181,7 @@ class extends Component {
                                 class="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-xs font-medium text-gray-700 ring-1 ring-gray-200 transition hover:bg-gray-50 hover:text-gray-950"
                             >
                                 Bekijk toegang
-                                <flux:icon.arrow-up-right class="size-3.5 text-gray-400" />
+                                <x-mortel::icon name="arrow-up-right" class="size-3.5 text-gray-400" />
                             </button>
                         </td>
                     </tr>

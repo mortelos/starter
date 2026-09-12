@@ -171,7 +171,7 @@ class extends Component {
                 class="flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900 min-h-[44px]"
                 x-on:click="showDetail = false"
             >
-                <flux:icon.arrow-left class="size-4" />
+                <x-mortel::icon name="arrow-left" class="size-4" />
                 Terug naar lijst
             </button>
         </div>

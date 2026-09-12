@@ -91,10 +91,10 @@ class extends Component {
             @endif
 
             <form wire:submit="updateProfile" class="space-y-4">
-                <flux:input label="Naam" wire:model="name" required />
-                <flux:input label="E-mail" type="email" wire:model="email" required />
+                <x-mortel::input label="Naam" wire:model="name" required />
+                <x-mortel::input label="E-mail" type="email" wire:model="email" required />
 
-                <flux:button type="submit" variant="primary">Opslaan</flux:button>
+                <x-mortel::button type="submit" variant="primary">Opslaan</x-mortel::button>
             </form>
         </div>
 
@@ -109,11 +109,11 @@ class extends Component {
             @endif
 
             <form wire:submit="updatePassword" class="space-y-4">
-                <flux:input label="Huidige wachtwoord" type="password" wire:model="current_password" required />
-                <flux:input label="Nieuw wachtwoord" type="password" wire:model="password" required />
-                <flux:input label="Bevestig nieuw wachtwoord" type="password" wire:model="password_confirmation" required />
+                <x-mortel::input label="Huidige wachtwoord" type="password" wire:model="current_password" required />
+                <x-mortel::input label="Nieuw wachtwoord" type="password" wire:model="password" required />
+                <x-mortel::input label="Bevestig nieuw wachtwoord" type="password" wire:model="password_confirmation" required />
 
-                <flux:button type="submit" variant="primary">Wachtwoord wijzigen</flux:button>
+                <x-mortel::button type="submit" variant="primary">Wachtwoord wijzigen</x-mortel::button>
             </form>
         </div>
     </div>
