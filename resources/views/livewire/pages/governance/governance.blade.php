@@ -119,11 +119,11 @@ class extends Component {
             Rollen &amp; policies
         </a>
         @if($roles !== [])
-            <select wire:model.live="selectedRoleId" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+            <x-mortel::select wire:model.live="selectedRoleId" class="w-56">
                 @foreach($roles as $role)
-                    <option value="{{ $role['id'] }}">{{ $role['name'] }}</option>
+                    <x-mortel::select.option value="{{ $role['id'] }}">{{ $role['name'] }}</x-mortel::select.option>
                 @endforeach
-            </select>
+            </x-mortel::select>
         @endif
     </div>
 

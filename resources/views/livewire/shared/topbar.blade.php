@@ -26,38 +26,38 @@ new class extends Component {
     }
 }; ?>
 
-<flux:dropdown :position="$position" :align="$align">
+<x-mortel::dropdown :position="$position" :align="$align">
     @if ($sidebar)
-        <flux:sidebar.profile
+        <x-mortel::sidebar.profile
             :name="$userName"
             avatar="{{ 'https://ui-avatars.com/api/?name=' . urlencode($userName) . '&background=0d9488&color=fff&size=32' }}"
         />
     @else
-        <flux:profile
+        <x-mortel::profile
             :name="$userName"
             avatar="{{ 'https://ui-avatars.com/api/?name=' . urlencode($userName) . '&background=0d9488&color=fff&size=32' }}"
         />
     @endif
 
-    <flux:menu>
-        <flux:menu.heading>
+    <x-mortel::menu>
+        <x-mortel::menu.heading>
             <div class="font-medium">{{ $userName }}</div>
             <div class="text-xs text-zinc-500">{{ $userEmail }}</div>
-        </flux:menu.heading>
+        </x-mortel::menu.heading>
 
-        <flux:menu.separator />
+        <x-mortel::menu.separator />
 
-        <flux:menu.item icon="cog-6-tooth" href="{{ route('settings') }}" wire:navigate>
+        <x-mortel::menu.item icon="cog-6-tooth" href="{{ route('settings') }}" wire:navigate>
             Instellingen
-        </flux:menu.item>
+        </x-mortel::menu.item>
 
-        <flux:menu.separator />
+        <x-mortel::menu.separator />
 
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <flux:menu.item icon="arrow-right-start-on-rectangle" type="submit">
+            <x-mortel::menu.item icon="arrow-right-start-on-rectangle" type="submit">
                 Uitloggen
-            </flux:menu.item>
+            </x-mortel::menu.item>
         </form>
-    </flux:menu>
-</flux:dropdown>
+    </x-mortel::menu>
+</x-mortel::dropdown>

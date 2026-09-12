@@ -59,10 +59,10 @@ new class extends Component {
     }
 }; ?>
 
-<flux:sidebar.nav aria-label="Hoofdnavigatie">
+<x-mortel::sidebar.nav aria-label="Hoofdnavigatie">
     @foreach ($sections as $section)
         @if ($loop->index > 0)
-            <flux:separator variant="subtle" />
+            <x-mortel::separator variant="subtle" />
         @endif
 
         <div class="flex flex-col" data-sidebar-section>
@@ -73,15 +73,15 @@ new class extends Component {
             <div class="flex flex-col">
                 @foreach ($section['items'] as $item)
                     @if (($item['type'] ?? 'link') === 'action')
-                        <flux:sidebar.item
+                        <x-mortel::sidebar.item
                             icon="{{ $item['icon'] }}"
                             wire:click="dispatchAction('{{ $item['action'] }}')"
                             :current="false"
                         >
                             {{ $item['label'] }}
-                        </flux:sidebar.item>
+                        </x-mortel::sidebar.item>
                     @else
-                        <flux:sidebar.item
+                        <x-mortel::sidebar.item
                             icon="{{ $item['icon'] }}"
                             href="{{ route($item['route']) }}"
                             wire:navigate
@@ -90,7 +90,7 @@ new class extends Component {
                             badge:color="teal"
                         >
                             {{ $item['label'] }}
-                        </flux:sidebar.item>
+                        </x-mortel::sidebar.item>
                     @endif
                 @endforeach
             </div>
@@ -98,7 +98,7 @@ new class extends Component {
     @endforeach
 
     @if (count($overviews) > 0)
-        <flux:separator variant="subtle" />
+        <x-mortel::separator variant="subtle" />
         <div class="flex flex-col" data-sidebar-section>
             <div class="px-3 py-2 in-data-flux-sidebar-collapsed-desktop:hidden">
                 <div class="text-sm text-zinc-400 font-medium leading-none">Mijn overzichten</div>
@@ -106,19 +106,19 @@ new class extends Component {
 
             <div class="flex flex-col">
                 @foreach ($overviews as $overzicht)
-                    <flux:sidebar.item
+                    <x-mortel::sidebar.item
                         icon="table-cells"
                         href="{{ route('overzichten.show', $overzicht['id']) }}"
                         wire:navigate
                         :current="request()->routeIs('overzichten.show')"
                     >
                         {{ $overzicht['name'] }}
-                    </flux:sidebar.item>
+                    </x-mortel::sidebar.item>
                 @endforeach
             </div>
         </div>
     @else
-        <flux:separator variant="subtle" />
+        <x-mortel::separator variant="subtle" />
         <div class="flex flex-col" data-sidebar-section>
             <div class="px-3 py-2 in-data-flux-sidebar-collapsed-desktop:hidden">
                 <div class="text-sm text-zinc-400 font-medium leading-none">Mijn overzichten</div>
@@ -129,4 +129,4 @@ new class extends Component {
             </p>
         </div>
     @endif
-</flux:sidebar.nav>
+</x-mortel::sidebar.nav>

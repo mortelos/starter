@@ -172,18 +172,18 @@ class extends Component {
             <h1 class="mt-1 text-2xl font-semibold text-zinc-900">Rollen &amp; policies</h1>
             <p class="mt-1 text-sm text-zinc-500">Beheer wie wat mag. Toegang is deny-by-default: niemand mag iets totdat een rol een expliciete <span class="font-medium text-zinc-700">allow</span>-policy krijgt.</p>
         </div>
-        <flux:button :href="route('governance')" wire:navigate icon="arrow-left" variant="ghost" size="sm" class="shrink-0">
+        <x-mortel::button :href="route('governance')" wire:navigate icon="arrow-left" variant="ghost" size="sm" class="shrink-0">
             Terug naar Governance
-        </flux:button>
+        </x-mortel::button>
     </div>
 
-    <flux:callout class="mb-6" icon="shield-check" variant="secondary">
-        <flux:callout.text>
+    <x-mortel::callout class="mb-6" icon="shield-check" variant="secondary">
+        <x-mortel::callout.text>
             Een rol zonder <span class="font-medium">allow</span>-policy verleent geen enkele bevoegdheid. Voeg de actie
             <code class="rounded bg-zinc-100 px-1 py-0.5 text-xs">governance.manage</code> toe om beheer van dit scherm te geven,
             of <code class="rounded bg-zinc-100 px-1 py-0.5 text-xs">users.manage</code> voor gebruikersbeheer.
-        </flux:callout.text>
-    </flux:callout>
+        </x-mortel::callout.text>
+    </x-mortel::callout>
 
     {{-- Nieuwe rol --}}
     <div class="mb-8 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
@@ -191,12 +191,12 @@ class extends Component {
 
         <form wire:submit="createRole" class="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div class="flex-1">
-                <flux:input label="Naam" wire:model="newRoleName" placeholder="bijv. Owner" required />
+                <x-mortel::input label="Naam" wire:model="newRoleName" placeholder="bijv. Owner" required />
             </div>
             <div class="flex-1">
-                <flux:input label="Omschrijving" wire:model="newRoleDescription" placeholder="Optioneel" />
+                <x-mortel::input label="Omschrijving" wire:model="newRoleDescription" placeholder="Optioneel" />
             </div>
-            <flux:button type="submit" variant="primary">Rol toevoegen</flux:button>
+            <x-mortel::button type="submit" variant="primary">Rol toevoegen</x-mortel::button>
         </form>
     </div>
 
@@ -207,14 +207,14 @@ class extends Component {
                 @if($editingRoleId === $role['id'])
                     <form wire:submit="updateRole" class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-end">
                         <div class="flex-1">
-                            <flux:input label="Naam" wire:model="editRoleName" required />
+                            <x-mortel::input label="Naam" wire:model="editRoleName" required />
                         </div>
                         <div class="flex-1">
-                            <flux:input label="Omschrijving" wire:model="editRoleDescription" />
+                            <x-mortel::input label="Omschrijving" wire:model="editRoleDescription" />
                         </div>
                         <div class="flex gap-2">
-                            <flux:button type="submit" variant="primary" size="sm">Opslaan</flux:button>
-                            <flux:button type="button" variant="ghost" size="sm" wire:click="cancelEditRole">Annuleren</flux:button>
+                            <x-mortel::button type="submit" variant="primary" size="sm">Opslaan</x-mortel::button>
+                            <x-mortel::button type="button" variant="ghost" size="sm" wire:click="cancelEditRole">Annuleren</x-mortel::button>
                         </div>
                     </form>
                 @else
@@ -225,11 +225,11 @@ class extends Component {
                         @endif
                     </div>
                     <div class="flex shrink-0 gap-2">
-                        <flux:button type="button" variant="ghost" size="sm" wire:click="startEditRole('{{ $role['id'] }}')">Bewerken</flux:button>
-                        <flux:button type="button" variant="ghost" size="sm"
+                        <x-mortel::button type="button" variant="ghost" size="sm" wire:click="startEditRole('{{ $role['id'] }}')">Bewerken</x-mortel::button>
+                        <x-mortel::button type="button" variant="ghost" size="sm"
                             wire:click="deleteRole('{{ $role['id'] }}')"
                             wire:confirm="Rol '{{ $role['name'] }}' en alle bijbehorende policies verwijderen?"
-                            class="text-red-600 hover:text-red-700">Verwijderen</flux:button>
+                            class="text-red-600 hover:text-red-700">Verwijderen</x-mortel::button>
                     </div>
                 @endif
             </div>
@@ -245,15 +245,15 @@ class extends Component {
                             <div class="flex items-center justify-between gap-4 rounded-lg border border-zinc-100 bg-zinc-50/60 px-4 py-2.5" wire:key="policy-{{ $policy['id'] }}">
                                 <div class="flex items-center gap-3">
                                     @if($policy['effect'] === 'allow')
-                                        <flux:badge color="teal" size="sm">allow</flux:badge>
+                                        <x-mortel::badge color="teal" size="sm">allow</x-mortel::badge>
                                     @else
-                                        <flux:badge color="red" size="sm">deny</flux:badge>
+                                        <x-mortel::badge color="red" size="sm">deny</x-mortel::badge>
                                     @endif
                                     <code class="text-sm text-zinc-700">{{ $policy['action'] }}</code>
                                 </div>
-                                <flux:button type="button" variant="ghost" size="sm"
+                                <x-mortel::button type="button" variant="ghost" size="sm"
                                     wire:click="deletePolicy('{{ $policy['id'] }}')"
-                                    class="text-red-600 hover:text-red-700">Verwijderen</flux:button>
+                                    class="text-red-600 hover:text-red-700">Verwijderen</x-mortel::button>
                             </div>
                         @endforeach
                     </div>
@@ -261,15 +261,15 @@ class extends Component {
 
                 <form wire:submit="addPolicy('{{ $role['id'] }}')" class="flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div class="flex-1">
-                        <flux:input label="Actie" wire:model="policyAction.{{ $role['id'] }}" placeholder="bijv. governance.manage" />
+                        <x-mortel::input label="Actie" wire:model="policyAction.{{ $role['id'] }}" placeholder="bijv. governance.manage" />
                     </div>
                     <div class="w-full sm:w-44">
-                        <flux:select label="Effect" wire:model="policyEffect.{{ $role['id'] }}" placeholder="allow">
-                            <flux:select.option value="allow">allow</flux:select.option>
-                            <flux:select.option value="deny">deny</flux:select.option>
-                        </flux:select>
+                        <x-mortel::select label="Effect" wire:model="policyEffect.{{ $role['id'] }}" placeholder="allow">
+                            <x-mortel::select.option value="allow">allow</x-mortel::select.option>
+                            <x-mortel::select.option value="deny">deny</x-mortel::select.option>
+                        </x-mortel::select>
                     </div>
-                    <flux:button type="submit" variant="filled" size="sm">Policy toevoegen</flux:button>
+                    <x-mortel::button type="submit" variant="filled" size="sm">Policy toevoegen</x-mortel::button>
                 </form>
             </div>
         </div>

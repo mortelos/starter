@@ -9,9 +9,9 @@
     @fluxAppearance
 </head>
 <body class="min-h-screen bg-white font-sans antialiased">
-    <flux:main>
+    <x-mortel::main>
         {{ $slot }}
-    </flux:main>
+    </x-mortel::main>
 
     @livewireScriptConfig
     @fluxScripts

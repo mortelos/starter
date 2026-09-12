@@ -192,21 +192,22 @@ new class extends Component {
     <div class="hidden" x-ref="icons">
         @foreach ($iconNames as $icon)
             <div data-icon="{{ $icon }}">
-                <x-dynamic-component :component="'flux::icon.' . $icon" variant="mini" class="size-4 text-zinc-400" />
+                <x-dynamic-component component="mortel::icon" :name="$icon" variant="mini" class="size-4 text-zinc-400" />
             </div>
         @endforeach
     </div>
 
     {{-- Search trigger button --}}
-    <button
+    <x-mortel::button
+        variant="ghost"
         type="button"
         @click="doOpen()"
         class="flex w-full items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-400 transition hover:border-zinc-300 hover:text-zinc-500"
     >
-        <flux:icon.magnifying-glass variant="mini" class="size-4" />
+        <x-mortel::icon name="magnifying-glass" variant="mini" class="size-4" />
         <span class="flex-1 text-left">Stel een vraag of zoek...</span>
         <kbd class="hidden rounded border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 sm:inline-block">⌘K</kbd>
-    </button>
+    </x-mortel::button>
 
     {{-- Modal overlay --}}
     <template x-teleport="body">
@@ -232,8 +233,8 @@ new class extends Component {
             >
                 {{-- Input --}}
                 <div class="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">
-                    <flux:icon.magnifying-glass variant="mini" class="size-5 text-zinc-400" />
-                    <input
+                    <x-mortel::icon name="magnifying-glass" variant="mini" class="size-5 text-zinc-400" />
+                    <x-mortel::input
                         x-ref="searchInput"
                         x-model="query"
                         @input.debounce.200ms="$wire.search(query)"
@@ -247,7 +248,7 @@ new class extends Component {
                         aria-label="Zoek of stel een vraag"
                         aria-autocomplete="list"
                         aria-controls="universal-search-results"
-                        :aria-activedescendant="activeIndex >= 0 ? 'search-result-' + activeIndex : null"
+                        x-bind:aria-activedescendant="activeIndex >= 0 ? 'search-result-' + activeIndex : null"
                     />
                     <kbd class="rounded border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400">ESC</kbd>
                 </div>
@@ -259,20 +260,21 @@ new class extends Component {
                         <div>
                             <div class="px-2 py-1.5 text-xs font-medium text-zinc-400">Entiteiten</div>
                             <template x-for="(entity, i) in results.entities" :key="'e-' + entity.id">
-                                <button
+                                <x-mortel::button
+                                    variant="ghost"
                                     type="button"
                                     @click="navigate({ ...entity, _type: 'entity' })"
                                     @mouseenter="activeIndex = i"
-                                    :id="'search-result-' + i"
-                                    :class="activeIndex === i ? 'bg-zinc-100' : ''"
-                                    class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-zinc-100"
+                                    x-bind:id="'search-result-' + i"
+                                    x-bind:class="activeIndex === i ? 'bg-zinc-100' : ''"
+                                    class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-zinc-100 w-full justify-start"
                                     role="option"
-                                    :aria-selected="activeIndex === i"
+                                    x-bind:aria-selected="activeIndex === i"
                                 >
                                     <span x-html="iconHtml(entity.icon)"></span>
                                     <span class="flex-1 truncate text-zinc-900" x-text="entity.name"></span>
                                     <span class="text-xs text-zinc-400" x-text="entity.type"></span>
-                                </button>
+                                </x-mortel::button>
                             </template>
                         </div>
                     </template>
@@ -285,15 +287,16 @@ new class extends Component {
                                 :class="results.entities.length > 0 ? 'mt-2 border-t border-zinc-100 pt-2' : ''"
                             >Inbox</div>
                             <template x-for="(item, j) in results.inboxItems" :key="'i-' + item.id">
-                                <button
+                                <x-mortel::button
+                                    variant="ghost"
                                     type="button"
                                     @click="navigate({ ...item, _type: 'inbox' })"
                                     @mouseenter="activeIndex = results.entities.length + j"
-                                    :id="'search-result-' + (results.entities.length + j)"
-                                    :class="activeIndex === (results.entities.length + j) ? 'bg-zinc-100' : ''"
-                                    class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-zinc-100"
+                                    x-bind:id="'search-result-' + (results.entities.length + j)"
+                                    x-bind:class="activeIndex === (results.entities.length + j) ? 'bg-zinc-100' : ''"
+                                    class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-zinc-100 w-full justify-start"
                                     role="option"
-                                    :aria-selected="activeIndex === (results.entities.length + j)"
+                                    x-bind:aria-selected="activeIndex === (results.entities.length + j)"
                                 >
                                     <span x-html="iconHtml(item.icon)"></span>
                                     <span class="min-w-0 flex-1">
@@ -301,7 +304,7 @@ new class extends Component {
                                         <span class="block truncate text-xs text-zinc-400" x-text="item.summary"></span>
                                     </span>
                                     <span class="text-xs text-zinc-400" x-text="item.status"></span>
-                                </button>
+                                </x-mortel::button>
                             </template>
                         </div>
                     </template>
@@ -314,22 +317,23 @@ new class extends Component {
                                 :class="(results.entities.length + results.inboxItems.length) > 0 ? 'mt-2 border-t border-zinc-100 pt-2' : ''"
                             >Chat</div>
                             <template x-for="(chat, k) in results.chatItems" :key="'c-' + chat.id">
-                                <button
+                                <x-mortel::button
+                                    variant="ghost"
                                     type="button"
                                     @click="navigate({ ...chat, _type: 'chat' })"
                                     @mouseenter="activeIndex = results.entities.length + results.inboxItems.length + k"
-                                    :id="'search-result-' + (results.entities.length + results.inboxItems.length + k)"
-                                    :class="activeIndex === (results.entities.length + results.inboxItems.length + k) ? 'bg-zinc-100' : ''"
-                                    class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-zinc-100"
+                                    x-bind:id="'search-result-' + (results.entities.length + results.inboxItems.length + k)"
+                                    x-bind:class="activeIndex === (results.entities.length + results.inboxItems.length + k) ? 'bg-zinc-100' : ''"
+                                    class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-zinc-100 w-full justify-start"
                                     role="option"
-                                    :aria-selected="activeIndex === (results.entities.length + results.inboxItems.length + k)"
+                                    x-bind:aria-selected="activeIndex === (results.entities.length + results.inboxItems.length + k)"
                                 >
                                     <span x-html="iconHtml(chat.icon)"></span>
                                     <span class="min-w-0 flex-1">
                                         <span class="block truncate text-zinc-900" x-text="chat.title"></span>
                                         <span class="block truncate text-xs text-zinc-400" x-text="chat.summary"></span>
                                     </span>
-                                </button>
+                                </x-mortel::button>
                             </template>
                         </div>
                     </template>
@@ -342,19 +346,20 @@ new class extends Component {
                                 :class="(results.entities.length + results.inboxItems.length + results.chatItems.length) > 0 ? 'mt-2 border-t border-zinc-100 pt-2' : ''"
                             >Navigatie</div>
                             <template x-for="(nav, j) in results.navItems" :key="'n-' + nav.label">
-                                <button
+                                <x-mortel::button
+                                    variant="ghost"
                                     type="button"
                                     @click="navigate({ ...nav, _type: 'nav' })"
                                     @mouseenter="activeIndex = results.entities.length + results.inboxItems.length + results.chatItems.length + j"
-                                    :id="'search-result-' + (results.entities.length + results.inboxItems.length + results.chatItems.length + j)"
-                                    :class="activeIndex === (results.entities.length + results.inboxItems.length + results.chatItems.length + j) ? 'bg-zinc-100' : ''"
-                                    class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-zinc-100"
+                                    x-bind:id="'search-result-' + (results.entities.length + results.inboxItems.length + results.chatItems.length + j)"
+                                    x-bind:class="activeIndex === (results.entities.length + results.inboxItems.length + results.chatItems.length + j) ? 'bg-zinc-100' : ''"
+                                    class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-zinc-100 w-full justify-start"
                                     role="option"
-                                    :aria-selected="activeIndex === (results.entities.length + results.inboxItems.length + results.chatItems.length + j)"
+                                    x-bind:aria-selected="activeIndex === (results.entities.length + results.inboxItems.length + results.chatItems.length + j)"
                                 >
                                     <span x-html="iconHtml(nav.icon)"></span>
                                     <span class="flex-1 truncate text-zinc-900" x-text="nav.label"></span>
-                                </button>
+                                </x-mortel::button>
                             </template>
                         </div>
                     </template>
@@ -362,14 +367,15 @@ new class extends Component {
                     {{-- No results: ask AI --}}
                     <template x-if="!hasResults && query.length > 0">
                         <div class="px-2 py-2">
-                            <button
+                            <x-mortel::button
+                                variant="ghost"
                                 type="button"
                                 @click="askFreeSearch()"
-                                class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-teal-600 hover:bg-teal-50"
+                                class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-teal-600 hover:bg-teal-50 w-full justify-start"
                             >
-                                <flux:icon.chat-bubble-left-right class="size-5 shrink-0" />
+                                <x-mortel::icon name="chat-bubble-left-right" class="size-5 shrink-0" />
                                 <span>Stel een vraag over '<span x-text="query" class="font-medium"></span>'</span>
-                            </button>
+                            </x-mortel::button>
                         </div>
                     </template>
                 </div>
@@ -378,18 +384,21 @@ new class extends Component {
                 <template x-if="results.entities.length > 0 && query.length > 0">
                     <div class="border-t border-zinc-100 px-3 py-2">
                         <template x-if="!showSaveForm && !saveConfirmed">
-                            <button
+                            <x-mortel::button
+                                variant="ghost"
+                                size="xs"
                                 type="button"
                                 @click="showSaveForm = true; $nextTick(() => $refs.saveNameInput?.focus())"
-                                class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-zinc-400 transition hover:bg-zinc-50 hover:text-zinc-600"
+                                class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-zinc-400 transition hover:bg-zinc-50 hover:text-zinc-600 w-full justify-start"
                             >
-                                <flux:icon.bookmark-square variant="mini" class="size-3.5" />
+                                <x-mortel::icon name="bookmark-square" variant="mini" class="size-3.5" />
                                 Bewaar als overzicht
-                            </button>
+                            </x-mortel::button>
                         </template>
                         <template x-if="showSaveForm">
                             <div class="flex items-center gap-2">
-                                <input
+                                <x-mortel::input
+                                    size="sm"
                                     x-ref="saveNameInput"
                                     x-model="saveName"
                                     @keydown.enter.prevent="if (saveName.trim()) { $wire.saveOverview(query, saveName); showSaveForm = false; saveConfirmed = true; saveName = ''; }"
@@ -398,13 +407,15 @@ new class extends Component {
                                     placeholder="Naam voor dit overzicht..."
                                     class="flex-1 rounded border border-zinc-200 px-2 py-1 text-xs text-zinc-900 outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400"
                                 />
-                                <button
+                                <x-mortel::button
+                                    variant="primary"
+                                    size="xs"
                                     type="button"
                                     @click="if (saveName.trim()) { $wire.saveOverview(query, saveName); showSaveForm = false; saveConfirmed = true; saveName = ''; }"
                                     class="rounded bg-teal-600 px-2 py-1 text-xs font-medium text-white hover:bg-teal-700"
                                 >
                                     Opslaan
-                                </button>
+                                </x-mortel::button>
                             </div>
                         </template>
                         <template x-if="saveConfirmed">

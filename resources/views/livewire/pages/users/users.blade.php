@@ -128,25 +128,13 @@ class extends Component {
         @endif
 
         <form wire:submit="invite" class="flex items-end gap-4">
-            <div class="flex-1">
-                <label for="inviteEmail" class="block text-sm font-medium text-gray-700">E-mailadres</label>
-                <input type="email" wire:model="inviteEmail" id="inviteEmail" required
-                    class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-                    placeholder="naam@voorbeeld.nl">
-            </div>
-            <div>
-                <label for="inviteRole" class="block text-sm font-medium text-gray-700">Rol</label>
-                <select wire:model="inviteRole" id="inviteRole"
-                    class="mt-1 block rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900">
-                    <option value="member">Member</option>
-                    <option value="observer">Observer</option>
-                    <option value="owner">Owner</option>
-                </select>
-            </div>
-            <button type="submit"
-                class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-gray-800">
-                Uitnodiging versturen
-            </button>
+            <x-mortel::input type="email" wire:model="inviteEmail" label="E-mailadres" placeholder="naam@voorbeeld.nl" required class="flex-1" />
+            <x-mortel::select wire:model="inviteRole" label="Rol">
+                <x-mortel::select.option value="member">Member</x-mortel::select.option>
+                <x-mortel::select.option value="observer">Observer</x-mortel::select.option>
+                <x-mortel::select.option value="owner">Owner</x-mortel::select.option>
+            </x-mortel::select>
+            <x-mortel::button type="submit" variant="primary">Uitnodiging versturen</x-mortel::button>
         </form>
     </div>
 
@@ -155,43 +143,32 @@ class extends Component {
         <div class="border-b border-gray-100 px-6 py-4">
             <h2 class="text-lg font-medium text-gray-900">Teamleden</h2>
         </div>
-        <table class="w-full text-sm">
-            <thead class="border-b border-gray-100 bg-gray-50/50">
-                <tr>
-                    <th class="px-6 py-3 text-left font-medium text-gray-500">Naam</th>
-                    <th class="px-6 py-3 text-left font-medium text-gray-500">E-mail</th>
-                    <th class="px-6 py-3 text-left font-medium text-gray-500">Rol</th>
-                    <th class="px-6 py-3 text-left font-medium text-gray-500">Lid sinds</th>
-                    <th class="px-6 py-3 text-right font-medium text-gray-500"></th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
+        <x-mortel::table class="px-6">
+            <x-mortel::table.columns>
+                <x-mortel::table.column>Naam</x-mortel::table.column>
+                <x-mortel::table.column>E-mail</x-mortel::table.column>
+                <x-mortel::table.column>Rol</x-mortel::table.column>
+                <x-mortel::table.column>Lid sinds</x-mortel::table.column>
+                <x-mortel::table.column align="end"></x-mortel::table.column>
+            </x-mortel::table.columns>
+            <x-mortel::table.rows>
                 @forelse($members as $member)
-                    <tr class="transition hover:bg-gray-50/70">
-                        <td class="px-6 py-3 text-gray-900">{{ $member['name'] }}</td>
-                        <td class="px-6 py-3 text-gray-600">{{ $member['email'] }}</td>
-                        <td class="px-6 py-3">
-                            <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">{{ $member['role'] }}</span>
-                        </td>
-                        <td class="px-6 py-3 text-gray-500">{{ $member['joined_at'] }}</td>
-                        <td class="px-6 py-3 text-right">
-                            <button
-                                type="button"
-                                wire:click="openUserAccessSlide('{{ $member['id'] }}')"
-                                class="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-xs font-medium text-gray-700 ring-1 ring-gray-200 transition hover:bg-gray-50 hover:text-gray-950"
-                            >
-                                Bekijk toegang
-                                <flux:icon.arrow-up-right class="size-3.5 text-gray-400" />
-                            </button>
-                        </td>
-                    </tr>
+                    <x-mortel::table.row>
+                        <x-mortel::table.cell>{{ $member['name'] }}</x-mortel::table.cell>
+                        <x-mortel::table.cell>{{ $member['email'] }}</x-mortel::table.cell>
+                        <x-mortel::table.cell><x-mortel::badge size="sm">{{ $member['role'] }}</x-mortel::badge></x-mortel::table.cell>
+                        <x-mortel::table.cell>{{ $member['joined_at'] }}</x-mortel::table.cell>
+                        <x-mortel::table.cell align="end">
+                            <x-mortel::button size="xs" icon:trailing="arrow-up-right" wire:click="openUserAccessSlide('{{ $member['id'] }}')">Bekijk toegang</x-mortel::button>
+                        </x-mortel::table.cell>
+                    </x-mortel::table.row>
                 @empty
-                    <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">Nog geen teamleden.</td>
-                    </tr>
+                    <x-mortel::table.row>
+                        <x-mortel::table.cell colspan="5" class="text-center text-zinc-500">Nog geen teamleden.</x-mortel::table.cell>
+                    </x-mortel::table.row>
                 @endforelse
-            </tbody>
-        </table>
+            </x-mortel::table.rows>
+        </x-mortel::table>
     </div>
 
     {{-- Openstaande uitnodigingen --}}
@@ -200,33 +177,26 @@ class extends Component {
             <div class="border-b border-gray-100 px-6 py-4">
                 <h2 class="text-lg font-medium text-gray-900">Openstaande uitnodigingen</h2>
             </div>
-            <table class="w-full text-sm">
-                <thead class="border-b border-gray-100 bg-gray-50/50">
-                    <tr>
-                        <th class="px-6 py-3 text-left font-medium text-gray-500">E-mail</th>
-                        <th class="px-6 py-3 text-left font-medium text-gray-500">Rol</th>
-                        <th class="px-6 py-3 text-left font-medium text-gray-500">Verloopt</th>
-                        <th class="px-6 py-3 text-right font-medium text-gray-500"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
+            <x-mortel::table class="px-6">
+                <x-mortel::table.columns>
+                    <x-mortel::table.column>E-mail</x-mortel::table.column>
+                    <x-mortel::table.column>Rol</x-mortel::table.column>
+                    <x-mortel::table.column>Verloopt</x-mortel::table.column>
+                    <x-mortel::table.column align="end"></x-mortel::table.column>
+                </x-mortel::table.columns>
+                <x-mortel::table.rows>
                     @foreach($pendingInvites as $invite)
-                        <tr>
-                            <td class="px-6 py-3 text-gray-900">{{ $invite['email'] }}</td>
-                            <td class="px-6 py-3">
-                                <span class="inline-flex rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">{{ $invite['role'] }}</span>
-                            </td>
-                            <td class="px-6 py-3 text-gray-500">{{ $invite['expires_at'] }}</td>
-                            <td class="px-6 py-3 text-right">
-                                <button wire:click="revokeInvite('{{ $invite['id'] }}')"
-                                    class="text-sm font-medium text-red-600 transition hover:text-red-800">
-                                    Intrekken
-                                </button>
-                            </td>
-                        </tr>
+                        <x-mortel::table.row>
+                            <x-mortel::table.cell>{{ $invite['email'] }}</x-mortel::table.cell>
+                            <x-mortel::table.cell><x-mortel::badge color="amber" size="sm">{{ $invite['role'] }}</x-mortel::badge></x-mortel::table.cell>
+                            <x-mortel::table.cell>{{ $invite['expires_at'] }}</x-mortel::table.cell>
+                            <x-mortel::table.cell align="end">
+                                <x-mortel::button variant="ghost" size="xs" class="text-red-600" wire:click="revokeInvite('{{ $invite['id'] }}')">Intrekken</x-mortel::button>
+                            </x-mortel::table.cell>
+                        </x-mortel::table.row>
                     @endforeach
-                </tbody>
-            </table>
+                </x-mortel::table.rows>
+            </x-mortel::table>
         </div>
     @endif
 
@@ -236,12 +206,7 @@ class extends Component {
             x-data
             x-on:keydown.escape.window="$wire.closeUserAccessSlide()"
         >
-            <button
-                type="button"
-                class="absolute inset-0 cursor-default"
-                wire:click="closeUserAccessSlide"
-                aria-label="Sluiten"
-            ></button>
+            <div class="absolute inset-0" wire:click="closeUserAccessSlide" aria-hidden="true"></div>
             <div class="relative h-full w-full max-w-3xl bg-white shadow-2xl">
                 <livewire:users.user-access-slide-over
                     :user-id="$selectedUserAccessId"
