@@ -27,7 +27,7 @@
     "livewire/livewire": "^4.0",
     "mortelos/app-standards": "^0.1",
     "mortelos/framework": "^0.6",
-    "mortelos/ui": "^0.4"
+    "mortelos/ui": "^0.4.2"
   },
   "require-dev": {
     "fakerphp/faker": "^1.23",
@@ -35,7 +35,7 @@
     "laravel/pail": "^1.2.5",
     "laravel/pint": "^1.27",
     "mockery/mockery": "^1.6",
-    "mortelos/agent-standards": "^0.1.4",
+    "mortelos/agent-standards": "^0.1.6",
     "mortelos/dev-tools": "^0.1",
     "nunomaduro/collision": "^8.6",
     "orchestra/testbench": "^11.0",
