@@ -1,19 +1,16 @@
 <?php
 
 use Spatie\FlareClient\Enums\CollectType;
-use Spatie\LaravelFlare\FlareConfig;
+use Spatie\LaravelFlare\Enums\LaravelCollectType;
 
 return [
     'key' => env('FLARE_KEY'),
 
-    'collects' => FlareConfig::defaultCollects(
-        ignore: [CollectType::StackFrameArguments],
-        extra: [
-            CollectType::Queries->value => [
-                'include_bindings' => false,
-            ],
-        ],
-    ),
+    'collects' => [
+        CollectType::ErrorsWithTraces->value => ['with_traces' => false],
+        CollectType::GitInfo->value => ['use_process' => false],
+        LaravelCollectType::HandledExceptions->value => [],
+    ],
 
     'censor' => [
         'body_fields' => ['*'],
