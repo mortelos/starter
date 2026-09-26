@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9a5f988eef07044c643d5e5f54efbba8",
+    "content-hash": "aea5512fbb5763e487b150a913b411e2",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -2915,12 +2915,12 @@
         },
         {
             "name": "mortelos/ui",
-            "version": "0.4.3",
+            "version": "0.4.4",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/ui/0.4.3.zip",
-                "reference": "b3c92c53c7a3b41e8a2a8a95cde5522ed57569a7",
-                "shasum": "df48699f911c62426e9a23201a7f1040b91ecc6c"
+                "url": "https://packages.mortelos.com/dist/mortelos/ui/0.4.4.zip",
+                "reference": "5bd32946b0b3f6023b10714956654a38a5eb3fd1",
+                "shasum": "cb0cf8b3303f401c4918756ed2c4940a88d405e4"
             },
             "require": {
                 "illuminate/support": "^13.0",
