@@ -117,14 +117,14 @@ class extends Component {
 }; ?>
 
 <div class="p-6">
-    <h1 class="mb-6 text-2xl font-semibold text-gray-900">Gebruikersbeheer</h1>
+    <x-mortel::heading size="xl" level="1" class="mb-6">Gebruikersbeheer</x-mortel::heading>
 
     {{-- Uitnodigingsformulier --}}
-    <div class="mb-8 rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5">
-        <h2 class="mb-4 text-lg font-medium text-gray-900">Medewerker uitnodigen</h2>
+    <x-mortel::card class="mb-8">
+        <x-mortel::heading size="lg" level="2" class="mb-4">Medewerker uitnodigen</x-mortel::heading>
 
         @if($errorMessage)
-            <div class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ $errorMessage }}</div>
+            <x-mortel::callout variant="danger" icon="exclamation-triangle" :heading="$errorMessage" class="mb-4" />
         @endif
 
         <form wire:submit="invite" class="flex items-end gap-4">
@@ -136,12 +136,12 @@ class extends Component {
             </x-mortel::select>
             <x-mortel::button type="submit" variant="primary">Uitnodiging versturen</x-mortel::button>
         </form>
-    </div>
+    </x-mortel::card>
 
     {{-- Teamleden --}}
-    <div class="mb-8 rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5">
-        <div class="border-b border-gray-100 px-6 py-4">
-            <h2 class="text-lg font-medium text-gray-900">Teamleden</h2>
+    <x-mortel::card class="mb-8 p-0">
+        <div class="border-b border-zinc-100 px-6 py-4">
+            <x-mortel::heading size="lg" level="2">Teamleden</x-mortel::heading>
         </div>
         <x-mortel::table class="px-6">
             <x-mortel::table.columns>
@@ -164,18 +164,20 @@ class extends Component {
                     </x-mortel::table.row>
                 @empty
                     <x-mortel::table.row>
-                        <x-mortel::table.cell colspan="5" class="text-center text-zinc-500">Nog geen teamleden.</x-mortel::table.cell>
+                        <x-mortel::table.cell colspan="5">
+                            <x-mortel::empty icon="users" heading="Nog geen teamleden" description="Nodig hierboven een medewerker uit." />
+                        </x-mortel::table.cell>
                     </x-mortel::table.row>
                 @endforelse
             </x-mortel::table.rows>
         </x-mortel::table>
-    </div>
+    </x-mortel::card>
 
     {{-- Openstaande uitnodigingen --}}
     @if($pendingInvites !== [])
-        <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5">
-            <div class="border-b border-gray-100 px-6 py-4">
-                <h2 class="text-lg font-medium text-gray-900">Openstaande uitnodigingen</h2>
+        <x-mortel::card class="p-0">
+            <div class="border-b border-zinc-100 px-6 py-4">
+                <x-mortel::heading size="lg" level="2">Openstaande uitnodigingen</x-mortel::heading>
             </div>
             <x-mortel::table class="px-6">
                 <x-mortel::table.columns>
@@ -197,7 +199,7 @@ class extends Component {
                     @endforeach
                 </x-mortel::table.rows>
             </x-mortel::table>
-        </div>
+        </x-mortel::card>
     @endif
 
     @if($showUserAccessSlide)

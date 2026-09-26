@@ -99,7 +99,7 @@ class extends Component {
                             'bg-zinc-200 text-zinc-500' => $step < $num,
                         ])>
                             @if ($step > $num)
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                <x-mortel::icon name="check" class="size-4" />
                             @else
                                 {{ $num }}
                             @endif
@@ -185,8 +185,8 @@ class extends Component {
                             <span class="text-sm text-zinc-700">Entiteit bijgewerkt</span>
                         </div>
                         <div class="flex gap-1">
-                            <span class="rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">Akkoord</span>
-                            <span class="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">Afwijzen</span>
+                            <x-mortel::badge color="emerald" size="sm">Akkoord</x-mortel::badge>
+                            <x-mortel::badge color="red" size="sm">Afwijzen</x-mortel::badge>
                         </div>
                     </div>
                     <div class="flex items-center justify-between rounded-md bg-white px-3 py-2 shadow-sm">
@@ -195,8 +195,8 @@ class extends Component {
                             <span class="text-sm text-zinc-700">Voorstel: mail versturen</span>
                         </div>
                         <div class="flex gap-1">
-                            <span class="rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">Akkoord</span>
-                            <span class="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">Afwijzen</span>
+                            <x-mortel::badge color="emerald" size="sm">Akkoord</x-mortel::badge>
+                            <x-mortel::badge color="red" size="sm">Afwijzen</x-mortel::badge>
                         </div>
                     </div>
                 </div>

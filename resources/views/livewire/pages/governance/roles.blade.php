@@ -166,11 +166,11 @@ class extends Component {
 }; ?>
 
 <div class="p-6">
-    <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-blue-600">Mortel Policy Studio</p>
-            <h1 class="mt-1 text-2xl font-semibold text-zinc-900">Rollen &amp; policies</h1>
-            <p class="mt-1 text-sm text-zinc-500">Beheer wie wat mag. Toegang is deny-by-default: niemand mag iets totdat een rol een expliciete <span class="font-medium text-zinc-700">allow</span>-policy krijgt.</p>
+    <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0">
+            <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-blue-600">Mortel Policy Studio</p>
+            <x-mortel::heading size="xl" level="1">Rollen &amp; policies</x-mortel::heading>
+            <x-mortel::subheading>Beheer wie wat mag. Toegang is deny-by-default: niemand mag iets totdat een rol een expliciete <span class="font-medium text-zinc-700">allow</span>-policy krijgt.</x-mortel::subheading>
         </div>
         <x-mortel::button :href="route('governance')" wire:navigate icon="arrow-left" variant="ghost" size="sm" class="shrink-0">
             Terug naar Governance
@@ -186,8 +186,8 @@ class extends Component {
     </x-mortel::callout>
 
     {{-- Nieuwe rol --}}
-    <div class="mb-8 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <h2 class="mb-4 text-lg font-semibold text-zinc-900">Nieuwe rol</h2>
+    <x-mortel::card class="mb-8">
+        <x-mortel::heading size="lg" level="2" class="mb-4">Nieuwe rol</x-mortel::heading>
 
         <form wire:submit="createRole" class="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div class="flex-1">
@@ -198,11 +198,11 @@ class extends Component {
             </div>
             <x-mortel::button type="submit" variant="primary">Rol toevoegen</x-mortel::button>
         </form>
-    </div>
+    </x-mortel::card>
 
     {{-- Rollen --}}
     @forelse($roles as $role)
-        <div class="mb-6 rounded-xl border border-zinc-200 bg-white shadow-sm" wire:key="role-{{ $role['id'] }}">
+        <x-mortel::card class="mb-6 p-0" wire:key="role-{{ $role['id'] }}">
             <div class="flex items-start justify-between gap-4 border-b border-zinc-100 px-6 py-4">
                 @if($editingRoleId === $role['id'])
                     <form wire:submit="updateRole" class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-end">
@@ -272,10 +272,8 @@ class extends Component {
                     <x-mortel::button type="submit" variant="filled" size="sm">Policy toevoegen</x-mortel::button>
                 </form>
             </div>
-        </div>
+        </x-mortel::card>
     @empty
-        <div class="rounded-xl border border-zinc-200 bg-white p-8 text-center shadow-sm">
-            <p class="text-zinc-500">Nog geen rollen. Maak hierboven een rol aan om toegang te kunnen verlenen.</p>
-        </div>
+        <x-mortel::empty icon="shield-check" heading="Nog geen rollen" description="Maak hierboven een rol aan om toegang te kunnen verlenen." />
     @endforelse
 </div>

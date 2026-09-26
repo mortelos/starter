@@ -108,23 +108,22 @@ class extends Component {
 }; ?>
 
 <div class="p-6">
-    <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-blue-600">Mortel Policy Studio</p>
-            <h1 class="mt-1 text-2xl font-semibold text-gray-900">Governance</h1>
-            <p class="mt-1 text-sm text-gray-500">Ontwerp, review en trace policy voorstellen voordat ze actief worden.</p>
+    <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0">
+            <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-blue-600">Mortel Policy Studio</p>
+            <x-mortel::heading size="xl" level="1">Governance</x-mortel::heading>
+            <x-mortel::subheading>Ontwerp, review en trace policy voorstellen voordat ze actief worden.</x-mortel::subheading>
         </div>
-        <a href="{{ route('governance.roles') }}" wire:navigate
-            class="inline-flex items-center gap-1.5 self-start rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 lg:self-auto">
-            Rollen &amp; policies
-        </a>
-        @if($roles !== [])
-            <x-mortel::select wire:model.live="selectedRoleId" class="w-56">
-                @foreach($roles as $role)
-                    <x-mortel::select.option value="{{ $role['id'] }}">{{ $role['name'] }}</x-mortel::select.option>
-                @endforeach
-            </x-mortel::select>
-        @endif
+        <div class="flex shrink-0 flex-wrap items-center gap-2">
+            <x-mortel::button :href="route('governance.roles')" wire:navigate size="sm">Rollen &amp; policies</x-mortel::button>
+            @if($roles !== [])
+                <x-mortel::select wire:model.live="selectedRoleId" class="w-56">
+                    @foreach($roles as $role)
+                        <x-mortel::select.option value="{{ $role['id'] }}">{{ $role['name'] }}</x-mortel::select.option>
+                    @endforeach
+                </x-mortel::select>
+            @endif
+        </div>
     </div>
 
     @if($proposalQueueComponent !== null)
@@ -134,9 +133,7 @@ class extends Component {
     @endif
 
     @if($roles === [])
-        <div class="rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm">
-            <p class="text-gray-500">Nog geen AI-rollen geconfigureerd.</p>
-        </div>
+        <x-mortel::empty icon="shield-check" heading="Nog geen AI-rollen geconfigureerd" />
     @else
         <div class="space-y-6">
             @if($trustConfigComponent !== null)
