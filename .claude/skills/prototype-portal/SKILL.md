@@ -59,7 +59,7 @@ approved screen list, reference it and proceed.
 
 ## How to build it (host mechanics)
 
-MortelOS uses Livewire 4 single-file components (SFC) and Flux UI v2.
+MortelOS uses Livewire 4 single-file components (SFC) and builds all UI from `<x-mortel::…>` components (`vendor/mortelos/ui/COMPONENTS.md`), never `<flux:…>` directly.
 
 1. **Routes.** Add prototype screens in their own group in `routes/web.php`, with
    NO `auth` middleware (the demo is gated at the server, not by login):
@@ -96,8 +96,8 @@ MortelOS uses Livewire 4 single-file components (SFC) and Flux UI v2.
    }; ?>
 
    <div>
-       <flux:heading size="xl">Dashboard</flux:heading>
-       {{-- Flux UI components, static interactions only --}}
+       <x-mortel::heading size="xl" level="1">Dashboard</x-mortel::heading>
+       {{-- x-mortel components, static interactions only --}}
    </div>
    ```
 
