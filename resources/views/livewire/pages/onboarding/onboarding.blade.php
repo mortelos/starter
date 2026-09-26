@@ -91,7 +91,7 @@ class extends Component {
         <div class="mb-8 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 @foreach ([1 => 'Welcome', 2 => 'AI-intro', 3 => 'Inbox'] as $num => $label)
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2" wire:key="onboarding-step-{{ $num }}">
                         <div @class([
                             'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium',
                             'bg-zinc-900 text-white' => $step === $num,
@@ -111,7 +111,7 @@ class extends Component {
                         ])>{{ $label }}</span>
                     </div>
                     @if ($num < 3)
-                        <div @class([
+                        <div wire:key="onboarding-step-line-{{ $num }}" @class([
                             'h-px w-8',
                             'bg-emerald-500' => $step > $num,
                             'bg-zinc-200' => $step <= $num,
