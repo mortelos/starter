@@ -80,37 +80,40 @@ class extends Component {
     <x-mortel::heading size="xl" level="1" class="mb-6">Instellingen</x-mortel::heading>
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {{-- Profiel --}}
-        <x-mortel::card>
-            <x-mortel::heading size="lg" level="2" class="mb-4">Profiel</x-mortel::heading>
+        {{-- Each card is its own island: saving one re-renders only that card (rules island-when, island-always). --}}
+        @island(name: 'profile', always: true)
+            <x-mortel::card>
+                <x-mortel::heading size="lg" level="2" class="mb-4">Profiel</x-mortel::heading>
 
-            @if ($profileMessage)
-                <x-mortel::callout variant="success" icon="check-circle" :heading="$profileMessage" class="mb-4" />
-            @endif
+                @if ($profileMessage)
+                    <x-mortel::callout variant="success" icon="check-circle" :heading="$profileMessage" class="mb-4" />
+                @endif
 
-            <form wire:submit="updateProfile" class="space-y-4">
-                <x-mortel::input label="Naam" wire:model="name" required />
-                <x-mortel::input label="E-mail" type="email" wire:model="email" required />
+                <form wire:submit="updateProfile" class="space-y-4">
+                    <x-mortel::input label="Naam" wire:model="name" required />
+                    <x-mortel::input label="E-mail" type="email" wire:model="email" required />
 
-                <x-mortel::button type="submit" variant="primary">Opslaan</x-mortel::button>
-            </form>
-        </x-mortel::card>
+                    <x-mortel::button type="submit" variant="primary">Opslaan</x-mortel::button>
+                </form>
+            </x-mortel::card>
+        @endisland
 
-        {{-- Wachtwoord --}}
-        <x-mortel::card>
-            <x-mortel::heading size="lg" level="2" class="mb-4">Wachtwoord wijzigen</x-mortel::heading>
+        @island(name: 'password', always: true)
+            <x-mortel::card>
+                <x-mortel::heading size="lg" level="2" class="mb-4">Wachtwoord wijzigen</x-mortel::heading>
 
-            @if ($passwordMessage)
-                <x-mortel::callout variant="success" icon="check-circle" :heading="$passwordMessage" class="mb-4" />
-            @endif
+                @if ($passwordMessage)
+                    <x-mortel::callout variant="success" icon="check-circle" :heading="$passwordMessage" class="mb-4" />
+                @endif
 
-            <form wire:submit="updatePassword" class="space-y-4">
-                <x-mortel::input label="Huidige wachtwoord" type="password" wire:model="current_password" required />
-                <x-mortel::input label="Nieuw wachtwoord" type="password" wire:model="password" required />
-                <x-mortel::input label="Bevestig nieuw wachtwoord" type="password" wire:model="password_confirmation" required />
+                <form wire:submit="updatePassword" class="space-y-4">
+                    <x-mortel::input label="Huidige wachtwoord" type="password" wire:model="current_password" required />
+                    <x-mortel::input label="Nieuw wachtwoord" type="password" wire:model="password" required />
+                    <x-mortel::input label="Bevestig nieuw wachtwoord" type="password" wire:model="password_confirmation" required />
 
-                <x-mortel::button type="submit" variant="primary">Wachtwoord wijzigen</x-mortel::button>
-            </form>
-        </x-mortel::card>
+                    <x-mortel::button type="submit" variant="primary">Wachtwoord wijzigen</x-mortel::button>
+                </form>
+            </x-mortel::card>
+        @endisland
     </div>
 </div>
