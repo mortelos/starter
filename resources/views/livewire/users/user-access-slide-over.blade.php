@@ -38,11 +38,13 @@ new class extends Component {
             'email' => $user->email,
             'roles' => $user->roles
                 ->map(fn ($role): array => [
+                    'id' => (string) $role->getKey(),
                     'name' => $role->name,
                     'description' => $role->description,
                     'policies' => $role->policies
                         ->sortBy('action')
                         ->map(fn ($policy): array => [
+                            'id' => (string) $policy->getKey(),
                             'action' => $policy->action,
                             'effect' => $policy->effect,
                         ])
@@ -88,7 +90,7 @@ new class extends Component {
         @else
             <div class="space-y-4">
                 @foreach($userAccess['roles'] as $role)
-                    <section class="rounded-lg border border-gray-200 bg-white">
+                    <section class="rounded-lg border border-gray-200 bg-white" wire:key="access-role-{{ $role['id'] }}">
                         <div class="border-b border-gray-100 px-4 py-3">
                             <h3 class="text-sm font-semibold text-gray-950">{{ $role['name'] }}</h3>
                             @if($role['description'])
@@ -102,7 +104,7 @@ new class extends Component {
                             @else
                                 <div class="space-y-2">
                                     @foreach($role['policies'] as $policy)
-                                        <div class="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-sm">
+                                        <div class="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-sm" wire:key="access-policy-{{ $policy['id'] }}">
                                             <code class="text-xs text-gray-700">{{ $policy['action'] }}</code>
                                             <x-mortel::badge :color="$policy['effect'] === 'allow' ? 'emerald' : 'red'" size="sm">{{ $policy['effect'] }}</x-mortel::badge>
                                         </div>

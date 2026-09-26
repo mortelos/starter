@@ -153,13 +153,13 @@ class extends Component {
             </x-mortel::table.columns>
             <x-mortel::table.rows>
                 @forelse($members as $member)
-                    <x-mortel::table.row>
+                    <x-mortel::table.row wire:key="member-{{ $member['id'] }}">
                         <x-mortel::table.cell>{{ $member['name'] }}</x-mortel::table.cell>
                         <x-mortel::table.cell>{{ $member['email'] }}</x-mortel::table.cell>
                         <x-mortel::table.cell><x-mortel::badge size="sm">{{ $member['role'] }}</x-mortel::badge></x-mortel::table.cell>
                         <x-mortel::table.cell>{{ $member['joined_at'] }}</x-mortel::table.cell>
                         <x-mortel::table.cell align="end">
-                            <x-mortel::button size="xs" icon:trailing="arrow-up-right" wire:click="openUserAccessSlide('{{ $member['id'] }}')">Bekijk toegang</x-mortel::button>
+                            <x-mortel::button size="xs" icon:trailing="arrow-up-right" wire:click="openUserAccessSlide('{{ $member['id'] }}')" wire:island="access">Bekijk toegang</x-mortel::button>
                         </x-mortel::table.cell>
                     </x-mortel::table.row>
                 @empty
@@ -188,7 +188,7 @@ class extends Component {
                 </x-mortel::table.columns>
                 <x-mortel::table.rows>
                     @foreach($pendingInvites as $invite)
-                        <x-mortel::table.row>
+                        <x-mortel::table.row wire:key="invite-{{ $invite['id'] }}">
                             <x-mortel::table.cell>{{ $invite['email'] }}</x-mortel::table.cell>
                             <x-mortel::table.cell><x-mortel::badge color="amber" size="sm">{{ $invite['role'] }}</x-mortel::badge></x-mortel::table.cell>
                             <x-mortel::table.cell>{{ $invite['expires_at'] }}</x-mortel::table.cell>
@@ -202,19 +202,23 @@ class extends Component {
         </x-mortel::card>
     @endif
 
-    @if($showUserAccessSlide)
-        <div
-            class="fixed inset-0 z-50 flex justify-end bg-gray-950/20"
-            x-data
-            x-on:keydown.escape.window="$wire.closeUserAccessSlide()"
-        >
-            <x-mortel::button variant="ghost" class="absolute! inset-0! h-auto! w-auto! rounded-none!" wire:click="closeUserAccessSlide" aria-label="Sluiten" />
-            <div class="relative h-full w-full max-w-3xl bg-white shadow-2xl">
-                <livewire:users.user-access-slide-over
-                    :user-id="$selectedUserAccessId"
-                    wire:key="users-access-slide-{{ $selectedUserAccessId }}"
-                />
+    {{-- Opened from a table row with wire:island, so only this island renders (rule island-trigger). --}}
+    @island(name: 'access')
+        @if($showUserAccessSlide)
+            <div
+                class="fixed inset-0 z-50 flex justify-end bg-gray-950/20"
+                data-access-panel
+                x-data
+                x-on:keydown.escape.window="$wire.$island('access').closeUserAccessSlide()"
+            >
+                <x-mortel::button variant="ghost" class="absolute! inset-0! h-auto! w-auto! rounded-none!" wire:click="closeUserAccessSlide" aria-label="Sluiten" data-access-close />
+                <div class="relative h-full w-full max-w-3xl bg-white shadow-2xl">
+                    <livewire:users.user-access-slide-over
+                        :user-id="$selectedUserAccessId"
+                        wire:key="users-access-slide-{{ $selectedUserAccessId }}"
+                    />
+                </div>
             </div>
-        </div>
-    @endif
+        @endif
+    @endisland
 </div>
