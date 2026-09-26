@@ -204,12 +204,12 @@ class extends Component {
         </div>
 
         {{-- Navigation --}}
-        <div class="mt-6 flex items-center justify-between">
-            <div>
-                @if ($step > 1)
+        <x-mortel::page-actions class="mt-6">
+            @if ($step > 1)
+                <x-slot:back>
                     <x-mortel::button wire:click="previous">← Vorige</x-mortel::button>
-                @endif
-            </div>
+                </x-slot:back>
+            @endif
             <x-mortel::button wire:click="next" variant="primary">
                 @if ($step === 3)
                     Aan de slag →
@@ -217,6 +217,6 @@ class extends Component {
                     Volgende →
                 @endif
             </x-mortel::button>
-        </div>
+        </x-mortel::page-actions>
     </div>
 </div>

@@ -14,7 +14,7 @@ class FlarePrivacyTest extends TestCase
             CollectType::ErrorsWithTraces->value,
             CollectType::GitInfo->value,
             LaravelCollectType::HandledExceptions->value,
-        ], array_keys(config('flare.collects')));
+        ], array_keys(config()->array('flare.collects')));
 
         $this->assertTrue(config('flare.censor.client_ips'));
         $this->assertTrue(config('flare.censor.cookies'));
