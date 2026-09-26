@@ -42,11 +42,6 @@ new class extends Component {
         $this->loadOverviews();
     }
 
-    public function dispatchAction(string $action): void
-    {
-        $this->js("window.dispatchEvent(new CustomEvent('{$action}'))");
-    }
-
     private function sidebarResolver(): ?object
     {
         $resolver = config('starter.navigation.sidebar_resolver');
@@ -62,10 +57,10 @@ new class extends Component {
 <x-mortel::sidebar.nav aria-label="Hoofdnavigatie">
     @foreach ($sections as $section)
         @if ($loop->index > 0)
-            <x-mortel::separator variant="subtle" />
+            <x-mortel::separator variant="subtle" wire:key="nav-separator-{{ $section['label'] }}" />
         @endif
 
-        <div class="flex flex-col" data-sidebar-section>
+        <div class="flex flex-col" data-sidebar-section wire:key="nav-section-{{ $section['label'] }}">
             <div class="px-3 py-2 in-data-flux-sidebar-collapsed-desktop:hidden">
                 <div class="text-sm text-zinc-400 font-medium leading-none">{{ $section['label'] }}</div>
             </div>
@@ -73,10 +68,12 @@ new class extends Component {
             <div class="flex flex-col">
                 @foreach ($section['items'] as $item)
                     @if (($item['type'] ?? 'link') === 'action')
+                        {{-- Browser-only action: fire the window event without a server round trip (rule click-server). --}}
                         <x-mortel::sidebar.item
                             icon="{{ $item['icon'] }}"
-                            wire:click="dispatchAction('{{ $item['action'] }}')"
+                            x-on:click="$dispatch('{{ $item['action'] }}')"
                             :current="false"
+                            wire:key="nav-action-{{ $item['action'] }}"
                         >
                             {{ $item['label'] }}
                         </x-mortel::sidebar.item>
@@ -88,6 +85,7 @@ new class extends Component {
                             :current="request()->routeIs($item['route'])"
                             :badge="$item['permission'] === 'nav.sidebar.inbox' && $inboxCount > 0 ? $inboxCount : null"
                             badge:color="teal"
+                            wire:key="nav-link-{{ $item['route'] }}"
                         >
                             {{ $item['label'] }}
                         </x-mortel::sidebar.item>
@@ -107,6 +105,7 @@ new class extends Component {
             <div class="flex flex-col">
                 @foreach ($overviews as $overzicht)
                     <x-mortel::sidebar.item
+                        wire:key="nav-overview-{{ $overzicht['id'] }}"
                         icon="table-cells"
                         href="{{ route('overzichten.show', $overzicht['id']) }}"
                         wire:navigate
