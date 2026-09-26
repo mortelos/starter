@@ -38,11 +38,13 @@ new class extends Component {
             'email' => $user->email,
             'roles' => $user->roles
                 ->map(fn ($role): array => [
+                    'id' => (string) $role->getKey(),
                     'name' => $role->name,
                     'description' => $role->description,
                     'policies' => $role->policies
                         ->sortBy('action')
                         ->map(fn ($policy): array => [
+                            'id' => (string) $policy->getKey(),
                             'action' => $policy->action,
                             'effect' => $policy->effect,
                         ])
@@ -82,17 +84,13 @@ new class extends Component {
 
     <div class="flex-1 overflow-y-auto p-6">
         @if($userAccess === null)
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-                Je hebt geen toegang tot deze gebruiker of de gebruiker bestaat niet meer.
-            </div>
+            <x-mortel::callout variant="warning" icon="exclamation-triangle" heading="Je hebt geen toegang tot deze gebruiker of de gebruiker bestaat niet meer." />
         @elseif($userAccess['roles'] === [])
-            <div class="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-600">
-                Deze gebruiker heeft nog geen rol.
-            </div>
+            <x-mortel::empty icon="shield-check" heading="Deze gebruiker heeft nog geen rol" />
         @else
             <div class="space-y-4">
                 @foreach($userAccess['roles'] as $role)
-                    <section class="rounded-lg border border-gray-200 bg-white">
+                    <section class="rounded-lg border border-gray-200 bg-white" wire:key="access-role-{{ $role['id'] }}">
                         <div class="border-b border-gray-100 px-4 py-3">
                             <h3 class="text-sm font-semibold text-gray-950">{{ $role['name'] }}</h3>
                             @if($role['description'])
@@ -106,15 +104,9 @@ new class extends Component {
                             @else
                                 <div class="space-y-2">
                                     @foreach($role['policies'] as $policy)
-                                        <div class="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-sm">
+                                        <div class="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-sm" wire:key="access-policy-{{ $policy['id'] }}">
                                             <code class="text-xs text-gray-700">{{ $policy['action'] }}</code>
-                                            <span @class([
-                                                'rounded-full px-2 py-0.5 text-xs font-medium',
-                                                'bg-emerald-50 text-emerald-700' => $policy['effect'] === 'allow',
-                                                'bg-red-50 text-red-700' => $policy['effect'] !== 'allow',
-                                            ])>
-                                                {{ $policy['effect'] }}
-                                            </span>
+                                            <x-mortel::badge :color="$policy['effect'] === 'allow' ? 'emerald' : 'red'" size="sm">{{ $policy['effect'] }}</x-mortel::badge>
                                         </div>
                                     @endforeach
                                 </div>
