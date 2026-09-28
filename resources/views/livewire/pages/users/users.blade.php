@@ -202,7 +202,9 @@ class extends Component {
         </x-mortel::card>
     @endif
 
-    {{-- Opened from a table row with wire:island, so only this island renders (rule island-trigger). --}}
+    {{-- Opened from a table row with wire:island, so only this island renders (rule island-trigger).
+         Its actions only change component state; invite and revokeInvite outside it write other data,
+         so running them at the same time is safe. --}}
     @island(name: 'access')
         @if($showUserAccessSlide)
             <div

@@ -80,7 +80,11 @@ class extends Component {
     <x-mortel::heading size="xl" level="1" class="mb-6">Instellingen</x-mortel::heading>
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {{-- Each card is its own island: saving one re-renders only that card (rules island-when, island-always). --}}
+        {{-- Each card is its own island: saving one re-renders only that card (rules island-when, island-always).
+             Island actions run in their own queue, so both saves can run at once. That is safe here: each
+             writes only its own columns (Eloquent updates dirty attributes), and nothing outside the islands
+             writes the user. Two islands that read-modify-write the same row need a transaction with
+             lockForUpdate() instead. --}}
         @island(name: 'profile', always: true)
             <x-mortel::card>
                 <x-mortel::heading size="lg" level="2" class="mb-4">Profiel</x-mortel::heading>
