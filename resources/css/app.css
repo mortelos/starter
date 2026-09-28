@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
+@import '../../vendor/mortelos/ui/resources/css/mortel.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../vendor/livewire/flux/stubs/**/*.blade.php';
@@ -18,3 +19,12 @@
     --color-surface-hover: #f4f4f5;
     --color-surface-active: #e4e4e7;
 }
+
+/*
+ * Brand colour: one token is enough. Button text and readable link tints for light and dark
+ * are derived by mortelos/ui. All tokens and rules: vendor/mortelos/ui/COMPONENTS.md, "Huisstijl".
+ *
+ * @theme {
+ *     --mortel-accent: #1466ff;
+ * }
+ */
