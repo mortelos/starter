@@ -3,11 +3,9 @@
 declare(strict_types=1);
 
 use Database\Seeders\DatabaseSeeder;
-use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mortelos\Ui\Testing\LivewireMonitor;
 use Pest\Browser\Api\PendingAwaitablePage;
-use Tests\Browser\Support\WithoutNotModified;
 use Tests\TestCase;
 
 use function Pest\Laravel\seed;
@@ -23,7 +21,6 @@ uses(TestCase::class, RefreshDatabase::class)
     ->beforeEach(function (): void {
         withVite();
         seed(DatabaseSeeder::class);
-        app(Kernel::class)->prependMiddleware(WithoutNotModified::class);
     })
     ->in('Browser');
 
