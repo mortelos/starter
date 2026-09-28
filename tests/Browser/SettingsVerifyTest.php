@@ -21,13 +21,9 @@ it('saves the profile with an island-only round trip and leaves the password car
         ->fill('name', 'Admin Verify')
         ->click(SETTINGS_PROFILE_SUBMIT), 1, 'profile');
 
-    fwrite(STDERR, "DEBUG a\n");
-    $page->assertSee('Profiel bijgewerkt.');
-    fwrite(STDERR, "DEBUG b\n");
-    $page->assertScript("document.querySelector('h1').__verifyProbe === 1");
-    fwrite(STDERR, "DEBUG c\n");
-    $page->assertValue('current_password', 'half-getypt');
-    fwrite(STDERR, "DEBUG d\n");
+    $page->assertSee('Profiel bijgewerkt.')
+        ->assertScript("document.querySelector('h1').__verifyProbe === 1")
+        ->assertValue('current_password', 'half-getypt');
 });
 
 it('shows a wrong current password inside the password island', function (): void {
