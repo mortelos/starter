@@ -37,12 +37,10 @@ class extends Component {
 }; ?>
 
 <div class="p-6">
-    <h1 class="mb-6 text-2xl font-semibold text-zinc-900">Management Dashboard</h1>
+    <x-mortel::heading size="xl" level="1" class="mb-6">Management Dashboard</x-mortel::heading>
 
     @if ($proudMessage)
-        <div class="mb-4 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-800">
-            {{ $proudMessage }}
-        </div>
+        <x-mortel::callout color="teal" icon="sparkles" :heading="$proudMessage" class="mb-4" />
     @endif
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">

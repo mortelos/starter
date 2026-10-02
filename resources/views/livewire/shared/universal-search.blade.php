@@ -139,13 +139,22 @@ new class extends Component {
             this.$nextTick(() => this.$refs.searchInput?.focus());
         },
         doClose() {
+            // Escape and outside clicks reach a closed search on every page: do nothing then.
+            if (! this.open) {
+                return;
+            }
+
             this.open = false;
             this.query = '';
             this.activeIndex = -1;
             this.showSaveForm = false;
             this.saveName = '';
             this.saveConfirmed = false;
-            this.$wire.search('');
+
+            // Only reset the server when it still holds a query (rule click-server).
+            if (this.$wire.query !== '') {
+                this.$wire.search('');
+            }
         },
         moveDown() {
             if (this.activeIndex < this.flatResults.length - 1) {
@@ -191,7 +200,7 @@ new class extends Component {
     {{-- Hidden icon bank rendered by Blade --}}
     <div class="hidden" x-ref="icons">
         @foreach ($iconNames as $icon)
-            <div data-icon="{{ $icon }}">
+            <div data-icon="{{ $icon }}" wire:key="icon-{{ $icon }}">
                 <x-dynamic-component component="mortel::icon" :name="$icon" variant="mini" class="size-4 text-zinc-400" />
             </div>
         @endforeach

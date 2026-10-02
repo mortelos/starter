@@ -1,6 +1,6 @@
 # Claude Code Instructions
 
-Read `AGENTS.md` first.
+@AGENTS.md
 
 The public MortelOS documentation is the source of truth:
 

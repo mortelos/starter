@@ -6,6 +6,7 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\Livewire;
 
 new
 #[Layout('layouts::app')]
@@ -104,6 +105,21 @@ class extends Component {
         return (string) app($resolver)->resolve($this->selectedItemId);
     }
 
+    /**
+     * The inbox parts come from an app package; the bare starter ships none.
+     */
+    #[Computed]
+    public function inboxAvailable(): bool
+    {
+        foreach (['inbox.inbox-filter', 'inbox.inbox-list', 'inbox.inbox-detail'] as $component) {
+            if (! Livewire::exists($component)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function isIntakeType(): bool
     {
         $intakeTypes = config('starter.inbox.intake_detail_types', []);
@@ -126,6 +142,11 @@ class extends Component {
     x-on:item-approved.window="showDetail = false"
     x-on:item-rejected.window="showDetail = false"
 >
+    @if (! $this->inboxAvailable)
+        <div class="flex-1 p-6 lg:p-8">
+            <x-mortel::empty icon="inbox" heading="Inbox is nog niet ingericht" description="Hier verschijnen items die je aandacht vragen." />
+        </div>
+    @else
     {{-- Left panel: filters + list --}}
     <nav
         aria-label="Inbox navigatie"
@@ -176,4 +197,5 @@ class extends Component {
             <livewire:inbox.inbox-detail :item-id="$selectedItemId" />
         @endif
     </div>
+    @endif
 </div>

@@ -17,7 +17,9 @@ Local quick check:
 
 ```bash
 php artisan starter:doctor
-vendor/bin/pest
+composer test
+npx playwright install chromium   # once per machine
+npm run build && composer test:browser
 ```
 
 Local development:
