@@ -12,7 +12,7 @@ const SETTINGS_PASSWORD_SUBMIT = 'form[wire\:submit="updatePassword"] button[typ
 it('saves the profile with an island-only round trip and leaves the password card alone', function (): void {
     $page = verifyAsAdmin('/settings');
 
-    LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page, 0);
+    expectNoPostsSinceLoad($page);
 
     $page->script("() => { document.querySelector('h1').__verifyProbe = 1; return true; }");
     $page->fill('current_password', 'half-getypt');

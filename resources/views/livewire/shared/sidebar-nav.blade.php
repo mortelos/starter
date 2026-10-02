@@ -71,7 +71,7 @@ new class extends Component {
                         {{-- Browser-only action: fire the window event without a server round trip (rule click-server). --}}
                         <x-mortel::sidebar.item
                             icon="{{ $item['icon'] }}"
-                            x-on:click="$dispatch('{{ $item['action'] }}')"
+                            x-on:click="$dispatch({{ \Illuminate\Support\Js::from($item['action']) }})"
                             :current="false"
                             wire:key="nav-action-{{ $item['action'] }}"
                         >

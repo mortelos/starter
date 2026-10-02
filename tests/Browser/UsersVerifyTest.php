@@ -8,20 +8,18 @@ use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 
 const USERS_PANEL_GONE = "document.querySelector('[data-access-panel]') === null";
-const USERS_CLOSE_CLICK = "() => { document.querySelector('[data-access-close]').click(); return true; }";
 
 it('opens and closes the access panel with island-only round trips', function (): void {
     $page = verifyAsAdmin('/users');
 
-    LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page, 0);
+    expectNoPostsSinceLoad($page);
     $page->script("() => { document.querySelector('h1').__verifyProbe = 1; return true; }");
 
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->click('Bekijk toegang'), 1, 'access');
     $page->assertSeeIn('[data-access-panel]', 'admin@example.test');
 
-    // The close button covers the whole overlay and the panel sits on top of its centre,
-    // so a pointer click would hit the panel; a DOM click reaches the button itself.
-    LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->script(USERS_CLOSE_CLICK), 1, 'access');
+    // A real pointer click on the overlay next to the panel (Playwright fails if anything covers it).
+    LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->click('[data-access-close]'), 1, 'access');
     $page->assertScript(USERS_PANEL_GONE);
 
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->click('Bekijk toegang'), 1, 'access');

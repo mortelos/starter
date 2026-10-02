@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mortelos\Ui\Testing\LivewireMonitor;
+use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Tests\TestCase;
 
@@ -43,4 +44,18 @@ function verifyAsAdmin(string $path): PendingAwaitablePage
     }
 
     return $page;
+}
+
+/**
+ * Asserts that loading the page sent no Livewire POST. expect() with an empty interaction
+ * lets the page settle and checks the other budgets, but only counts POSTs that start after
+ * it is called; summary() counts from page load, so a wire:init or lazy load fails here.
+ */
+function expectNoPostsSinceLoad(PendingAwaitablePage|AwaitableWebpage $page): void
+{
+    LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page, 0);
+
+    $posts = LivewireMonitor::summary($page)['posts'];
+
+    expect($posts)->toBe([], 'Livewire POSTs since page load: '.json_encode($posts));
 }

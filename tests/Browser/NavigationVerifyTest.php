@@ -21,7 +21,7 @@ beforeEach(function (): void {
 it('opens search from the sidebar without a server round trip', function (): void {
     $page = verifyAsAdmin('/dashboard');
 
-    LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page, 0);
+    expectNoPostsSinceLoad($page);
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->click('Zoeken'), 0);
 
     $page->assertScript(SEARCH_IS_OPEN);

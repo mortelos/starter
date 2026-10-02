@@ -202,19 +202,21 @@ class extends Component {
         </x-mortel::card>
     @endif
 
-    {{-- Opened from a table row with wire:island, so only this island renders (rule island-trigger).
-         Its actions only change component state; invite and revokeInvite outside it write other data,
-         so running them at the same time is safe. --}}
+    {{-- Opened from a table row with wire:island (rule island-trigger). An island action returns only
+         this island's HTML; markup outside it is not re-rendered and would go stale if it showed what
+         these actions write (rule island-stale). They only write $showUserAccessSlide and
+         $selectedUserAccessId, which only this island shows. Island actions run in their own queue,
+         next to invite and revokeInvite; that is safe because the island actions write no data. --}}
     @island(name: 'access')
         @if($showUserAccessSlide)
             <div
-                class="fixed inset-0 z-50 flex justify-end bg-gray-950/20"
+                class="fixed inset-0 z-50 flex bg-gray-950/20"
                 data-access-panel
                 x-data
                 x-on:keydown.escape.window="$wire.$island('access').closeUserAccessSlide()"
             >
-                <x-mortel::button variant="ghost" class="absolute! inset-0! h-auto! w-auto! rounded-none!" wire:click="closeUserAccessSlide" aria-label="Sluiten" data-access-close />
-                <div class="relative h-full w-full max-w-3xl bg-white shadow-2xl">
+                <x-mortel::button variant="ghost" class="h-full! min-w-0 flex-1 rounded-none!" wire:click="closeUserAccessSlide" aria-label="Sluiten" data-access-close />
+                <div class="h-full w-full max-w-3xl shrink-0 bg-white shadow-2xl">
                     <livewire:users.user-access-slide-over
                         :user-id="$selectedUserAccessId"
                         wire:key="users-access-slide-{{ $selectedUserAccessId }}"
