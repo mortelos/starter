@@ -83,9 +83,9 @@ class extends Component {
         {{-- Each card is its own island (rules island-when, island-always). A save returns only that card's
              HTML; markup outside it is not re-rendered, so what a save writes ($name, $email, the messages,
              the cleared password fields) is shown only inside its own card (rule island-stale).
-             Island actions run in their own queue, so both saves can run at once. That is safe here: each
-             writes only its own columns (Eloquent updates dirty attributes) and neither reads a column the
-             other writes. Two islands that read-modify-write the same row need a transaction with
+             Island actions run in their own queue, so both saves can run at once. For the stored data that
+             is safe: each writes only its own columns (Eloquent updates dirty attributes) and neither reads
+             a column the other writes; for component state the last response's snapshot wins. Two islands that read-modify-write the same row need a transaction with
              lockForUpdate() instead. --}}
         @island(name: 'profile', always: true)
             <x-mortel::card>

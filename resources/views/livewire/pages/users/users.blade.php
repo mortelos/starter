@@ -206,7 +206,9 @@ class extends Component {
          this island's HTML; markup outside it is not re-rendered and would go stale if it showed what
          these actions write (rule island-stale). They only write $showUserAccessSlide and
          $selectedUserAccessId, which only this island shows. Island actions run in their own queue,
-         next to invite and revokeInvite; that is safe because the island actions write no data. --}}
+         next to invite and revokeInvite; for the stored data that is safe, because the island actions
+         write none (the last response's snapshot wins for component state). The overlay keeps 3rem
+         next to the panel on narrow screens, so a tap can always close it. --}}
     @island(name: 'access')
         @if($showUserAccessSlide)
             <div
@@ -215,8 +217,8 @@ class extends Component {
                 x-data
                 x-on:keydown.escape.window="$wire.$island('access').closeUserAccessSlide()"
             >
-                <x-mortel::button variant="ghost" class="h-full! min-w-0 flex-1 rounded-none!" wire:click="closeUserAccessSlide" aria-label="Sluiten" data-access-close />
-                <div class="h-full w-full max-w-3xl shrink-0 bg-white shadow-2xl">
+                <x-mortel::button variant="ghost" class="h-full! min-w-12 flex-1 rounded-none!" wire:click="closeUserAccessSlide" aria-label="Sluiten" data-access-close />
+                <div class="h-full w-full max-w-3xl bg-white shadow-2xl">
                     <livewire:users.user-access-slide-over
                         :user-id="$selectedUserAccessId"
                         wire:key="users-access-slide-{{ $selectedUserAccessId }}"
