@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "19ef1eb21f018068073bb16ff15259a2",
+    "content-hash": "ce951b60edd89ef4f63411256ab145dd",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -2915,12 +2915,12 @@
         },
         {
             "name": "mortelos/ui",
-            "version": "0.4.5",
+            "version": "0.4.6",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/ui/0.4.5.zip",
-                "reference": "cc1f64dce5c85f35741de47014728a1b2db1ad5f",
-                "shasum": "adaff918b7c702596506239776d2ee15feb81a89"
+                "url": "https://packages.mortelos.com/dist/mortelos/ui/0.4.6.zip",
+                "reference": "cd10953e2b617b238572f5c71680165b612a1e17",
+                "shasum": "4be7ffa47c6da17e9ca1786e4fc6da0a125579b9"
             },
             "require": {
                 "illuminate/support": "^13.0",
@@ -2947,8 +2947,7 @@
             "license": [
                 "proprietary"
             ],
-            "description": "Reusable UI primitives for MortelOS starter and packages",
-            "time": "2026-09-26T10:42:15+02:00"
+            "description": "Reusable UI primitives for MortelOS starter and packages"
         },
         {
             "name": "nesbot/carbon",
