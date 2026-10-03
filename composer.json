@@ -35,6 +35,7 @@
     "larastan/larastan": "^3.0",
     "laravel/pail": "^1.2.5",
     "laravel/pint": "^1.27",
+    "laravel/vet": "^0.1",
     "mockery/mockery": "^1.6",
     "mortelos/agent-standards": "^0.1.8",
     "mortelos/dev-tools": "^0.1",
@@ -112,7 +113,8 @@
     "sort-packages": true,
     "allow-plugins": {
       "pestphp/pest-plugin": true,
-      "php-http/discovery": true
+      "php-http/discovery": true,
+      "laravel/vet": true
     }
   },
   "minimum-stability": "dev",
