@@ -28,6 +28,7 @@ Read these pages before portal work:
 7. Verify host behavior with `php artisan starter:doctor`, `composer test`, `composer test:browser` (after `npm run build` and, once per machine, `npx playwright install chromium`) and `vendor/bin/pint --dirty` when applicable.
 8. Do not use em-dashes in Dutch user-facing prose.
 9. Build UI only from `<x-mortel::…>` components; the catalogue is `vendor/mortelos/ui/COMPONENTS.md`. `tests/Feature/UiGuardTest.php` fails on `<flux:` and on raw `<select>`, `<table>`, `<button>`, `<input>` or `<textarea>`. The same test prints hints without failing — a primary button outside the action bar, a disabled primary — and those are questions to answer, not output to scroll past.
+10. `laravel/vet` guards `composer install`, `require` and `update`: a package version that `vet.json` does not trust fails the command. Never approve packages yourself: do not edit `vet.json` and do not run `vet --init` or `vet --fresh` to clear the failure. Stop and ask the developer to run `./vendor/bin/vet` in their own terminal and choose "Automatically, with my coding agent reading the changes first", then pick the packages to trust. Commit the updated `vet.json` with `composer.lock`.
 
 For current contracts, routes, install steps and troubleshooting, use the documentation site instead of this repository.
 
