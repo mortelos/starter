@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Actions\Account\UpdateProfile;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
@@ -46,4 +48,14 @@ it('shows the wrong current password error', function (): void {
         ->call('updatePassword')
         ->assertSee('Huidige wachtwoord klopt niet.')
         ->assertHasErrors(['current_password']);
+});
+
+it('refuses a profile change by anyone but the account owner', function (): void {
+    $owner = User::factory()->create();
+    $other = User::factory()->create();
+
+    expect(fn () => app(UpdateProfile::class)->handle($owner, 'Nieuwe naam', 'nieuw@example.test', $other))
+        ->toThrow(AuthorizationException::class);
+
+    expect($owner->fresh()?->name)->not->toBe('Nieuwe naam');
 });

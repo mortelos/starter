@@ -5,33 +5,45 @@ declare(strict_types=1);
 namespace App\Access;
 
 use App\Contracts\GovernanceGate;
-use App\Models\Policy;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Mortel\Access\ActorContextResolver;
+use Mortel\Actions\Policies\CheckPolicy;
 use Mortel\Contracts\TenantResolver;
+use Mortel\Enums\PolicyScope;
 
 /**
  * Fail-closed governance gate (R7), single-tenant baseline, deny-by-default.
  *
- * Decision order — any miss is a deny:
- *  1. no user                              -> deny (DeniedActor semantics)
- *  2. user has no tenant role with an explicit
- *     `allow` policy for the action        -> deny
+ * Decision order; any miss is a deny:
+ *  1. no user                                       -> deny
+ *  2. no role on the tenant membership (tenant_user) -> deny
+ *  3. no explicit `allow` policy for the ability     -> deny
  *
- * Roles and policies are DB DATA (D11), editable by the owner via the governance
- * surface — never hardcoded role names, never config-in-code. The absence of an
- * explicit `allow` row is a denial; a `deny` row never grants.
- *
- * Role resolution delegates to the framework so tenant_user remains the single
- * source of truth in both single-tenant and multi-tenant hosts.
+ * Roles and policies are data (D11), edited by the owner on the governance
+ * screen through Mortel\Actions\Role and Mortel\Actions\Policy. Role resolution
+ * and the policy check are the framework's own (ActorContextResolver and
+ * CheckPolicy), so this host adds no second model of authorization.
  */
 final class StarterGovernanceGate implements GovernanceGate
 {
     private const MANAGE_GOVERNANCE = 'governance.manage';
 
+    /**
+     * The policy scope each host ability lives in. The framework stores abilities
+     * per scope in the json column `actions`; CheckPolicy only sees a policy in
+     * the scope it asks for, so screens, seeder and tests use this one map.
+     *
+     * @var array<string, PolicyScope>
+     */
+    public const SCOPES = [
+        'governance.manage' => PolicyScope::Policy,
+        'users.manage' => PolicyScope::Role,
+    ];
+
     public function __construct(
         private readonly ActorContextResolver $actorContextResolver,
         private readonly TenantResolver $tenantResolver,
+        private readonly CheckPolicy $checkPolicy,
     ) {}
 
     public function canManage(?Authenticatable $user): bool
@@ -40,11 +52,9 @@ final class StarterGovernanceGate implements GovernanceGate
     }
 
     /**
-     * Generic deny-by-default ability check over the owner-editable policy data.
-     *
-     * The contract only exposes canManage(); this parameterized method lets the
-     * users surface ask for `users.manage` against the same role/policy store
-     * (resolved on the bound concrete instance via method_exists).
+     * Deny-by-default ability check over the owner-editable policy data. The
+     * contract only exposes canManage(); the users surface asks for
+     * `users.manage` through this method on the bound concrete instance.
      */
     public function allows(?Authenticatable $user, string $action): bool
     {
@@ -54,6 +64,7 @@ final class StarterGovernanceGate implements GovernanceGate
 
         $identifier = $user->getAuthIdentifier();
         $userId = is_string($identifier) || is_int($identifier) ? (string) $identifier : null;
+
         $roleId = $this->actorContextResolver
             ->resolveRole($userId, $this->tenantResolver->id())
             ?->getKey();
@@ -62,10 +73,11 @@ final class StarterGovernanceGate implements GovernanceGate
             return false;
         }
 
-        return Policy::query()
-            ->where('role_id', (string) $roleId)
-            ->where('action', $action)
-            ->where('effect', 'allow')
-            ->exists();
+        return $this->checkPolicy->check((string) $roleId, $action, self::scopeFor($action))->allowed;
+    }
+
+    public static function scopeFor(string $action): PolicyScope
+    {
+        return self::SCOPES[$action] ?? PolicyScope::Policy;
     }
 }

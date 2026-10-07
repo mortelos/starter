@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use App\Actions\Account\ChangePassword;
+use App\Actions\Account\UpdateProfile;
+use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -47,7 +48,12 @@ class extends Component {
         ]);
 
         $user = auth()->user();
-        $user->update($validated);
+
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
+        app(UpdateProfile::class)->handle($user, $validated['name'], $validated['email'], $user);
 
         $this->profileMessage = 'Profiel bijgewerkt.';
     }
@@ -61,13 +67,11 @@ class extends Component {
 
         $user = auth()->user();
 
-        if (! Hash::check($this->current_password, $user->password)) {
-            throw ValidationException::withMessages([
-                'current_password' => 'Huidige wachtwoord klopt niet.',
-            ]);
+        if (! $user instanceof User) {
+            abort(403);
         }
 
-        $user->update(['password' => Hash::make($this->password)]);
+        app(ChangePassword::class)->handle($user, $this->current_password, $this->password, $user);
 
         $this->current_password = '';
         $this->password = '';

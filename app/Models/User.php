@@ -32,16 +32,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Roles assigned to this user (owner-editable, deny-by-default; D11).
-     *
-     * @return BelongsToMany<Role, $this>
-     */
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class);
-    }
-
-    /**
      * Single-tenant baseline membership compatible with framework access
      * resolution. The add-tenancy skill turns this into real tenant switching.
      *
