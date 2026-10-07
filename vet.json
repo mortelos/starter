@@ -146,8 +146,8 @@
             "hash": "tree-v2:3bf8a86c910cd116831654f51a4505300d76f9405711425fc42156020bc20ea0"
         },
         "mortelos/app-standards": {
-            "version": "0.1.1",
-            "hash": "tree-v2:13650ad6dc3ae3fff8259bb5c46e41d5eb9b2512f2c9585f37da4417ba7f0c73"
+            "version": "0.1.2",
+            "hash": "tree-v2:2e4b644a0441e8ce825083ee7d4b367e57e59cec364cbe5091efad09a1995175"
         },
         "mortelos/framework": {
             "version": "0.6.7",
@@ -608,12 +608,12 @@
             "hash": "tree-v2:4bc0e2fbaea02a9469caa0f1105242dca2907278bc1fd8a3f9c6c8a2ddf920d7"
         },
         "mortelos/agent-standards": {
-            "version": "0.1.8",
-            "hash": "tree-v2:d0a376163d4a6301ba76e66f6250b781ea05c25dc86562d2e41e2463d3af4f8c"
+            "version": "0.1.10",
+            "hash": "tree-v2:d1d731b6f69c9c2df47b7463c5d74b72566c94ea3a9db5b96c3be72ecd8643bb"
         },
         "mortelos/dev-tools": {
-            "version": "0.1.5",
-            "hash": "tree-v2:e1ce5cc07e222265ef47ebb069f15ed69533d844c1d5e98a326cdd65d4c167e2"
+            "version": "0.1.6",
+            "hash": "tree-v2:003d54825ecc8708af797cbfdfe8b5de06cf23e3d9f5c17856b95f87c05d6bc8"
         },
         "myclabs/deep-copy": {
             "version": "1.14.0",
