@@ -12,8 +12,8 @@ const SEARCH_INPUT = '[aria-label="Zoek of stel een vraag"]';
 
 beforeEach(function (): void {
     config([
-        'starter.layout.sidebar_nav_component' => 'starter::shared.sidebar-nav',
-        'starter.layout.universal_search_component' => 'starter::shared.universal-search',
+        'starter.layout.sidebar_nav_component' => 'shared.sidebar-nav',
+        'starter.layout.universal_search_component' => 'shared.universal-search',
         'starter.navigation.sidebar_resolver' => NavigationFixture::class,
     ]);
 });

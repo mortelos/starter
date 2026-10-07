@@ -63,7 +63,7 @@ it('redirects guests to login', function (): void {
 it('creates a role', function (): void {
     actingAs(ownerUser());
 
-    Livewire::test('pages.governance.roles')
+    Livewire::test('pages::governance.roles')
         ->set('newRoleName', 'Reviewer')
         ->set('newRoleDescription', 'Mag voorstellen reviewen')
         ->call('createRole')
@@ -75,7 +75,7 @@ it('creates a role', function (): void {
 it('validates a required role name on create', function (): void {
     actingAs(ownerUser());
 
-    Livewire::test('pages.governance.roles')
+    Livewire::test('pages::governance.roles')
         ->set('newRoleName', '')
         ->call('createRole')
         ->assertHasErrors(['newRoleName' => 'required']);
@@ -86,7 +86,7 @@ it('updates a role', function (): void {
     $role = Role::factory()->create(['name' => 'Old name']);
     $roleKey = modelKeyString($role);
 
-    Livewire::test('pages.governance.roles')
+    Livewire::test('pages::governance.roles')
         ->call('startEditRole', $roleKey)
         ->set('editRoleName', 'New name')
         ->call('updateRole')
@@ -102,7 +102,7 @@ it('deletes a role and its policies', function (): void {
     $role = Role::factory()->create();
     $policy = Policy::factory()->for($role)->create();
 
-    Livewire::test('pages.governance.roles')
+    Livewire::test('pages::governance.roles')
         ->call('deleteRole', $role->getKey());
 
     expect(Role::query()->whereKey($role->getKey())->exists())->toBeFalse();
@@ -114,7 +114,7 @@ it('adds a policy to a role', function (): void {
     $role = Role::factory()->create();
     $roleKey = modelKeyString($role);
 
-    Livewire::test('pages.governance.roles')
+    Livewire::test('pages::governance.roles')
         ->set("policyAction.{$roleKey}", 'inbox.manage')
         ->set("policyEffect.{$roleKey}", 'allow')
         ->call('addPolicy', $roleKey)
@@ -143,7 +143,7 @@ it('removes a policy from a role', function (): void {
     $role = Role::factory()->create();
     $policy = Policy::factory()->for($role)->create();
 
-    Livewire::test('pages.governance.roles')
+    Livewire::test('pages::governance.roles')
         ->call('deletePolicy', $policy->getKey());
 
     expect(Policy::query()->whereKey($policy->getKey())->exists())->toBeFalse();

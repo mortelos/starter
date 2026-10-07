@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 final class ResolvePostLoginRedirect
 {
-    public function execute(Model $user): string
+    public function handle(Model $user): string
     {
         return route('dashboard');
     }

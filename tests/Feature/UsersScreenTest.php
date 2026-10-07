@@ -53,7 +53,7 @@ it('opens the user access slide for an inspectable user', function (): void {
 
     actingAs($manager);
 
-    $component = Livewire::test('pages.users.users');
+    $component = Livewire::test('pages::users.index');
     $component->call('openUserAccessSlide', $targetKey);
     $component->assertSet('showUserAccessSlide', true);
     $component->assertSet('selectedUserAccessId', $targetKey);
@@ -80,7 +80,7 @@ it('renders access details for an inspectable user', function (): void {
 it('keeps invite creation closed until a membership model is configured', function (): void {
     actingAs(usersScreenManager());
 
-    Livewire::test('pages.users.users')
+    Livewire::test('pages::users.index')
         ->set('inviteEmail', 'new@example.test')
         ->set('inviteRole', 'member')
         ->call('invite')
@@ -95,7 +95,7 @@ it('lists only users with a membership in the configured tenant', function (): v
 
     actingAs($manager);
 
-    Livewire::test('pages.users.users')
+    Livewire::test('pages::users.index')
         ->assertSee($member->email)
         ->assertDontSee($outsideUser->email);
 });
