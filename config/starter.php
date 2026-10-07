@@ -14,7 +14,7 @@ return [
     'auth' => [
         'post_login_redirect_resolver' => ResolvePostLoginRedirect::class,
         'passkey_form_component' => null,
-        'password_form_component' => 'mortelos-starter::auth.password-form',
+        'password_form_component' => 'auth.password-form',
 
         'controllers' => [
             'accept_invitation' => AcceptInvitationController::class,
@@ -38,7 +38,7 @@ return [
 
     'layout' => [
         'sidebar_nav_component' => null,
-        'topbar_component' => 'starter::shared.topbar',
+        'topbar_component' => 'shared.topbar',
         'universal_search_component' => null,
     ],
 

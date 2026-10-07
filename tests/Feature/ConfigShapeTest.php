@@ -41,7 +41,7 @@ it('exposes the optional layout, navigation, governance, users, dashboard, inbox
 
 it('defaults the password form component to the package blade', function (): void {
     expect(config('starter.auth.password_form_component'))
-        ->toBe('mortelos-starter::auth.password-form');
+        ->toBe('auth.password-form');
 });
 
 it('leaves dashboard widgets empty until the host registers real components', function (): void {

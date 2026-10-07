@@ -13,7 +13,7 @@ uses(RefreshDatabase::class);
 it('shows the profile confirmation after saving', function (): void {
     actingAs(User::factory()->create());
 
-    Livewire::test('pages.settings.settings')
+    Livewire::test('pages::settings.index')
         ->set('name', 'Nieuwe Naam')
         ->call('updateProfile')
         ->assertSee('Profiel bijgewerkt.')
@@ -29,7 +29,7 @@ it('saves the profile without writing back a password changed in the meantime', 
     // The password island may save while the profile island runs; this user instance is then stale.
     User::query()->whereKey($user->getKey())->update(['password' => 'hash-van-het-wachtwoord-island']);
 
-    Livewire::test('pages.settings.settings')
+    Livewire::test('pages::settings.index')
         ->set('name', 'Nieuwe Naam')
         ->call('updateProfile');
 
@@ -39,7 +39,7 @@ it('saves the profile without writing back a password changed in the meantime', 
 it('shows the wrong current password error', function (): void {
     actingAs(User::factory()->create());
 
-    Livewire::test('pages.settings.settings')
+    Livewire::test('pages::settings.index')
         ->set('current_password', 'niet-het-wachtwoord')
         ->set('password', 'een-nieuw-wachtwoord')
         ->set('password_confirmation', 'een-nieuw-wachtwoord')

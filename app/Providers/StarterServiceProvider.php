@@ -8,7 +8,6 @@ use App\Access\StarterGovernanceGate;
 use App\Contracts\GovernanceGate;
 use App\Support\SingleTenantResolver;
 use Illuminate\Support\ServiceProvider;
-use Livewire\Livewire;
 use Mortel\Contracts\TenantResolver;
 
 final class StarterServiceProvider extends ServiceProvider
@@ -21,18 +20,5 @@ final class StarterServiceProvider extends ServiceProvider
         $this->app->bind(GovernanceGate::class, StarterGovernanceGate::class);
 
         $this->app->scoped(TenantResolver::class, SingleTenantResolver::class);
-    }
-
-    public function boot(): void
-    {
-        // Expose the starter views under a stable namespace so route bindings
-        // like 'starter::pages.dashboard.dashboard' resolve regardless of
-        // future host customizations of the resources/views/ layout.
-        $this->loadViewsFrom(resource_path('views'), 'mortelos-starter');
-
-        Livewire::addNamespace(
-            namespace: 'starter',
-            viewPath: resource_path('views/livewire'),
-        );
     }
 }

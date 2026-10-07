@@ -55,13 +55,13 @@ it('throws LogicException when an auth controller is missing', function (): void
 });
 
 it('exposes the starter view namespaces and shell pages', function (): void {
-    expect(View::exists('mortelos-starter::layouts.app'))->toBeTrue();
+    expect(View::exists('layouts.app'))->toBeTrue();
     expect(View::exists('layouts.guest'))->toBeTrue();
 
     expect(is_file(resource_path('views/components/auth/password-form.blade.php')))->toBeTrue();
-    expect(is_file(resource_path('views/livewire/pages/dashboard/dashboard.blade.php')))->toBeTrue();
-    expect(is_file(resource_path('views/livewire/pages/inbox/inbox.blade.php')))->toBeTrue();
-    expect(is_file(resource_path('views/livewire/pages/auth/login.blade.php')))->toBeTrue();
+    expect(is_file(resource_path('views/pages/dashboard/⚡index.blade.php')))->toBeTrue();
+    expect(is_file(resource_path('views/pages/inbox/⚡index.blade.php')))->toBeTrue();
+    expect(is_file(resource_path('views/pages/auth/⚡login.blade.php')))->toBeTrue();
 });
 
 it('reports the doctor command as green for the default config', function (): void {

@@ -40,7 +40,7 @@ it('passes a sidebar action to $dispatch as a JS string literal, not as interpol
     config(['starter.navigation.sidebar_resolver' => 'test.sidebar-resolver']);
     actingAs(User::factory()->create());
 
-    $html = Livewire::test('starter::shared.sidebar-nav')->html();
+    $html = Livewire::test('shared.sidebar-nav')->html();
 
     preg_match('/x-on:click="([^"]*)"/', $html, $match);
 

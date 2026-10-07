@@ -25,7 +25,7 @@ Route::get('/', function () use ($starterClass) {
 })->name('home');
 
 Route::middleware(['web'])->group(function () use ($starterClass): void {
-    Route::livewire('/login', 'starter::pages.auth.login')->name('login');
+    Route::livewire('/login', 'pages::auth.login')->name('login');
 
     Route::post('passkeys/authenticate', $starterClass('starter.auth.controllers.passkey_authenticated'))
         ->middleware('throttle:auth')
@@ -48,13 +48,13 @@ Route::middleware(['web'])->group(function () use ($starterClass): void {
         ->name('invite.store');
 
     Route::middleware('auth')->group(function (): void {
-        Route::livewire('/onboarding', 'starter::pages.onboarding.onboarding')->name('onboarding');
-        Route::livewire('/dashboard', 'starter::pages.dashboard.dashboard')->name('dashboard');
-        Route::livewire('/inbox', 'starter::pages.inbox.inbox')->name('inbox');
-        Route::livewire('/governance', 'starter::pages.governance.governance')->name('governance');
-        Route::livewire('/governance/roles', 'starter::pages.governance.roles')->name('governance.roles');
-        Route::livewire('/users', 'starter::pages.users.users')->name('users');
-        Route::livewire('/settings', 'starter::pages.settings.settings')->name('settings');
+        Route::livewire('/onboarding', 'pages::onboarding.index')->name('onboarding');
+        Route::livewire('/dashboard', 'pages::dashboard.index')->name('dashboard');
+        Route::livewire('/inbox', 'pages::inbox.index')->name('inbox');
+        Route::livewire('/governance', 'pages::governance.index')->name('governance');
+        Route::livewire('/governance/roles', 'pages::governance.roles')->name('governance.roles');
+        Route::livewire('/users', 'pages::users.index')->name('users');
+        Route::livewire('/settings', 'pages::settings.index')->name('settings');
 
         Route::post('/logout', function () {
             Auth::logout();

@@ -27,7 +27,7 @@ it('puts the wizard navigation in the action bar, with back only after step 1', 
     config(['starter.onboarding.resolver' => OnboardingScreenTestResolver::class]);
     actingAs(User::factory()->create());
 
-    Livewire::test('starter::pages.onboarding.onboarding')
+    Livewire::test('pages::onboarding.index')
         ->assertSeeHtml('data-mortel-page-actions')
         ->assertSee('Volgende')
         ->assertDontSee('Vorige')
