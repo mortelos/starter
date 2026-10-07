@@ -4,18 +4,23 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Models\Policy;
-use App\Models\Role;
+use App\Access\StarterGovernanceGate;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Mortel\Actions\Policy\CreatePolicy;
+use Mortel\Actions\Role\CreateRole;
+use Mortel\Enums\PolicyEffect;
+use Mortel\Models\Policy;
+use Mortel\Models\Role;
 
 final class DatabaseSeeder extends Seeder
 {
+    private const ACTOR = 'system:seeder';
+
     public function run(): void
     {
         $tenantId = is_string($t = config('starter.tenancy.default_tenant_id', 'default')) ? $t : 'default';
@@ -43,47 +48,38 @@ final class DatabaseSeeder extends Seeder
 
         // Owner role with explicit allow policies, so the governance surface is
         // reachable after db:seed. Deny-by-default means nothing is manageable
-        // until a policy grants it (D11). The id is a string PK, so generate it
-        // only on first create — never reassign it on a re-seed.
-        Role::query()
-            ->where('name', 'Owner')
-            ->update(['name' => 'owner']);
+        // until a policy grants it (D11). Both go through the framework Actions,
+        // so the role and its policies are stored events with projections, and
+        // re-seeding finds them by name instead of creating them twice.
+        $ownerId = $this->ownerRoleId($tenantId, $branchId);
 
-        $owner = Role::query()->firstOrCreate(
-            ['name' => 'owner'],
-            [
-                'id' => (string) Str::ulid(),
-                'description' => 'Volledig beheer van governance en gebruikers.',
-            ],
-        );
-        $owner->forceFill([
-            'description' => 'Volledig beheer van governance en gebruikers.',
-            'scope' => ['all_branches' => true],
-            'org_id' => $tenantId,
-            'branch_id' => $branchId,
-        ])->save();
+        foreach (StarterGovernanceGate::SCOPES as $ability => $scope) {
+            $exists = Policy::query()
+                ->where('role_id', $ownerId)
+                ->where('scope', $scope->value)
+                ->get()
+                ->contains(fn (Policy $policy): bool => is_array($policy->actions) && array_key_exists($ability, $policy->actions));
 
-        foreach (['governance.manage', 'users.manage'] as $action) {
-            $policy = Policy::query()->firstOrCreate(
-                ['role_id' => $owner->getKey(), 'action' => $action],
-                [
-                    'id' => (string) Str::ulid(),
-                    'effect' => 'allow',
-                ],
+            if ($exists) {
+                continue;
+            }
+
+            app(CreatePolicy::class)->handle(
+                name: 'Allow '.$ability,
+                description: null,
+                scope: $scope,
+                resourceType: null,
+                resourceId: null,
+                roleId: $ownerId,
+                actions: [$ability => PolicyEffect::Allow->value],
+                effect: PolicyEffect::Allow,
+                priority: 100,
+                conditions: null,
+                orgId: $tenantId,
+                branchId: $branchId,
+                actor: self::ACTOR,
             );
-            $policy->forceFill([
-                'name' => 'Allow '.$action,
-                'scope' => 'host',
-                'actions' => [$action => 'allow'],
-                'effect' => 'allow',
-                'priority' => 100,
-                'conditions' => [],
-                'org_id' => $tenantId,
-                'branch_id' => $branchId,
-            ])->save();
         }
-
-        $admin->roles()->syncWithoutDetaching([$owner->getKey()]);
 
         DB::table('tenant_user')->updateOrInsert(
             [
@@ -92,10 +88,29 @@ final class DatabaseSeeder extends Seeder
             ],
             [
                 'role' => 'admin',
-                'role_id' => $this->key($owner),
+                'role_id' => $ownerId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+        );
+    }
+
+    private function ownerRoleId(string $tenantId, string $branchId): string
+    {
+        $existing = Role::query()->where('name', 'owner')->first();
+
+        if ($existing instanceof Role) {
+            return $this->key($existing);
+        }
+
+        return app(CreateRole::class)->handle(
+            name: 'owner',
+            description: 'Volledig beheer van governance en gebruikers.',
+            trustConfig: [],
+            scope: ['all_branches' => true],
+            orgId: $tenantId,
+            branchId: $branchId,
+            actor: self::ACTOR,
         );
     }
 

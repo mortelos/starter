@@ -12,6 +12,8 @@ use Tests\TestCase;
 use function Pest\Laravel\seed;
 use function Pest\Laravel\withVite;
 
+require __DIR__.'/Support/Governance.php';
+
 uses(TestCase::class)->in('Feature');
 
 uses(TestCase::class, RefreshDatabase::class)->in('Feature/Database');

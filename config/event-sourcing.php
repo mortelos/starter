@@ -19,4 +19,31 @@ return [
     */
     'auto_discover_projectors_and_reactors' => [app_path()],
     'event_class_map' => [],
+
+    /*
+    | De projectors en reactors van mortelos/framework. Het framework meldt ze niet
+    | zelf aan; zonder deze lijst worden RoleCreated, PolicyCreated en de andere
+    | framework-events wel opgeslagen maar nooit in hun tabel geprojecteerd.
+    */
+    'projectors' => [
+        Mortel\Projectors\AiActionStatisticsProjector::class,
+        Mortel\Projectors\ChannelProjector::class,
+        Mortel\Projectors\DocumentProjector::class,
+        Mortel\Projectors\EntityLinkProjector::class,
+        Mortel\Projectors\EntityProjector::class,
+        Mortel\Projectors\ExperimentProjector::class,
+        Mortel\Projectors\InboxAttentionProjector::class,
+        Mortel\Projectors\InboxItemReclassifiedProjector::class,
+        Mortel\Projectors\MetricProjector::class,
+        Mortel\Projectors\PolicyProjector::class,
+        Mortel\Projectors\RoleProjector::class,
+        Mortel\Projectors\TranscriptProjector::class,
+        Mortel\Projectors\WorkflowProjector::class,
+        Mortel\Projectors\WorkflowRunProjector::class,
+        Mortel\Projectors\WorkflowScheduleProjector::class,
+        Mortel\Projectors\WorkflowStepWaitProjector::class,
+    ],
+    'reactors' => [
+        Mortel\Reactors\WorkflowReactor::class,
+    ],
 ];

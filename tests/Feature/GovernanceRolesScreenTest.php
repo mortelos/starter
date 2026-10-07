@@ -2,39 +2,21 @@
 
 declare(strict_types=1);
 
-use App\Models\Policy;
-use App\Models\Role;
-use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Mortel\Actions\Policy\CreatePolicy;
+use Mortel\Enums\PolicyEffect;
+use Mortel\Enums\PolicyScope;
+use Mortel\Events\Role\RoleCreated;
+use Mortel\Models\Policy;
+use Mortel\Models\Role;
+use Mortel\Models\UteqStoredEvent;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
 uses(RefreshDatabase::class);
-
-/**
- * Create a user that owns the governance.manage allow policy.
- */
-function ownerUser(): User
-{
-    $user = User::factory()->create();
-    $role = Role::factory()->create(['name' => 'Owner']);
-    Policy::factory()->for($role)->action('governance.manage')->allow()->create();
-    $tenantId = 'default';
-
-    Tenant::query()->firstOrCreate(
-        ['id' => $tenantId],
-        ['data' => ['name' => 'Default workspace']],
-    );
-    $user->tenants()->attach($tenantId, [
-        'role' => 'admin',
-        'role_id' => modelKeyString($role),
-    ]);
-
-    return $user;
-}
 
 it('renders the roles screen for an owner', function (): void {
     actingAs(ownerUser());
@@ -60,7 +42,7 @@ it('redirects guests to login', function (): void {
     get(route('governance.roles'))->assertRedirect(route('login'));
 });
 
-it('creates a role', function (): void {
+it('creates a role through the framework action, as a stored event', function (): void {
     actingAs(ownerUser());
 
     Livewire::test('pages::governance.roles')
@@ -69,7 +51,10 @@ it('creates a role', function (): void {
         ->call('createRole')
         ->assertHasNoErrors();
 
-    expect(Role::query()->where('name', 'Reviewer')->exists())->toBeTrue();
+    $role = Role::query()->where('name', 'Reviewer')->firstOrFail();
+
+    expect($role->description)->toBe('Mag voorstellen reviewen');
+    expect(UteqStoredEvent::where('aggregate_uuid', modelKeyString($role))->where('event_class', RoleCreated::class)->count())->toBe(1);
 });
 
 it('validates a required role name on create', function (): void {
@@ -83,7 +68,7 @@ it('validates a required role name on create', function (): void {
 
 it('updates a role', function (): void {
     actingAs(ownerUser());
-    $role = Role::factory()->create(['name' => 'Old name']);
+    $role = createRole('Old name');
     $roleKey = modelKeyString($role);
 
     Livewire::test('pages::governance.roles')
@@ -92,59 +77,84 @@ it('updates a role', function (): void {
         ->call('updateRole')
         ->assertHasNoErrors();
 
-    $freshRole = Role::query()->whereKey($roleKey)->firstOrFail();
-
-    expect($freshRole->name)->toBe('New name');
+    expect(Role::query()->whereKey($roleKey)->firstOrFail()->name)->toBe('New name');
 });
 
 it('deletes a role and its policies', function (): void {
     actingAs(ownerUser());
-    $role = Role::factory()->create();
-    $policy = Policy::factory()->for($role)->create();
+    $role = createRole('Tijdelijk');
+    $policy = grantPolicy($role, 'inbox.manage');
 
     Livewire::test('pages::governance.roles')
-        ->call('deleteRole', $role->getKey());
+        ->call('deleteRole', modelKeyString($role))
+        ->assertHasNoErrors();
 
     expect(Role::query()->whereKey($role->getKey())->exists())->toBeFalse();
     expect(Policy::query()->whereKey($policy->getKey())->exists())->toBeFalse();
 });
 
-it('adds a policy to a role', function (): void {
+it('refuses to delete a role a member still holds and says so on the screen', function (): void {
     actingAs(ownerUser());
-    $role = Role::factory()->create();
+    $role = createRole('Bezet');
+    attachGovernanceMembership(User::factory()->create(), $role);
+
+    Livewire::test('pages::governance.roles')
+        ->call('deleteRole', modelKeyString($role))
+        ->assertHasErrors('roles')
+        ->assertSee('Deze rol is nog toegewezen aan een gebruiker.');
+
+    expect(Role::query()->whereKey($role->getKey())->exists())->toBeTrue();
+});
+
+it('adds a policy to a role in the chosen scope', function (): void {
+    actingAs(ownerUser());
+    $role = createRole('Reviewer');
     $roleKey = modelKeyString($role);
 
     Livewire::test('pages::governance.roles')
         ->set("policyAction.{$roleKey}", 'inbox.manage')
         ->set("policyEffect.{$roleKey}", 'allow')
+        ->set("policyScope.{$roleKey}", 'role')
         ->call('addPolicy', $roleKey)
         ->assertHasNoErrors();
 
-    expect(Policy::query()
-        ->where('role_id', $role->getKey())
-        ->where('action', 'inbox.manage')
-        ->where('effect', 'allow')
-        ->exists())->toBeTrue();
+    expect(roleHasPolicy($role, 'inbox.manage'))->toBeTrue();
+    expect(Policy::query()->where('role_id', $roleKey)->firstOrFail()->scope)->toBe('role');
 });
 
-function modelKeyString(Role|Policy $model): string
-{
-    $key = $model->getKey();
+it('shows every ability of a policy with more than one', function (): void {
+    actingAs(ownerUser());
+    $role = createRole('Reviewer');
 
-    if (! is_int($key) && ! is_string($key)) {
-        throw new RuntimeException('Expected a scalar model key.');
-    }
+    app(CreatePolicy::class)->handle(
+        name: 'Inbox',
+        description: null,
+        scope: PolicyScope::Policy,
+        resourceType: null,
+        resourceId: null,
+        roleId: modelKeyString($role),
+        actions: ['inbox.read' => 'allow', 'inbox.manage' => 'deny'],
+        effect: PolicyEffect::Allow,
+        priority: 0,
+        conditions: null,
+        orgId: governanceTenantId(),
+        branchId: governanceBranchId(),
+        actor: 'system:test',
+    );
 
-    return (string) $key;
-}
+    Livewire::test('pages::governance.roles')
+        ->assertSee('inbox.read')
+        ->assertSee('inbox.manage');
+});
 
 it('removes a policy from a role', function (): void {
     actingAs(ownerUser());
-    $role = Role::factory()->create();
-    $policy = Policy::factory()->for($role)->create();
+    $role = createRole('Reviewer');
+    $policy = grantPolicy($role, 'inbox.manage');
 
     Livewire::test('pages::governance.roles')
-        ->call('deletePolicy', $policy->getKey());
+        ->call('deletePolicy', modelKeyString($policy))
+        ->assertHasNoErrors();
 
     expect(Policy::query()->whereKey($policy->getKey())->exists())->toBeFalse();
 });

@@ -31,11 +31,10 @@ return new class extends Migration
         Schema::create('policies', function (Blueprint $table): void {
             $table->string('id')->primary();
             $table->string('role_id');
-            $table->string('action');
             $table->string('effect')->default('deny'); // 'allow' | 'deny'
             $table->timestamps();
 
-            $table->index(['role_id', 'action']);
+            $table->index('role_id');
         });
     }
 

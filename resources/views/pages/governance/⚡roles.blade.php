@@ -3,18 +3,26 @@
 declare(strict_types=1);
 
 use App\Contracts\GovernanceGate;
-use App\Models\Policy;
-use App\Models\Role;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Mortel\Actions\Policy\CreatePolicy;
+use Mortel\Actions\Policy\DeletePolicy;
+use Mortel\Actions\Role\CreateRole;
+use Mortel\Actions\Role\DeleteRole;
+use Mortel\Actions\Role\UpdateRole;
+use Mortel\Contracts\TenantResolver;
+use Mortel\Enums\PolicyEffect;
+use Mortel\Enums\PolicyScope;
+use Mortel\Exceptions\RoleInUseException;
+use Mortel\Models\Policy;
+use Mortel\Models\Role;
 
 new
 #[Layout('layouts::app')]
 #[Title('Rollen & policies')]
 class extends Component {
-    /** @var array<int, array{id: string, name: string, description: ?string, policies: array<int, array{id: string, action: string, effect: string}>}> */
+    /** @var array<int, array{id: string, name: string, description: ?string, policies: array<int, array{id: string, name: string, scope: string, actions: array<int, array{action: string, effect: string}>}>}> */
     public array $roles = [];
 
     public string $newRoleName = '';
@@ -33,6 +41,9 @@ class extends Component {
     /** @var array<string, string> effect draft, keyed by role id */
     public array $policyEffect = [];
 
+    /** @var array<string, string> scope draft, keyed by role id */
+    public array $policyScope = [];
+
     public function mount(): void
     {
         if (! auth()->check()) {
@@ -50,20 +61,32 @@ class extends Component {
 
     public function loadRoles(): void
     {
-        $this->roles = Role::query()
-            ->with('policies')
+        $roles = Role::query()->orderBy('name')->get();
+        $policies = Policy::query()
+            ->whereIn('role_id', $roles->modelKeys())
             ->orderBy('name')
             ->get()
+            ->groupBy('role_id');
+
+        $this->roles = $roles
             ->map(fn (Role $role): array => [
                 'id' => (string) $role->getKey(),
                 'name' => (string) $role->name,
                 'description' => $role->description,
-                'policies' => $role->policies
+                'policies' => $policies->get((string) $role->getKey(), collect())
                     ->map(fn (Policy $policy): array => [
                         'id' => (string) $policy->getKey(),
-                        'action' => (string) $policy->action,
-                        'effect' => (string) $policy->effect,
+                        'name' => (string) $policy->name,
+                        'scope' => (string) $policy->scope,
+                        'actions' => collect(is_array($policy->actions) ? $policy->actions : [])
+                            ->map(fn (mixed $effect, string $action): array => [
+                                'action' => $action,
+                                'effect' => is_string($effect) ? $effect : 'deny',
+                            ])
+                            ->values()
+                            ->all(),
                     ])
+                    ->values()
                     ->all(),
             ])
             ->all();
@@ -76,11 +99,15 @@ class extends Component {
             'newRoleDescription' => ['nullable', 'string', 'max:255'],
         ]);
 
-        Role::create([
-            'id' => (string) Str::ulid(),
-            'name' => $validated['newRoleName'],
-            'description' => $validated['newRoleDescription'] ?: null,
-        ]);
+        app(CreateRole::class)->handle(
+            name: $validated['newRoleName'],
+            description: $validated['newRoleDescription'] ?: null,
+            trustConfig: [],
+            scope: ['all_branches' => true],
+            orgId: $this->orgId(),
+            branchId: $this->branchId(),
+            actor: $this->actor(),
+        );
 
         $this->newRoleName = '';
         $this->newRoleDescription = '';
@@ -110,10 +137,16 @@ class extends Component {
             'editRoleDescription' => ['nullable', 'string', 'max:255'],
         ]);
 
-        Role::query()->findOrFail($this->editingRoleId)->update([
-            'name' => $validated['editRoleName'],
-            'description' => $validated['editRoleDescription'] ?: null,
-        ]);
+        app(UpdateRole::class)->handle(
+            roleId: $this->editingRoleId,
+            changes: [
+                'name' => $validated['editRoleName'],
+                'description' => $validated['editRoleDescription'] ?: null,
+            ],
+            orgId: $this->orgId(),
+            branchId: $this->branchId(),
+            actor: $this->actor(),
+        );
 
         $this->cancelEditRole();
         $this->loadRoles();
@@ -121,10 +154,13 @@ class extends Component {
 
     public function deleteRole(string $roleId): void
     {
-        $role = Role::query()->findOrFail($roleId);
-        $role->policies()->delete();
-        $role->users()->detach();
-        $role->delete();
+        try {
+            app(DeleteRole::class)->handle($roleId, $this->orgId(), $this->branchId(), $this->actor());
+        } catch (RoleInUseException) {
+            $this->addError('roles', 'Deze rol is nog toegewezen aan een gebruiker. Wijs die eerst een andere rol toe.');
+
+            return;
+        }
 
         if ($this->editingRoleId === $roleId) {
             $this->cancelEditRole();
@@ -135,33 +171,64 @@ class extends Component {
 
     public function addPolicy(string $roleId): void
     {
-        $action = trim($this->policyAction[$roleId] ?? '');
-        $effect = $this->policyEffect[$roleId] ?? 'allow';
+        $this->policyScope[$roleId] ??= PolicyScope::Policy->value;
+        $this->policyEffect[$roleId] ??= PolicyEffect::Allow->value;
 
         $this->validate([
             "policyAction.{$roleId}" => ['required', 'string', 'max:255'],
             "policyEffect.{$roleId}" => ['required', 'in:allow,deny'],
+            "policyScope.{$roleId}" => ['required', 'in:'.implode(',', array_column(PolicyScope::cases(), 'value'))],
         ]);
 
         Role::query()->findOrFail($roleId);
 
-        Policy::create([
-            'id' => (string) Str::ulid(),
-            'role_id' => $roleId,
-            'action' => $action,
-            'effect' => $effect,
-        ]);
+        $action = trim($this->policyAction[$roleId]);
+        $effect = PolicyEffect::from($this->policyEffect[$roleId]);
+
+        app(CreatePolicy::class)->handle(
+            name: $action,
+            description: null,
+            scope: PolicyScope::from($this->policyScope[$roleId]),
+            resourceType: null,
+            resourceId: null,
+            roleId: $roleId,
+            actions: [$action => $effect->value],
+            effect: $effect,
+            priority: 0,
+            conditions: null,
+            orgId: $this->orgId(),
+            branchId: $this->branchId(),
+            actor: $this->actor(),
+        );
 
         $this->policyAction[$roleId] = '';
-        $this->policyEffect[$roleId] = 'allow';
+        $this->policyEffect[$roleId] = PolicyEffect::Allow->value;
+        $this->policyScope[$roleId] = PolicyScope::Policy->value;
         $this->loadRoles();
     }
 
     public function deletePolicy(string $policyId): void
     {
-        Policy::query()->findOrFail($policyId)->delete();
+        app(DeletePolicy::class)->handle($policyId, $this->orgId(), $this->branchId(), $this->actor());
 
         $this->loadRoles();
+    }
+
+    private function orgId(): string
+    {
+        $tenantId = app(TenantResolver::class)->id();
+
+        return is_string($tenantId) && $tenantId !== '' ? $tenantId : (string) config('starter.tenancy.default_tenant_id', 'default');
+    }
+
+    private function branchId(): string
+    {
+        return (string) config('starter.tenancy.default_branch_id', 'main');
+    }
+
+    private function actor(): string
+    {
+        return (string) auth()->id();
     }
 }; ?>
 
@@ -201,6 +268,9 @@ class extends Component {
     </x-mortel::card>
 
     {{-- Rollen --}}
+    @error('roles')
+        <x-mortel::callout variant="danger" class="mb-6">{{ $message }}</x-mortel::callout>
+    @enderror
     @forelse($roles as $role)
         <x-mortel::card class="mb-6 p-0" wire:key="role-{{ $role['id'] }}">
             <div class="flex items-start justify-between gap-4 border-b border-zinc-100 px-6 py-4">
@@ -243,13 +313,18 @@ class extends Component {
                     <div class="mb-4 space-y-2">
                         @foreach($role['policies'] as $policy)
                             <div class="flex items-center justify-between gap-4 rounded-lg border border-zinc-100 bg-zinc-50/60 px-4 py-2.5" wire:key="policy-{{ $policy['id'] }}">
-                                <div class="flex items-center gap-3">
-                                    @if($policy['effect'] === 'allow')
-                                        <x-mortel::badge color="teal" size="sm">allow</x-mortel::badge>
-                                    @else
-                                        <x-mortel::badge color="red" size="sm">deny</x-mortel::badge>
-                                    @endif
-                                    <code class="text-sm text-zinc-700">{{ $policy['action'] }}</code>
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <span class="text-xs text-zinc-400">{{ $policy['scope'] }}</span>
+                                    @foreach($policy['actions'] as $ability)
+                                        <span class="flex items-center gap-1.5" wire:key="policy-{{ $policy['id'] }}-{{ $ability['action'] }}">
+                                            @if($ability['effect'] === 'allow')
+                                                <x-mortel::badge color="teal" size="sm">allow</x-mortel::badge>
+                                            @else
+                                                <x-mortel::badge color="red" size="sm">deny</x-mortel::badge>
+                                            @endif
+                                            <code class="text-sm text-zinc-700">{{ $ability['action'] }}</code>
+                                        </span>
+                                    @endforeach
                                 </div>
                                 <x-mortel::button type="button" variant="ghost" size="sm"
                                     wire:click="deletePolicy('{{ $policy['id'] }}')"
@@ -262,6 +337,13 @@ class extends Component {
                 <form wire:submit="addPolicy('{{ $role['id'] }}')" class="flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div class="flex-1">
                         <x-mortel::input label="Actie" wire:model="policyAction.{{ $role['id'] }}" placeholder="bijv. governance.manage" />
+                    </div>
+                    <div class="w-full sm:w-44">
+                        <x-mortel::select label="Scope" wire:model="policyScope.{{ $role['id'] }}" placeholder="policy">
+                            @foreach(\Mortel\Enums\PolicyScope::cases() as $scope)
+                                <x-mortel::select.option value="{{ $scope->value }}">{{ $scope->value }}</x-mortel::select.option>
+                            @endforeach
+                        </x-mortel::select>
                     </div>
                     <div class="w-full sm:w-44">
                         <x-mortel::select label="Effect" wire:model="policyEffect.{{ $role['id'] }}" placeholder="allow">

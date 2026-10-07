@@ -47,3 +47,13 @@ it('shows the wrong current password error', function (): void {
         ->assertSee('Huidige wachtwoord klopt niet.')
         ->assertHasErrors(['current_password']);
 });
+
+it('refuses a profile change by anyone but the account owner', function (): void {
+    $owner = \App\Models\User::factory()->create();
+    $other = \App\Models\User::factory()->create();
+
+    expect(fn () => app(\App\Actions\Account\UpdateProfile::class)->handle($owner, 'Nieuwe naam', 'nieuw@example.test', $other))
+        ->toThrow(\Illuminate\Auth\Access\AuthorizationException::class);
+
+    expect($owner->fresh()?->name)->not->toBe('Nieuwe naam');
+});

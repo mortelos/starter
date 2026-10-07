@@ -165,7 +165,7 @@ final class StarterDoctor extends Command
             $this->components->info('TenantResolver is initialized');
         }
 
-        foreach (['tenants', 'tenant_user', 'entities', 'entity_links', 'roles', 'policies'] as $table) {
+        foreach (['tenants', 'tenant_user', 'entities', 'entity_links', 'roles', 'policies', 'snapshots'] as $table) {
             if (! Schema::hasTable($table)) {
                 $missing[] = 'database.'.$table;
                 $this->components->error('database table '.$table.' is missing');
