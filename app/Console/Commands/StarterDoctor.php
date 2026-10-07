@@ -75,6 +75,12 @@ final class StarterDoctor extends Command
         $this->checkEventStore($missing, $invalid);
         $this->checkSingleTenantFrameworkBaseline($missing, $invalid);
 
+        // De spine-rails van mortelos/app-standards. EnforcePolicy staat pas na stap 2b
+        // (governance op het framework) op de routes; tot dan bewust overgeslagen.
+        if ($this->call('mortelos:spine:check', ['--skip' => ['enforce-policy-route']]) !== self::SUCCESS) {
+            $invalid[] = 'spine';
+        }
+
         return $missing === [] && $invalid === [] ? self::SUCCESS : self::FAILURE;
     }
 
