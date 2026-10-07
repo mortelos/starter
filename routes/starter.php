@@ -21,7 +21,7 @@ Route::get('/', function () use ($starterClass) {
     }
 
     return redirect(app($starterClass('starter.auth.post_login_redirect_resolver'))
-        ->execute(Auth::user()));
+        ->handle(Auth::user()));
 })->name('home');
 
 Route::middleware(['web'])->group(function () use ($starterClass): void {
