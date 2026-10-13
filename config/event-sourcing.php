@@ -3,6 +3,22 @@
 declare(strict_types=1);
 
 use Mortel\Models\UteqStoredEvent;
+use Mortel\Projectors\AiActionStatisticsProjector;
+use Mortel\Projectors\ChannelProjector;
+use Mortel\Projectors\DocumentProjector;
+use Mortel\Projectors\EntityLinkProjector;
+use Mortel\Projectors\EntityProjector;
+use Mortel\Projectors\ExperimentProjector;
+use Mortel\Projectors\InboxAttentionProjector;
+use Mortel\Projectors\InboxItemReclassifiedProjector;
+use Mortel\Projectors\MetricProjector;
+use Mortel\Projectors\PolicyProjector;
+use Mortel\Projectors\RoleProjector;
+use Mortel\Projectors\TranscriptProjector;
+use Mortel\Projectors\WorkflowProjector;
+use Mortel\Projectors\WorkflowRunProjector;
+use Mortel\Projectors\WorkflowScheduleProjector;
+use Mortel\Projectors\WorkflowStepWaitProjector;
 use Mortel\Repositories\UteqStoredEventRepository;
 
 return [
@@ -19,4 +35,33 @@ return [
     */
     'auto_discover_projectors_and_reactors' => [app_path()],
     'event_class_map' => [],
+
+    /*
+    | De projectors en reactors van mortelos/framework. Het framework meldt ze niet
+    | zelf aan; zonder deze lijst worden RoleCreated, PolicyCreated en de andere
+    | framework-events wel opgeslagen maar nooit in hun tabel geprojecteerd.
+    */
+    'projectors' => [
+        AiActionStatisticsProjector::class,
+        ChannelProjector::class,
+        DocumentProjector::class,
+        EntityLinkProjector::class,
+        EntityProjector::class,
+        ExperimentProjector::class,
+        InboxAttentionProjector::class,
+        InboxItemReclassifiedProjector::class,
+        MetricProjector::class,
+        PolicyProjector::class,
+        RoleProjector::class,
+        TranscriptProjector::class,
+        WorkflowProjector::class,
+        WorkflowRunProjector::class,
+        WorkflowScheduleProjector::class,
+        WorkflowStepWaitProjector::class,
+    ],
+    /*
+    | Mortel\Reactors\WorkflowReactor hoort hier pas bij als de host de tabel
+    | workflows heeft: de reactor bevraagt die tabel bij elk opgeslagen event.
+    */
+    'reactors' => [],
 ];

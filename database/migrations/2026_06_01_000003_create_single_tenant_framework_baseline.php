@@ -64,7 +64,7 @@ return new class extends Migration
             }
 
             if (! Schema::hasColumn('policies', 'scope')) {
-                $table->string('scope')->default('host')->after('description');
+                $table->string('scope')->default('policy')->after('description');
             }
 
             if (! Schema::hasColumn('policies', 'resource_type')) {
@@ -76,7 +76,7 @@ return new class extends Migration
             }
 
             if (! Schema::hasColumn('policies', 'actions')) {
-                $table->json('actions')->nullable()->after('action');
+                $table->json('actions')->nullable()->after('role_id');
             }
 
             if (! Schema::hasColumn('policies', 'priority')) {

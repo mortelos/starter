@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Models\Policy;
-use App\Models\Role;
-use App\Models\Tenant;
 use App\Models\User;
 use App\Support\StarterUsersAccessResolver;
 use App\Support\StarterUsersResolver;
@@ -16,21 +13,8 @@ use function Pest\Laravel\get;
 
 uses(RefreshDatabase::class);
 
-function usersScreenManager(): User
-{
-    $user = User::factory()->create();
-    $role = Role::factory()->create(['name' => 'Owner']);
-
-    Policy::factory()->for($role)->action('users.manage')->allow()->create();
-    $user->roles()->attach($role);
-    attachUserToDefaultTenant($user, 'admin', roleKeyString($role));
-
-    return $user;
-}
-
 it('renders the users page for a user manager', function (): void {
     $manager = usersScreenManager();
-
     actingAs($manager);
 
     get(route('users'))
@@ -48,8 +32,8 @@ it('redirects users without users.manage to the dashboard', function (): void {
 it('opens the user access slide for an inspectable user', function (): void {
     $manager = usersScreenManager();
     $target = User::factory()->create();
-    attachUserToDefaultTenant($target);
-    $targetKey = userKeyString($target);
+    attachGovernanceMembership($target, null);
+    $targetKey = modelKeyString($target);
 
     actingAs($manager);
 
@@ -59,15 +43,13 @@ it('opens the user access slide for an inspectable user', function (): void {
     $component->assertSet('selectedUserAccessId', $targetKey);
 });
 
-it('renders access details for an inspectable user', function (): void {
+it('renders access details for an inspectable user from the membership role', function (): void {
     $manager = usersScreenManager();
     $target = User::factory()->create();
-    $role = Role::factory()->create(['name' => 'Reviewer']);
-
-    Policy::factory()->for($role)->action('dashboard.view')->allow()->create();
-    $target->roles()->attach($role);
-    attachUserToDefaultTenant($target, 'member', roleKeyString($role));
-    $targetKey = userKeyString($target);
+    $role = createRole('Reviewer');
+    grantPolicy($role, 'dashboard.view');
+    attachGovernanceMembership($target, $role);
+    $targetKey = modelKeyString($target);
 
     actingAs($manager);
 
@@ -91,7 +73,7 @@ it('lists only users with a membership in the configured tenant', function (): v
     $manager = usersScreenManager();
     $member = User::factory()->create();
     $outsideUser = User::factory()->create();
-    attachUserToDefaultTenant($member);
+    attachGovernanceMembership($member, null);
 
     actingAs($manager);
 
@@ -104,74 +86,27 @@ it('does not allow inspecting a user outside the configured tenant', function ()
     actingAs(usersScreenManager());
     $outsideUser = User::factory()->create();
 
-    expect(app(StarterUsersAccessResolver::class)->canInspect(userKeyString($outsideUser)))->toBeFalse();
+    expect(app(StarterUsersAccessResolver::class)->canInspect(modelKeyString($outsideUser)))->toBeFalse();
 });
 
-it('does not grant user management from a global role without tenant membership', function (): void {
+it('does not grant user management without a tenant membership', function (): void {
     $outsideManager = User::factory()->create();
-    $role = Role::factory()->create(['name' => 'Owner']);
-
-    Policy::factory()->for($role)->action('users.manage')->allow()->create();
-    $outsideManager->roles()->attach($role);
+    $role = createRole('Owner');
+    grantPolicy($role, 'users.manage');
 
     actingAs($outsideManager);
 
     get(route('users'))->assertRedirect(route('dashboard'));
 });
 
-it('reports the tenant membership role instead of a global user role', function (): void {
+it('reports the tenant membership role', function (): void {
     actingAs(usersScreenManager());
     $member = User::factory()->create();
-    $globalRole = Role::factory()->create(['name' => 'Reviewer']);
-    $member->roles()->attach($globalRole);
-    attachUserToDefaultTenant($member, 'member');
+    attachGovernanceMembership($member, null, 'member');
 
     $resolvedMember = collect(app(StarterUsersResolver::class)->members())
-        ->firstWhere('id', userKeyString($member));
+        ->firstWhere('id', modelKeyString($member));
 
     expect($resolvedMember)->not->toBeNull();
     expect($resolvedMember['role'] ?? null)->toBe('member');
 });
-
-function attachUserToDefaultTenant(User $user, string $role = 'member', ?string $roleId = null): void
-{
-    $configuredTenantId = config('starter.tenancy.default_tenant_id', 'default');
-
-    if (! is_string($configuredTenantId) && ! is_int($configuredTenantId)) {
-        throw new RuntimeException('Expected a scalar tenant id.');
-    }
-
-    $tenantId = (string) $configuredTenantId;
-
-    Tenant::query()->firstOrCreate(
-        ['id' => $tenantId],
-        ['data' => ['name' => 'Default workspace']],
-    );
-
-    $user->tenants()->attach($tenantId, [
-        'role' => $role,
-        'role_id' => $roleId,
-    ]);
-}
-
-function userKeyString(User $user): string
-{
-    $key = $user->getKey();
-
-    if (! is_int($key) && ! is_string($key)) {
-        throw new RuntimeException('Expected a scalar user key.');
-    }
-
-    return (string) $key;
-}
-
-function roleKeyString(Role $role): string
-{
-    $key = $role->getKey();
-
-    if (! is_int($key) && ! is_string($key)) {
-        throw new RuntimeException('Expected a scalar role key.');
-    }
-
-    return (string) $key;
-}

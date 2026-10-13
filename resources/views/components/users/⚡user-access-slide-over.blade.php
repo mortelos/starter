@@ -1,7 +1,11 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Mortel\Contracts\TenantResolver;
+use Mortel\Models\Policy;
+use Mortel\Models\Role;
 
 new class extends Component {
     public string $userId = '';
@@ -22,10 +26,7 @@ new class extends Component {
             return;
         }
 
-        $user = User::query()
-            ->with('roles.policies')
-            ->whereKey($this->userId)
-            ->first();
+        $user = User::query()->whereKey($this->userId)->first();
 
         if (! $user instanceof User) {
             $this->userAccess = null;
@@ -33,26 +34,39 @@ new class extends Component {
             return;
         }
 
+        // De rol van een lid staat op de tenant-membership (tenant_user.role_id),
+        // precies waar het framework hem ook leest (ActorContextResolver).
+        $roleId = DB::table('tenant_user')
+            ->where('user_id', $user->getKey())
+            ->where('tenant_id', app(TenantResolver::class)->id())
+            ->value('role_id');
+        $role = is_string($roleId) ? Role::query()->find($roleId) : null;
+
         $this->userAccess = [
             'name' => $user->name,
             'email' => $user->email,
-            'roles' => $user->roles
-                ->map(fn ($role): array => [
-                    'id' => (string) $role->getKey(),
-                    'name' => $role->name,
-                    'description' => $role->description,
-                    'policies' => $role->policies
-                        ->sortBy('action')
-                        ->map(fn ($policy): array => [
-                            'id' => (string) $policy->getKey(),
-                            'action' => $policy->action,
-                            'effect' => $policy->effect,
-                        ])
-                        ->values()
-                        ->all(),
-                ])
-                ->values()
-                ->all(),
+            'roles' => $role instanceof Role ? [[
+                'id' => (string) $role->getKey(),
+                'name' => $role->name,
+                'description' => $role->description,
+                'policies' => Policy::query()
+                    ->where('role_id', $role->getKey())
+                    ->orderBy('name')
+                    ->get()
+                    ->map(fn (Policy $policy): array => [
+                        'id' => (string) $policy->getKey(),
+                        'name' => (string) $policy->name,
+                        'actions' => collect(is_array($policy->actions) ? $policy->actions : [])
+                            ->map(fn (mixed $effect, string $action): array => [
+                                'action' => $action,
+                                'effect' => is_string($effect) ? $effect : 'deny',
+                            ])
+                            ->values()
+                            ->all(),
+                    ])
+                    ->values()
+                    ->all(),
+            ]] : [],
         ];
     }
 
@@ -104,9 +118,13 @@ new class extends Component {
                             @else
                                 <div class="space-y-2">
                                     @foreach($role['policies'] as $policy)
-                                        <div class="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-sm" wire:key="access-policy-{{ $policy['id'] }}">
-                                            <code class="text-xs text-gray-700">{{ $policy['action'] }}</code>
-                                            <x-mortel::badge :color="$policy['effect'] === 'allow' ? 'emerald' : 'red'" size="sm">{{ $policy['effect'] }}</x-mortel::badge>
+                                        <div class="flex flex-wrap items-center justify-between gap-2 rounded-md bg-gray-50 px-3 py-2 text-sm" wire:key="access-policy-{{ $policy['id'] }}">
+                                            @foreach($policy['actions'] as $ability)
+                                                <span class="flex items-center gap-2" wire:key="access-policy-{{ $policy['id'] }}-{{ $ability['action'] }}">
+                                                    <code class="text-xs text-gray-700">{{ $ability['action'] }}</code>
+                                                    <x-mortel::badge :color="$ability['effect'] === 'allow' ? 'emerald' : 'red'" size="sm">{{ $ability['effect'] }}</x-mortel::badge>
+                                                </span>
+                                            @endforeach
                                         </div>
                                     @endforeach
                                 </div>
