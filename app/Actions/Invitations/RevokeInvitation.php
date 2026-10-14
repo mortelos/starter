@@ -47,6 +47,7 @@ final class RevokeInvitation
                 'Uitnodiging voor '.$invitation->email.' ingetrokken',
                 fn () => InvitationAggregate::retrieve($invitation->id)->revoke(now()->toIso8601String())->persist(),
                 $invitation->tenant_id,
+                InviteUser::branchId(),
             );
         } catch (InvitationNotOpenException $e) {
             return ActionResult::failed($e->getMessage());

@@ -21,6 +21,7 @@ use Mortel\Actions\UndoRegistry;
 use Mortel\Exceptions\InvalidEventPayloadException;
 use Mortel\Models\Role;
 use Mortel\Support\Actor;
+use Mortel\Support\EventContext;
 use Spatie\EventSourcing\Projectionist;
 use Spatie\EventSourcing\StoredEvents\Repositories\StoredEventRepository;
 
@@ -73,7 +74,9 @@ it('records an invitation as a stored event and projects it without the plain to
     $event = storedInvitationEvent(invitationId($result), 'created');
     expect($event['event_class'])->toBe('invitations.invitation.created')
         ->and($event['event_type'])->toBe('invitations.invitation.created')
-        ->and($event['actor'])->toBe(modelKeyString($owner));
+        ->and($event['actor'])->toBe(modelKeyString($owner))
+        ->and($event['org_id'])->toBe(governanceTenantId())
+        ->and($event['branch_id'])->toBe('main');
 
     $row = Invitation::query()->findOrFail(invitationId($result));
     expect($row->token_hash)->toBe(hash('sha256', inviteToken($result)))
@@ -99,12 +102,15 @@ it('refuses to invite a member or an address that already has an open invitation
 it('revokes an open invitation once', function (): void {
     $owner = invitationsManager();
     $id = invitationId(invite($owner));
+    app(EventContext::class)->reset(); // een nieuw request: de setup laat geen org of branch achter
 
     $result = app(RevokeInvitation::class)->handle($id, Actor::user($owner));
 
     expect($result->isDone())->toBeTrue()
         ->and($result->undo)->toBeNull()
         ->and(storedInvitationEvent($id, 'revoked')['actor'])->toBe(modelKeyString($owner))
+        ->and(storedInvitationEvent($id, 'revoked')['org_id'])->toBe(governanceTenantId())
+        ->and(storedInvitationEvent($id, 'revoked')['branch_id'])->toBe('main')
         ->and(Invitation::query()->findOrFail($id)->revoked_at)->not->toBeNull()
         ->and(app(RevokeInvitation::class)->handle($id, Actor::user($owner))->isFailed())->toBeTrue();
 });
@@ -122,6 +128,7 @@ it('undoes an invitation through the undo registry', function (): void {
 it('accepts an invitation into an account with a membership', function (): void {
     $owner = invitationsManager();
     $invited = invite($owner);
+    app(EventContext::class)->reset(); // een nieuw request: de setup laat geen org of branch achter
 
     $result = app(AcceptInvitation::class)->handle(inviteToken($invited), 'Nieuwe Collega', 'geheim-wachtwoord');
 
@@ -132,7 +139,9 @@ it('accepts an invitation into an account with a membership', function (): void 
 
     expect($result->data['user_id'])->toBe($userId)
         ->and(DB::table('tenant_user')->where('user_id', $userId)->where('tenant_id', governanceTenantId())->value('role_id'))->toBe(modelKeyString(ownerRole()))
-        ->and(storedInvitationEvent(invitationId($invited), 'accepted')['actor'])->toBe($userId);
+        ->and(storedInvitationEvent(invitationId($invited), 'accepted')['actor'])->toBe($userId)
+        ->and(storedInvitationEvent(invitationId($invited), 'accepted')['org_id'])->toBe(governanceTenantId())
+        ->and(storedInvitationEvent(invitationId($invited), 'accepted')['branch_id'])->toBe('main');
 
     $row = Invitation::query()->findOrFail(invitationId($invited));
     expect($row->accepted_at)->not->toBeNull()

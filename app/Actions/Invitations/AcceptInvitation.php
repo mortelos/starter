@@ -66,6 +66,7 @@ final class AcceptInvitation
                     'Uitnodiging geaccepteerd',
                     fn () => $aggregate->accept($userId, $acceptedAt)->persist(),
                     $invitation->tenant_id,
+                    InviteUser::branchId(),
                 );
 
                 return $user;

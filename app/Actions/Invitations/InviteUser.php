@@ -68,7 +68,7 @@ final class InviteUser
 
         $id = (string) Str::ulid();
         $token = Str::random(64);
-        $branchId = is_string($branch = config('starter.tenancy.default_branch_id', 'main')) ? $branch : 'main';
+        $branchId = self::branchId();
 
         app(EventContext::class)->within(
             $actor,
@@ -93,5 +93,11 @@ final class InviteUser
             ['invitation_id' => $id, 'accept_url' => route('invite.show', ['token' => $token])],
             Undo::of(RevokeInvitation::class, ['invitation_id' => $id], now()->addHour()),
         );
+    }
+
+    /** The branch every invitation event is recorded in; the three invitation Actions share it. */
+    public static function branchId(): string
+    {
+        return is_string($branch = config('starter.tenancy.default_branch_id', 'main')) ? $branch : 'main';
     }
 }
