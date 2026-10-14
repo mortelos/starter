@@ -123,3 +123,14 @@ function roleHasPolicy(Role $role, string $ability, string $effect = 'allow'): b
         ->get()
         ->contains(fn (Policy $policy): bool => is_array($policy->actions) && ($policy->actions[$ability] ?? null) === $effect);
 }
+
+/** Een gebruiker met de rol 'owner' die invitations.manage mag. */
+function invitationsManager(): User
+{
+    $user = User::factory()->create();
+    $role = createRole('owner');
+    grantPolicy($role, 'invitations.manage');
+    attachGovernanceMembership($user, $role, 'admin');
+
+    return $user;
+}

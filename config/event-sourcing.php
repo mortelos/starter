@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Events\Invitations\InvitationAccepted;
+use App\Events\Invitations\InvitationCreated;
+use App\Events\Invitations\InvitationRevoked;
 use Mortel\Models\UteqStoredEvent;
 use Mortel\Projectors\AiActionStatisticsProjector;
 use Mortel\Projectors\ChannelProjector;
@@ -34,7 +37,11 @@ return [
     | een replay niet breekt: 'notes.note.created' => App\Events\Notes\NoteCreated::class.
     */
     'auto_discover_projectors_and_reactors' => [app_path()],
-    'event_class_map' => [],
+    'event_class_map' => [
+        'invitations.invitation.created' => InvitationCreated::class,
+        'invitations.invitation.revoked' => InvitationRevoked::class,
+        'invitations.invitation.accepted' => InvitationAccepted::class,
+    ],
 
     /*
     | De projectors en reactors van mortelos/framework. Het framework meldt ze niet
