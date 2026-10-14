@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\get;
 
 uses(RefreshDatabase::class);
 
@@ -34,4 +35,15 @@ it('puts the wizard navigation in the action bar, with back only after step 1', 
         ->call('next')
         ->assertSeeHtml('data-mortel-page-actions')
         ->assertSee('Vorige');
+});
+
+it('shows an empty state naming the missing config key instead of failing without a resolver', function (): void {
+    config(['starter.onboarding.resolver' => null]);
+    actingAs(User::factory()->create());
+
+    get('/onboarding')
+        ->assertOk()
+        ->assertSee('Onboarding is nog niet ingericht')
+        ->assertSee('starter.onboarding.resolver')
+        ->assertDontSee('Volgende');
 });

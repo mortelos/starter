@@ -73,7 +73,21 @@ it('reports the doctor command as green for the default config', function (): vo
     expect($command)->toBeInstanceOf(PendingCommand::class);
     assert($command instanceof PendingCommand);
 
-    $command->assertSuccessful();
+    $command
+        ->expectsOutputToContain('starter.navigation.sidebar_resolver is empty: the sidebar stays empty')
+        ->expectsOutputToContain('starter.onboarding.resolver is empty: /onboarding shows an empty state')
+        ->expectsOutputToContain('starter.inbox.item_type_resolver is empty: the inbox never opens the intake detail pane')
+        ->assertSuccessful();
+});
+
+it('fails the doctor command when a host resolver points to nothing', function (): void {
+    /** @var TestCase $this */
+    $this->seed(DatabaseSeeder::class);
+    config()->set('starter.navigation.sidebar_resolver', 'App\\Support\\MissingSidebarResolver');
+
+    $command = artisan('starter:doctor');
+    assert($command instanceof PendingCommand);
+    $command->assertFailed();
 });
 
 it('ships the MortelOS event store baseline', function (): void {

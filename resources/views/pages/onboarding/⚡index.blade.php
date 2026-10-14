@@ -12,6 +12,7 @@ class extends Component {
     public string $userName = '';
     public string $userRole = '';
     public array $trustLevels = [];
+    public bool $configured = true;
 
     public function mount(): void
     {
@@ -21,7 +22,15 @@ class extends Component {
             return;
         }
 
-        $state = $this->onboardingResolver()->resolve();
+        $resolver = $this->onboardingResolver();
+
+        if ($resolver === null) {
+            $this->configured = false;
+
+            return;
+        }
+
+        $state = $resolver->resolve();
 
         if ($state['completed']) {
             $this->redirect(route('dashboard'), navigate: true);
@@ -52,18 +61,18 @@ class extends Component {
 
     public function complete(): void
     {
-        $this->onboardingResolver()->complete();
+        $this->onboardingResolver()?->complete();
 
         $this->redirect(route('dashboard'), navigate: true);
     }
 
 
-    private function onboardingResolver(): object
+    private function onboardingResolver(): ?object
     {
         $resolver = config('starter.onboarding.resolver');
 
         if (! is_string($resolver) || $resolver === '') {
-            throw new LogicException('Missing starter onboarding resolver config [starter.onboarding.resolver].');
+            return null;
         }
 
         return app($resolver);
@@ -87,6 +96,9 @@ class extends Component {
 
 <div class="flex min-h-[80vh] items-center justify-center p-6">
     <div class="w-full max-w-xl">
+        @if (! $configured)
+            <x-mortel::empty icon="cog-6-tooth" heading="Onboarding is nog niet ingericht" description="Vul starter.onboarding.resolver in config/starter.php in om de welkomststappen te tonen." />
+        @else
         {{-- Progress indicator --}}
         <div class="mb-8 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -218,5 +230,6 @@ class extends Component {
                 @endif
             </x-mortel::button>
         </x-mortel::page-actions>
+        @endif
     </div>
 </div>
