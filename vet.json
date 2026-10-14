@@ -154,8 +154,8 @@
             "hash": "tree-v2:2e4b644a0441e8ce825083ee7d4b367e57e59cec364cbe5091efad09a1995175"
         },
         "mortelos/framework": {
-            "version": "0.6.38",
-            "hash": "tree-v2:d50ca7652cd8db93137dc7d4f7cd16d889bdb6e2dc7c9477ac51a204a3b395a2"
+            "version": "0.6.41",
+            "hash": "tree-v2:136e1c4842ad97e503b64d6a3d443bf1fde0a156acf8794eb3c9533d4740d2d9"
         },
         "mortelos/ui": {
             "version": "0.4.6",
