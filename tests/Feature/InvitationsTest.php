@@ -14,10 +14,12 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Mortel\Actions\ActionResult;
 use Mortel\Actions\InviteUserToTenant;
 use Mortel\Actions\UndoRegistry;
+use Mortel\Enums\PolicyEffect;
 use Mortel\Exceptions\InvalidEventPayloadException;
 use Mortel\Models\Role;
 use Mortel\Support\Actor;
@@ -90,6 +92,73 @@ it('refuses to invite without the ability', function (): void {
 
     invite($user);
 })->throws(AuthorizationException::class);
+
+/** Een gebruiker met een eigen rol 'uitnodiger' die alleen invitations.manage mag, naast een volle owner-rol. */
+function inviterBesideOwnerRole(): User
+{
+    $owner = createRole('owner');
+    grantPolicy($owner, 'governance.manage');
+    grantPolicy($owner, 'users.manage');
+    grantPolicy($owner, 'invitations.manage');
+
+    $inviter = User::factory()->create();
+    $role = createRole('uitnodiger');
+    grantPolicy($role, 'invitations.manage');
+    attachGovernanceMembership($inviter, $role);
+
+    return $inviter;
+}
+
+it('refuses to invite into a role with more rights than the inviter', function (): void {
+    $inviter = inviterBesideOwnerRole();
+
+    $result = invite($inviter);
+
+    expect($result->isFailed())->toBeTrue()
+        ->and($result->message)->toBe('Je kunt niemand uitnodigen voor een rol met meer rechten dan jijzelf.')
+        ->and(DB::table('events')->where('event_type', 'invitations.invitation.created')->exists())->toBeFalse()
+        ->and(Invitation::query()->exists())->toBeFalse();
+});
+
+it('invites into a role with no more rights than the inviter', function (): void {
+    $inviter = inviterBesideOwnerRole();
+    $sameRights = Role::query()->where('name', 'uitnodiger')->firstOrFail();
+    $onlyDenies = createRole('lezer');
+    grantPolicy($onlyDenies, 'governance.manage', PolicyEffect::Deny);
+
+    $handle = fn (Role $role, string $email): ActionResult => app(InviteUser::class)
+        ->handle($email, modelKeyString($role), Actor::user($inviter));
+
+    expect($handle($sameRights, 'collega@example.test')->isDone())->toBeTrue()
+        ->and($handle($onlyDenies, 'lezer@example.test')->isDone())->toBeTrue()
+        ->and($handle(createRole('leeg'), 'leeg@example.test')->isDone())->toBeTrue();
+});
+
+it('lets the owner invite into the owner role', function (): void {
+    $owner = User::factory()->create();
+    $role = createRole('owner');
+    foreach (['governance.manage', 'users.manage', 'invitations.manage'] as $ability) {
+        grantPolicy($role, $ability);
+    }
+    attachGovernanceMembership($owner, $role, 'admin');
+
+    expect(invite($owner)->isDone())->toBeTrue();
+});
+
+it('stores an agent actor of 32 characters in a column wide enough for it', function (): void {
+    $owner = invitationsManager();
+    $actor = Actor::agent((string) Str::ulid(), $owner);
+
+    $result = app(InviteUser::class)->handle('nieuw@example.test', modelKeyString(ownerRole()), $actor);
+
+    expect(strlen($actor->id()))->toBe(32)
+        ->and(storedInvitationEvent(invitationId($result), 'created')['actor'])->toBe($actor->id())
+        ->and(Schema::getColumnType('events', 'actor', fullDefinition: true))->toBe(match (DB::getDriverName()) {
+            'sqlite' => 'varchar', // SQLite bewaart geen lengte; MySQL en Postgres wel.
+            'pgsql' => 'character varying(255)',
+            default => 'varchar(255)',
+        });
+});
 
 it('refuses to invite a member or an address that already has an open invitation', function (): void {
     $owner = invitationsManager();

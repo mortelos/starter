@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
 use Mortel\Actions\ActionResult;
 use Mortel\Actions\Undo;
 use Mortel\Contracts\TenantResolver;
+use Mortel\Enums\PolicyEffect;
+use Mortel\Models\Policy;
 use Mortel\Models\Role;
 use Mortel\Support\Actor;
 use Mortel\Support\EventContext;
@@ -50,6 +52,10 @@ final class InviteUser
 
         if (! Role::query()->whereKey($roleId)->where('org_id', $tenantId)->exists()) {
             return ActionResult::failed('Kies een rol die bij deze omgeving hoort.');
+        }
+
+        if (! $this->actorHoldsEveryAllowOf($actor, $roleId)) {
+            return ActionResult::failed('Je kunt niemand uitnodigen voor een rol met meer rechten dan jijzelf.');
         }
 
         $isMember = DB::table('tenant_user')
@@ -93,6 +99,29 @@ final class InviteUser
             ['invitation_id' => $id, 'accept_url' => route('invite.show', ['token' => $token])],
             Undo::of(RevokeInvitation::class, ['invitation_id' => $id], now()->addHour()),
         );
+    }
+
+    /**
+     * Whether the actor itself holds every ability the role allows, each in the
+     * scope of the policy that grants it. Without this check `invitations.manage`
+     * alone would let anyone invite a second address of their own into the owner
+     * role and so hand themselves rights they lack. Deny policies grant nothing.
+     */
+    private function actorHoldsEveryAllowOf(Actor $actor, string $roleId): bool
+    {
+        foreach (Policy::query()->where('role_id', $roleId)->get() as $policy) {
+            if ($policy->effect !== PolicyEffect::Allow || ! is_array($policy->actions)) {
+                continue;
+            }
+
+            foreach ($policy->actions as $ability => $effect) {
+                if ($effect === PolicyEffect::Allow->value && ! $this->gate->allowsActor($actor, (string) $ability, $policy->scope)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /** The branch every invitation event is recorded in; the three invitation Actions share it. */
