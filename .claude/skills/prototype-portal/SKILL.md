@@ -70,14 +70,14 @@ MortelOS uses Livewire 4 single-file components (SFC) and builds all UI from `<x
 
    ```php
    Route::prefix('prototype')->name('prototype.')->group(function () {
-       Route::livewire('/dashboard', 'pages.prototype.dashboard')->name('dashboard');
-       Route::livewire('/projects', 'pages.prototype.projects')->name('projects');
+       Route::livewire('/dashboard', 'pages::prototype.dashboard')->name('dashboard');
+       Route::livewire('/projects', 'pages::prototype.projects')->name('projects');
        // one route per screen
    });
    ```
 
 2. **Screens.** One native Livewire 4 SFC per screen at
-   `resources/views/livewire/pages/prototype/<name>.blade.php` (this host uses
+   `resources/views/pages/prototype/⚡<name>.blade.php` (this host uses
    native L4 SFC, NOT Volt). Keep mock data hardcoded in the `new class`
    block, or in the shared file from step 4. No DB. Use the `#[Layout]`
    attribute, not an `<x-layout>` wrapper, and end the class statement with a
@@ -90,7 +90,7 @@ MortelOS uses Livewire 4 single-file components (SFC) and builds all UI from `<x
    use Livewire\Component;
 
    new
-   #[Layout('layouts.prototype')]
+   #[Layout('layouts::prototype')]
    #[Title('Dashboard')]
    class extends Component {
        // Mock data lives here, hardcoded. No models, no queries.
@@ -107,7 +107,7 @@ MortelOS uses Livewire 4 single-file components (SFC) and builds all UI from `<x
    ```
 
 3. **Layout.** Create `resources/views/layouts/prototype.blade.php` (referenced as
-   `#[Layout('layouts.prototype')]`), a clone of `layouts/app.blade.php` that does
+   `#[Layout('layouts::prototype')]`), a clone of `layouts/app.blade.php` that does
    NOT depend on `Auth::user()` or the starter's config-driven nav components
    (hardcode the demo user and nav links) and renders a fixed PROTOTYPE badge on
    every screen. Keep `@fluxAppearance`, `@livewireStyles` and the `@vite` include
@@ -115,7 +115,7 @@ MortelOS uses Livewire 4 single-file components (SFC) and builds all UI from `<x
 
 4. **Mock data.** Use real client context (names, projects, packages) so it lands
    with the client. Keep it in the components, or in one shared file
-   `resources/views/livewire/pages/prototype/_mock.php` that returns an array.
+   `resources/views/pages/prototype/_mock.php` that returns an array.
    Never seed the database.
 
    ```php
@@ -136,7 +136,7 @@ MortelOS uses Livewire 4 single-file components (SFC) and builds all UI from `<x
 
    public function mount(): void
    {
-       $mock = require resource_path('views/livewire/pages/prototype/_mock.php');
+       $mock = require resource_path('views/pages/prototype/_mock.php');
 
        $this->team = $mock['team'];
    }
