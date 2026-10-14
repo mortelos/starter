@@ -18,7 +18,9 @@ use Mortel\Support\EventContext;
  * Turns an invitation into an account with a membership of the tenant. The
  * account, the membership and the event are one transaction. No Undo: there
  * is an account now, and taking a membership away is a governance decision
- * on the users screen, not the reverse of accepting.
+ * on the users screen, not the reverse of accepting. The starter shows the
+ * link to the inviter; a host mails it instead, so only the recipient holds
+ * it. Either way the address is not verified.
  */
 final class AcceptInvitation
 {

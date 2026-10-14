@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Access\StarterGovernanceGate;
 use App\Actions\Invitations\AcceptInvitation;
 use App\Actions\Invitations\InviteUser;
 use App\Actions\Invitations\RevokeInvitation;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Mortel\Actions\ActionResult;
 use Mortel\Actions\InviteUserToTenant;
+use Mortel\Actions\Policy\CreatePolicy;
 use Mortel\Actions\UndoRegistry;
 use Mortel\Enums\PolicyEffect;
 use Mortel\Exceptions\InvalidEventPayloadException;
@@ -118,6 +120,32 @@ it('refuses to invite into a role with more rights than the inviter', function (
         ->and($result->message)->toBe('Je kunt niemand uitnodigen voor een rol met meer rechten dan jijzelf.')
         ->and(DB::table('events')->where('event_type', 'invitations.invitation.created')->exists())->toBeFalse()
         ->and(Invitation::query()->exists())->toBeFalse();
+});
+
+it('counts an allow in the actions map even when the policy effect says deny', function (): void {
+    $inviter = inviterBesideOwnerRole();
+    $role = createRole('verkeerd-gelabeld');
+    app(CreatePolicy::class)->handle(
+        name: 'governance.manage',
+        description: null,
+        scope: StarterGovernanceGate::scopeFor('governance.manage'),
+        resourceType: null,
+        resourceId: null,
+        roleId: modelKeyString($role),
+        actions: ['governance.manage' => 'allow'],
+        effect: PolicyEffect::Deny,
+        priority: 0,
+        conditions: null,
+        orgId: governanceTenantId(),
+        branchId: governanceBranchId(),
+        actor: 'system:test',
+    );
+
+    $result = app(InviteUser::class)->handle('nieuw@example.test', modelKeyString($role), Actor::user($inviter));
+
+    expect($result->isFailed())->toBeTrue()
+        ->and($result->message)->toBe('Je kunt niemand uitnodigen voor een rol met meer rechten dan jijzelf.')
+        ->and(DB::table('events')->where('event_type', 'invitations.invitation.created')->exists())->toBeFalse();
 });
 
 it('invites into a role with no more rights than the inviter', function (): void {

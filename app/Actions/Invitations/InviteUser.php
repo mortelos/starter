@@ -105,12 +105,13 @@ final class InviteUser
      * Whether the actor itself holds every ability the role allows, each in the
      * scope of the policy that grants it. Without this check `invitations.manage`
      * alone would let anyone invite a second address of their own into the owner
-     * role and so hand themselves rights they lack. Deny policies grant nothing.
+     * role and so hand themselves rights they lack. It follows the same rule as
+     * CheckPolicy: only the actions map counts, the effect column is not read.
      */
     private function actorHoldsEveryAllowOf(Actor $actor, string $roleId): bool
     {
         foreach (Policy::query()->where('role_id', $roleId)->get() as $policy) {
-            if ($policy->effect !== PolicyEffect::Allow || ! is_array($policy->actions)) {
+            if (! is_array($policy->actions)) {
                 continue;
             }
 

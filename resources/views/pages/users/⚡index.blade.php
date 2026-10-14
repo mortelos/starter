@@ -23,6 +23,7 @@ class extends Component {
     public array $pendingInvites = [];
 
     /** @var array<string, string> role id => name, the roles of this tenant */
+    #[Locked]
     public array $roles = [];
 
     public string $inviteEmail = '';
