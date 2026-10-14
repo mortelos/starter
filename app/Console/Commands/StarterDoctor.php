@@ -107,6 +107,10 @@ final class StarterDoctor extends Command
             $invalid[] = 'spine';
         }
 
+        if ($this->call('mortelos:outlets:check') !== self::SUCCESS) {
+            $invalid[] = 'outlets';
+        }
+
         return $missing === [] && $invalid === [] ? self::SUCCESS : self::FAILURE;
     }
 

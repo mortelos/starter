@@ -20,6 +20,7 @@ Minimum for every new portal:
 | Agentic development | https://mortelos.nl/docs/0/agentic-development |
 | Building portals | https://mortelos.nl/docs/0/building-portals |
 | Host app anatomy | https://mortelos.nl/docs/0/host-app-anatomy |
+| Outlets | https://mortelos.nl/docs/0/outlets |
 | TALL conventions | https://mortelos.nl/docs/0/tall-conventions |
 | Package governance | https://mortelos.nl/docs/0/package-governance |
 | Troubleshooting | https://mortelos.nl/docs/0/troubleshooting |
@@ -162,7 +163,20 @@ and request approval again.
 
 1. Build host-side first unless the task is explicitly a package PR.
 2. Do not patch `vendor/mortelos/*` or sibling `mortelos/*` package worktrees
-   from a starter task.
+   from a starter task. Change what a package does by climbing the ladder, in
+   this order: config, event, registry, contract, view outlet. Run
+   `php artisan mortelos:outlets:list <package>` first to see what the package
+   offers. Only when none fits, open a package pull request that adds the
+   missing outlet and plug in from the host afterwards.
+   Change the package behavior itself only with a package decision, when a
+   second host needs it, it fixes a bug or security issue, or it concerns the
+   package's own default screens or defaults.
+   `tests/Feature/OutletsGuardTest.php` fails on patches, copied views,
+   subclasses of concrete package classes, `config()->set` on package keys and
+   `require` of vendor files. A view outlet is plugged in from a provider, for
+   example after `composer require mortelos/chat`:
+   `Mortelos\Ui\Outlet::view('chat.conversation.footer', 'chat.footer')`,
+   with the host view at `resources/views/chat/footer.blade.php`.
 3. Keep domain rules out of Blade and Livewire components.
 4. Use actions, projections, policies, resolvers or package services for domain
    behavior.
