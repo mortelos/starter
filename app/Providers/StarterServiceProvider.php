@@ -8,6 +8,8 @@ use App\Access\StarterGovernanceGate;
 use App\Contracts\GovernanceGate;
 use App\Support\SingleTenantResolver;
 use Illuminate\Support\ServiceProvider;
+use Mortel\Actions\Inbox\AuthorizeInboxItemAccess;
+use Mortel\Actions\Inbox\OwnerScopedInboxItemAccess;
 use Mortel\Contracts\TenantResolver;
 
 final class StarterServiceProvider extends ServiceProvider
@@ -20,5 +22,8 @@ final class StarterServiceProvider extends ServiceProvider
         $this->app->bind(GovernanceGate::class, StarterGovernanceGate::class);
 
         $this->app->scoped(TenantResolver::class, SingleTenantResolver::class);
+
+        // The framework denies every inbox item by default; the owner may view and decide on their own items.
+        $this->app->bind(AuthorizeInboxItemAccess::class, OwnerScopedInboxItemAccess::class);
     }
 }
