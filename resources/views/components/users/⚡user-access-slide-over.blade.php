@@ -86,12 +86,12 @@ new class extends Component {
 }; ?>
 
 <div class="flex h-full flex-col">
-    <div class="border-b border-gray-100 px-6 py-5">
-        <p class="text-xs font-semibold uppercase tracking-wider text-blue-600">Toegang</p>
-        <h2 class="mt-1 text-xl font-semibold text-gray-950">
+    <div class="border-b border-gray-100 px-6 py-5 dark:border-zinc-800">
+        <p class="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Toegang</p>
+        <h2 class="mt-1 text-xl font-semibold text-gray-950 dark:text-zinc-100">
             {{ $userAccess['name'] ?? 'Gebruiker' }}
         </h2>
-        <p class="mt-1 text-sm text-gray-500">
+        <p class="mt-1 text-sm text-gray-500 dark:text-zinc-400">
             {{ $userAccess['email'] ?? 'Geen gegevens beschikbaar.' }}
         </p>
     </div>
@@ -104,24 +104,24 @@ new class extends Component {
         @else
             <div class="space-y-4">
                 @foreach($userAccess['roles'] as $role)
-                    <section class="rounded-lg border border-gray-200 bg-white" wire:key="access-role-{{ $role['id'] }}">
-                        <div class="border-b border-gray-100 px-4 py-3">
-                            <h3 class="text-sm font-semibold text-gray-950">{{ $role['name'] }}</h3>
+                    <section class="rounded-lg border border-gray-200 bg-surface dark:border-zinc-800" wire:key="access-role-{{ $role['id'] }}">
+                        <div class="border-b border-gray-100 px-4 py-3 dark:border-zinc-800">
+                            <h3 class="text-sm font-semibold text-gray-950 dark:text-zinc-100">{{ $role['name'] }}</h3>
                             @if($role['description'])
-                                <p class="mt-1 text-sm text-gray-500">{{ $role['description'] }}</p>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-zinc-400">{{ $role['description'] }}</p>
                             @endif
                         </div>
 
                         <div class="p-4">
                             @if($role['policies'] === [])
-                                <p class="text-sm text-gray-500">Geen expliciete policies.</p>
+                                <p class="text-sm text-gray-500 dark:text-zinc-400">Geen expliciete policies.</p>
                             @else
                                 <div class="space-y-2">
                                     @foreach($role['policies'] as $policy)
-                                        <div class="flex flex-wrap items-center justify-between gap-2 rounded-md bg-gray-50 px-3 py-2 text-sm" wire:key="access-policy-{{ $policy['id'] }}">
+                                        <div class="flex flex-wrap items-center justify-between gap-2 rounded-md bg-surface-alt px-3 py-2 text-sm" wire:key="access-policy-{{ $policy['id'] }}">
                                             @foreach($policy['actions'] as $ability)
                                                 <span class="flex items-center gap-2" wire:key="access-policy-{{ $policy['id'] }}-{{ $ability['action'] }}">
-                                                    <code class="text-xs text-gray-700">{{ $ability['action'] }}</code>
+                                                    <code class="text-xs text-gray-700 dark:text-zinc-200">{{ $ability['action'] }}</code>
                                                     <x-mortel::badge :color="$ability['effect'] === 'allow' ? 'emerald' : 'red'" size="sm">{{ $ability['effect'] }}</x-mortel::badge>
                                                 </span>
                                             @endforeach

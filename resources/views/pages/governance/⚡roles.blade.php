@@ -235,9 +235,9 @@ class extends Component {
 <div class="p-6">
     <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div class="min-w-0">
-            <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-blue-600">Mortel Policy Studio</p>
+            <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Mortel Policy Studio</p>
             <x-mortel::heading size="xl" level="1">Rollen &amp; policies</x-mortel::heading>
-            <x-mortel::subheading>Beheer wie wat mag. Toegang is deny-by-default: niemand mag iets totdat een rol een expliciete <span class="font-medium text-zinc-700">allow</span>-policy krijgt.</x-mortel::subheading>
+            <x-mortel::subheading>Beheer wie wat mag. Toegang is deny-by-default: niemand mag iets totdat een rol een expliciete <span class="font-medium text-zinc-700 dark:text-zinc-200">allow</span>-policy krijgt.</x-mortel::subheading>
         </div>
         <x-mortel::button :href="route('governance')" wire:navigate icon="arrow-left" variant="ghost" size="sm" class="shrink-0">
             Terug naar Governance
@@ -247,8 +247,8 @@ class extends Component {
     <x-mortel::callout class="mb-6" icon="shield-check" variant="secondary">
         <x-mortel::callout.text>
             Een rol zonder <span class="font-medium">allow</span>-policy verleent geen enkele bevoegdheid. Voeg de actie
-            <code class="rounded bg-zinc-100 px-1 py-0.5 text-xs">governance.manage</code> toe om beheer van dit scherm te geven,
-            of <code class="rounded bg-zinc-100 px-1 py-0.5 text-xs">users.manage</code> voor gebruikersbeheer.
+            <code class="rounded bg-surface-hover px-1 py-0.5 text-xs">governance.manage</code> toe om beheer van dit scherm te geven,
+            of <code class="rounded bg-surface-hover px-1 py-0.5 text-xs">users.manage</code> voor gebruikersbeheer.
         </x-mortel::callout.text>
     </x-mortel::callout>
 
@@ -273,7 +273,7 @@ class extends Component {
     @enderror
     @forelse($roles as $role)
         <x-mortel::card class="mb-6 p-0" wire:key="role-{{ $role['id'] }}">
-            <div class="flex items-start justify-between gap-4 border-b border-zinc-100 px-6 py-4">
+            <div class="flex items-start justify-between gap-4 border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
                 @if($editingRoleId === $role['id'])
                     <form wire:submit="updateRole" class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-end">
                         <div class="flex-1">
@@ -289,9 +289,9 @@ class extends Component {
                     </form>
                 @else
                     <div>
-                        <h3 class="text-base font-semibold text-zinc-900">{{ $role['name'] }}</h3>
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ $role['name'] }}</h3>
                         @if($role['description'])
-                            <p class="mt-0.5 text-sm text-zinc-500">{{ $role['description'] }}</p>
+                            <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">{{ $role['description'] }}</p>
                         @endif
                     </div>
                     <div class="flex shrink-0 gap-2">
@@ -308,11 +308,11 @@ class extends Component {
                 <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Policies</p>
 
                 @if($role['policies'] === [])
-                    <p class="mb-4 text-sm text-zinc-500">Geen policies. Deze rol verleent niets (deny-by-default).</p>
+                    <p class="mb-4 text-sm text-zinc-500 dark:text-zinc-400">Geen policies. Deze rol verleent niets (deny-by-default).</p>
                 @else
                     <div class="mb-4 space-y-2">
                         @foreach($role['policies'] as $policy)
-                            <div class="flex items-center justify-between gap-4 rounded-lg border border-zinc-100 bg-zinc-50/60 px-4 py-2.5" wire:key="policy-{{ $policy['id'] }}">
+                            <div class="flex items-center justify-between gap-4 rounded-lg border border-zinc-100 bg-surface-alt/60 px-4 py-2.5 dark:border-zinc-800" wire:key="policy-{{ $policy['id'] }}">
                                 <div class="flex flex-wrap items-center gap-3">
                                     <span class="text-xs text-zinc-400">{{ $policy['scope'] }}</span>
                                     @foreach($policy['actions'] as $ability)
@@ -322,7 +322,7 @@ class extends Component {
                                             @else
                                                 <x-mortel::badge color="red" size="sm">deny</x-mortel::badge>
                                             @endif
-                                            <code class="text-sm text-zinc-700">{{ $ability['action'] }}</code>
+                                            <code class="text-sm text-zinc-700 dark:text-zinc-200">{{ $ability['action'] }}</code>
                                         </span>
                                     @endforeach
                                 </div>
