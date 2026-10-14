@@ -8,7 +8,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @fluxAppearance
 </head>
-<body class="min-h-screen bg-white font-sans antialiased">
+<body class="min-h-screen bg-surface font-sans antialiased">
     <x-mortel::main>
         {{ $slot }}
     </x-mortel::main>

@@ -129,7 +129,7 @@ class extends Component {
     {{-- Left panel: filters + list --}}
     <nav
         aria-label="Inbox navigatie"
-        class="flex min-h-0 flex-col overflow-y-auto border-r border-zinc-200"
+        class="flex min-h-0 flex-col overflow-y-auto border-r border-zinc-200 dark:border-zinc-800"
         :class="{
             'hidden': (isMobile || isTablet) && showDetail,
             'w-full': isMobile && !showDetail,
@@ -167,7 +167,7 @@ class extends Component {
         :class="{ 'hidden': (isMobile || isTablet) && !showDetail }"
         x-cloak
     >
-        <div class="border-b border-zinc-200 p-3 lg:hidden">
+        <div class="border-b border-zinc-200 p-3 lg:hidden dark:border-zinc-800">
             <x-mortel::button variant="ghost" size="sm" icon="arrow-left" wire:click="$dispatch('item-selected', { itemId: '' })" x-on:click="showDetail = false">Terug naar lijst</x-mortel::button>
         </div>
         @if ($this->isIntakeType())
