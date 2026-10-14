@@ -51,6 +51,32 @@ final class StarterDoctor extends Command
             $this->components->info($key.' → '.$value);
         }
 
+        // Host fills these in; empty is a valid state, so a warning that says what stays off.
+        $optional = [
+            'starter.navigation.sidebar_resolver' => 'the sidebar stays empty',
+            'starter.onboarding.resolver' => '/onboarding shows an empty state instead of the wizard',
+            'starter.inbox.item_type_resolver' => 'the inbox never opens the intake detail pane',
+        ];
+
+        foreach ($optional as $key => $consequence) {
+            $value = config($key);
+
+            if (! is_string($value) || $value === '') {
+                $this->components->warn($key.' is empty: '.$consequence);
+
+                continue;
+            }
+
+            if (! class_exists($value) && ! app()->bound($value)) {
+                $invalid[] = $key;
+                $this->components->error($key.' is neither a class nor a container binding: '.$value);
+
+                continue;
+            }
+
+            $this->components->info($key.' → '.$value);
+        }
+
         if (! is_file(base_path('routes/starter.php'))) {
             $this->components->error('routes/starter.php is missing');
         } else {

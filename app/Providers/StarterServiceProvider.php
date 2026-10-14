@@ -11,6 +11,8 @@ use App\Support\SingleTenantResolver;
 use App\Support\StarterTenantInvitationService;
 use Illuminate\Support\ServiceProvider;
 use Mortel\Actions\ActionResult;
+use Mortel\Actions\Inbox\AuthorizeInboxItemAccess;
+use Mortel\Actions\Inbox\OwnerScopedInboxItemAccess;
 use Mortel\Actions\UndoRegistry;
 use Mortel\Contracts\TenantInvitationService;
 use Mortel\Contracts\TenantResolver;
@@ -29,6 +31,9 @@ final class StarterServiceProvider extends ServiceProvider
         $this->app->scoped(TenantResolver::class, SingleTenantResolver::class);
 
         $this->app->bind(TenantInvitationService::class, StarterTenantInvitationService::class);
+
+        // The framework denies every inbox item by default; the owner may view and decide on their own items.
+        $this->app->bind(AuthorizeInboxItemAccess::class, OwnerScopedInboxItemAccess::class);
     }
 
     public function boot(): void

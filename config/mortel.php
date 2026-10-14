@@ -2,14 +2,21 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
+
 /*
-| Host overrides for mortelos/framework. Every other key comes from the
-| package's own config/mortel.php through mergeConfigFrom. That merge is
-| shallow: a top-level key set here replaces the package's whole key, so
-| copy the package's sub-keys along when you add one.
+| Only the keys the starter sets; mortelos/framework merges in the rest of
+| its own config/mortel.php. That merge is shallow: a top-level key set here
+| replaces the package's whole key, so copy the package's sub-keys along
+| when you add one. Single-tenant: no tenant model.
 */
 
 return [
+
+    'models' => [
+        'tenant' => null,
+        'user' => User::class,
+    ],
 
     'events' => [
         // Host stored events validate against the schema file next to their class,

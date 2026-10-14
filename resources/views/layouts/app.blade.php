@@ -9,14 +9,14 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @fluxAppearance
 </head>
-<body class="min-h-screen bg-white font-sans antialiased">
+<body class="min-h-screen bg-surface font-sans antialiased">
     @php
         $sidebarNavComponent = config('starter.layout.sidebar_nav_component');
         $topbarComponent = config('starter.layout.topbar_component');
         $universalSearchComponent = config('starter.layout.universal_search_component');
     @endphp
 
-    <x-mortel::sidebar sticky collapsible class="border-r border-zinc-200 bg-surface-alt">
+    <x-mortel::sidebar sticky collapsible class="border-r border-zinc-200 bg-surface-alt dark:border-zinc-800">
         <x-mortel::sidebar.header>
             <x-mortel::sidebar.brand
                 href="{{ route('dashboard') }}"

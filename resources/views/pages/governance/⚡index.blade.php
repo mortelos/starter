@@ -110,7 +110,7 @@ class extends Component {
 <div class="p-6">
     <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div class="min-w-0">
-            <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-blue-600">Mortel Policy Studio</p>
+            <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Mortel Policy Studio</p>
             <x-mortel::heading size="xl" level="1">Governance</x-mortel::heading>
             <x-mortel::subheading>Ontwerp, review en trace policy voorstellen voordat ze actief worden.</x-mortel::subheading>
         </div>

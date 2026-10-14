@@ -187,7 +187,7 @@ class extends Component {
 
     {{-- Teamleden --}}
     <x-mortel::card class="mb-8 p-0">
-        <div class="border-b border-zinc-100 px-6 py-4">
+        <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
             <x-mortel::heading size="lg" level="2">Teamleden</x-mortel::heading>
         </div>
         <x-mortel::table class="px-6">
@@ -263,7 +263,7 @@ class extends Component {
     {{-- Openstaande uitnodigingen --}}
     @if($pendingInvites !== [])
         <x-mortel::card class="p-0">
-            <div class="border-b border-zinc-100 px-6 py-4">
+            <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
                 <x-mortel::heading size="lg" level="2">Openstaande uitnodigingen</x-mortel::heading>
             </div>
             <x-mortel::table class="px-6">
@@ -305,7 +305,7 @@ class extends Component {
                 x-on:keydown.escape.window="$wire.$island('access').closeUserAccessSlide()"
             >
                 <x-mortel::button variant="ghost" class="h-full! min-w-12 flex-1 rounded-none!" wire:click="closeUserAccessSlide" aria-label="Sluiten" data-access-close />
-                <div class="h-full w-full max-w-3xl bg-white shadow-2xl">
+                <div class="h-full w-full max-w-3xl bg-surface shadow-2xl">
                     <livewire:users.user-access-slide-over
                         :user-id="$selectedUserAccessId"
                         wire:key="users-access-slide-{{ $selectedUserAccessId }}"

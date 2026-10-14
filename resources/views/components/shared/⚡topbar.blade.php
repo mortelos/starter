@@ -42,7 +42,7 @@ new class extends Component {
     <x-mortel::menu>
         <x-mortel::menu.heading>
             <div class="font-medium">{{ $userName }}</div>
-            <div class="text-xs text-zinc-500">{{ $userEmail }}</div>
+            <div class="text-xs text-zinc-500 dark:text-zinc-300">{{ $userEmail }}</div>
         </x-mortel::menu.heading>
 
         <x-mortel::menu.separator />
