@@ -34,6 +34,7 @@ it('records the owner role and its policies as stored events', function (): void
     expect(UteqStoredEvent::where('aggregate_uuid', modelKeyString($owner))->count())->toBe(1);
     expect(roleHasPolicy($owner, 'governance.manage'))->toBeTrue();
     expect(roleHasPolicy($owner, 'users.manage'))->toBeTrue();
+    expect(roleHasPolicy($owner, 'invitations.manage'))->toBeTrue();
 });
 
 it('is idempotent when re-seeding does not duplicate the owner role or policies', function (): void {
@@ -43,6 +44,6 @@ it('is idempotent when re-seeding does not duplicate the owner role or policies'
     $owner = Role::query()->where('name', 'owner')->firstOrFail();
 
     expect(Role::query()->where('name', 'owner')->count())->toBe(1);
-    expect(Policy::query()->where('role_id', modelKeyString($owner))->count())->toBe(2);
+    expect(Policy::query()->where('role_id', modelKeyString($owner))->count())->toBe(3);
     expect(UteqStoredEvent::where('event_class', RoleCreated::class)->count())->toBe(1);
 });

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Invitation;
 use App\Models\User;
 use App\Support\StarterUsersAccessResolver;
 use App\Support\StarterUsersResolver;
@@ -59,14 +60,106 @@ it('renders access details for an inspectable user from the membership role', fu
     $component->assertSee('dashboard.view');
 });
 
-it('keeps invite creation closed until a membership model is configured', function (): void {
+/** A user whose role may open the users screen and invite. */
+function userInviter(): User
+{
+    $user = User::factory()->create();
+    $role = createRole('owner');
+    grantPolicy($role, 'users.manage');
+    grantPolicy($role, 'invitations.manage');
+    attachGovernanceMembership($user, $role, 'admin');
+
+    return $user;
+}
+
+it('offers the tenant roles and picks member by default', function (): void {
+    actingAs(userInviter());
+    $member = createRole('member');
+
+    Livewire::test('pages::users.index')
+        ->assertSet('inviteRole', modelKeyString($member))
+        ->assertSee('owner');
+});
+
+it('invites through the Action and shows the message, the link and the open invitation', function (): void {
+    actingAs(userInviter());
+
+    $component = Livewire::test('pages::users.index')
+        ->set('inviteEmail', 'nieuw@example.test')
+        ->call('invite')
+        ->assertSet('inviteEmail', '')
+        ->assertSee('nieuw@example.test')
+        ->assertSee('Ongedaan maken');
+    $component->assertHasNoErrors();
+
+    expect($component->get('resultMessage'))->toContain('Uitnodiging klaargezet')
+        ->and($component->get('acceptUrl'))->toStartWith(config()->string('app.url').'/invite/')
+        ->and($component->get('pendingUndo'))->not->toBeNull()
+        ->and($component->get('pendingInvites'))->toHaveCount(1);
+});
+
+it('rejects an invalid email address before calling the Action', function (): void {
+    actingAs(userInviter());
+
+    Livewire::test('pages::users.index')
+        ->set('inviteEmail', 'geen-adres')
+        ->call('invite')
+        ->assertHasErrors(['inviteEmail' => 'email']);
+
+    expect(Invitation::query()->count())->toBe(0);
+});
+
+it('shows a failed invitation as an error', function (): void {
+    actingAs(userInviter());
+
+    Livewire::test('pages::users.index')
+        ->set('inviteEmail', 'nieuw@example.test')
+        ->call('invite')
+        ->set('inviteEmail', 'nieuw@example.test')
+        ->call('invite')
+        ->assertSet('errorMessage', 'Er staat al een uitnodiging open voor nieuw@example.test.')
+        ->assertSet('resultMessage', null);
+});
+
+it('undoes an invitation through the UndoRegistry', function (): void {
+    actingAs(userInviter());
+
+    $component = Livewire::test('pages::users.index')
+        ->set('inviteEmail', 'nieuw@example.test')
+        ->call('invite')
+        ->call('undoInvite')
+        ->assertSet('pendingUndo', null)
+        ->assertSet('acceptUrl', null)
+        ->assertSet('pendingInvites', [])
+        ->assertDontSee('Ongedaan maken');
+
+    expect($component->get('resultMessage'))->toContain('ingetrokken')
+        ->and(Invitation::query()->sole()->revoked_at)->not->toBeNull();
+});
+
+it('revokes an open invitation from the list', function (): void {
+    actingAs(userInviter());
+
+    $component = Livewire::test('pages::users.index')
+        ->set('inviteEmail', 'nieuw@example.test')
+        ->call('invite');
+
+    $component->call('revokeInvite', Invitation::query()->sole()->id)
+        ->assertSet('pendingInvites', [])
+        ->assertSet('pendingUndo', null);
+
+    expect(Invitation::query()->sole()->revoked_at)->not->toBeNull();
+});
+
+it('forbids inviting without invitations.manage', function (): void {
     actingAs(usersScreenManager());
 
     Livewire::test('pages::users.index')
-        ->set('inviteEmail', 'new@example.test')
-        ->set('inviteRole', 'member')
+        ->set('inviteEmail', 'nieuw@example.test')
         ->call('invite')
-        ->assertSet('errorMessage', 'Uitnodigingen zijn nog niet gekoppeld aan een membershipmodel.');
+        ->assertForbidden();
+
+    expect(Invitation::query()->count())->toBe(0);
 });
 
 it('lists only users with a membership in the configured tenant', function (): void {

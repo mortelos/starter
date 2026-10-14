@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "InvitationCreated",
+    "type": "object",
+    "required": ["invitation_id", "org_id", "branch_id", "email", "role_id", "invited_by", "token_hash", "expires_at"],
+    "properties": {
+        "invitation_id": { "type": "string" },
+        "org_id": { "type": "string" },
+        "branch_id": { "type": "string" },
+        "email": { "type": "string" },
+        "role_id": { "type": "string" },
+        "invited_by": { "type": "string" },
+        "token_hash": { "type": "string" },
+        "expires_at": { "type": "string" }
+    }
+}

@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Contracts\GovernanceGate;
+use App\Models\Invitation;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Mortel\Contracts\TenantResolver;
+use Mortel\Models\Role;
 use RuntimeException;
 
 final readonly class StarterUsersResolver
@@ -86,26 +87,27 @@ final readonly class StarterUsersResolver
     }
 
     /**
+     * Open invitations of the tenant, read from the projection.
+     *
      * @return list<array{id: string, email: string, role: string, expires_at: string}>
      */
     public function pendingInvites(): array
     {
-        return [];
-    }
+        $tenantId = $this->tenantId();
 
-    /**
-     * @throws ValidationException
-     */
-    public function invite(string $email, string $role): void
-    {
-        throw ValidationException::withMessages([
-            'email' => 'Uitnodigingen zijn nog niet gekoppeld aan een membershipmodel.',
-        ]);
-    }
+        if ($tenantId === null) {
+            return [];
+        }
 
-    public function revokeInvite(string $inviteId): void
-    {
-        // No invitation store exists in the starter baseline.
+        $invitations = Invitation::query()->open()->where('tenant_id', $tenantId)->orderBy('expires_at')->get();
+        $roleNames = Role::query()->whereIn('id', $invitations->pluck('role_id')->filter())->pluck('name', 'id');
+
+        return array_values($invitations->map(fn (Invitation $invitation): array => [
+            'id' => $invitation->id,
+            'email' => $invitation->email,
+            'role' => $this->membershipRole($roleNames[$invitation->role_id] ?? null),
+            'expires_at' => $invitation->expires_at->format('d-m-Y'),
+        ])->all());
     }
 
     private function membershipRole(mixed $role): string

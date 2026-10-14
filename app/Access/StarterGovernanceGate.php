@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Access;
 
 use App\Contracts\GovernanceGate;
+use App\Models\User;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Mortel\Access\ActorContextResolver;
 use Mortel\Actions\Policies\CheckPolicy;
 use Mortel\Contracts\TenantResolver;
 use Mortel\Enums\PolicyScope;
+use Mortel\Support\Actor;
 
 /**
  * Fail-closed governance gate (R7), single-tenant baseline, deny-by-default.
@@ -38,6 +40,7 @@ final class StarterGovernanceGate implements GovernanceGate
     public const SCOPES = [
         'governance.manage' => PolicyScope::Policy,
         'users.manage' => PolicyScope::Role,
+        'invitations.manage' => PolicyScope::Action,
     ];
 
     public function __construct(
@@ -56,7 +59,7 @@ final class StarterGovernanceGate implements GovernanceGate
      * contract only exposes canManage(); the users surface asks for
      * `users.manage` through this method on the bound concrete instance.
      */
-    public function allows(?Authenticatable $user, string $action): bool
+    public function allows(?Authenticatable $user, string $action, ?PolicyScope $scope = null): bool
     {
         if ($user === null) {
             return false;
@@ -73,7 +76,18 @@ final class StarterGovernanceGate implements GovernanceGate
             return false;
         }
 
-        return $this->checkPolicy->check((string) $roleId, $action, self::scopeFor($action))->allowed;
+        return $this->checkPolicy->check((string) $roleId, $action, $scope ?? self::scopeFor($action))->allowed;
+    }
+
+    /**
+     * The same check for the Actor an Action receives: an agent or bridge acting
+     * on behalf of a user gets that user's rights, anything without a user none.
+     */
+    public function allowsActor(Actor $actor, string $action, ?PolicyScope $scope = null): bool
+    {
+        $userId = $actor->userId();
+
+        return $userId !== null && $this->allows(User::query()->find($userId), $action, $scope);
     }
 
     public static function scopeFor(string $action): PolicyScope

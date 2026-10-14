@@ -35,6 +35,7 @@ return [
         'Mortel\Models\WorkflowRun',
         'Mortel\Models\Document',
         'Mortel\Models\DocumentVersion',
+        'App\Models\Invitation',
     ],
 
     /*

@@ -1,0 +1,11 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "InvitationAccepted",
+    "type": "object",
+    "required": ["invitation_id", "user_id", "accepted_at"],
+    "properties": {
+        "invitation_id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "accepted_at": { "type": "string" }
+    }
+}
