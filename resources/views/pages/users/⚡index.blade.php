@@ -1,8 +1,18 @@
 <?php
 
+use App\Actions\Invitations\InviteUser;
+use App\Actions\Invitations\RevokeInvitation;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Mortel\Actions\ActionResult;
+use Mortel\Actions\Undo;
+use Mortel\Actions\UndoRegistry;
+use Mortel\Contracts\TenantResolver;
+use Mortel\Models\Role;
+use Mortel\Support\Actor;
 
 new
 #[Layout('layouts::app')]
@@ -12,11 +22,24 @@ class extends Component {
 
     public array $pendingInvites = [];
 
+    /** @var array<string, string> role id => name, the roles of this tenant */
+    public array $roles = [];
+
     public string $inviteEmail = '';
 
-    public string $inviteRole = 'member';
+    public string $inviteRole = '';
+
+    public ?string $resultMessage = null;
 
     public ?string $errorMessage = null;
+
+    /** The accept link holds the plain token, which exists only in the ActionResult of InviteUser. */
+    #[Locked]
+    public ?string $acceptUrl = null;
+
+    /** @var array{action: string, params: array<string, mixed>, valid_until: string|null}|null */
+    #[Locked]
+    public ?array $pendingUndo = null;
 
     public bool $showUserAccessSlide = false;
 
@@ -36,6 +59,13 @@ class extends Component {
             return;
         }
 
+        $this->roles = Role::query()
+            ->where('org_id', app(TenantResolver::class)->id())
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
+        $this->inviteRole = $this->defaultRole();
+
         $this->loadData();
     }
 
@@ -46,7 +76,6 @@ class extends Component {
         $this->members = $resolver->members();
         $this->pendingInvites = $resolver->pendingInvites();
     }
-
 
     private function usersResolver(): object
     {
@@ -70,6 +99,11 @@ class extends Component {
         return app($resolver);
     }
 
+    private function defaultRole(): string
+    {
+        return (string) (array_search('member', $this->roles, true) ?: array_key_first($this->roles) ?? '');
+    }
+
     public function openUserAccessSlide(string $userId): void
     {
         $userId = trim($userId);
@@ -91,52 +125,64 @@ class extends Component {
     public function invite(): void
     {
         $this->validate([
-            'inviteEmail' => 'required|email',
-            'inviteRole' => 'required|in:owner,member,observer',
+            'inviteEmail' => ['required', 'email'],
+            'inviteRole' => ['required', Rule::in(array_keys($this->roles))],
         ]);
 
-        $this->errorMessage = null;
+        $result = app(InviteUser::class)->handle($this->inviteEmail, $this->inviteRole, Actor::current());
 
-        try {
-            $this->usersResolver()->invite($this->inviteEmail, $this->inviteRole);
+        $this->showResult($result);
 
+        if ($result->isDone()) {
+            $this->acceptUrl = $result->data['accept_url'];
+            $this->pendingUndo = $result->undo?->toArray();
             $this->inviteEmail = '';
-            $this->inviteRole = 'member';
+            $this->inviteRole = $this->defaultRole();
             $this->loadData();
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            $this->errorMessage = $e->errors()['email'][0] ?? 'Er is een fout opgetreden.';
         }
     }
 
-    public function revokeInvite(string $inviteId): void
+    public function undoInvite(): void
     {
-        $this->usersResolver()->revokeInvite($inviteId);
+        if ($this->pendingUndo === null) {
+            return;
+        }
+
+        $this->showResult(app(UndoRegistry::class)->undo(Undo::fromArray($this->pendingUndo), Actor::current()));
+        $this->pendingUndo = null;
+        $this->acceptUrl = null;
+        $this->loadData();
+    }
+
+    public function canUndo(): bool
+    {
+        return $this->pendingUndo !== null && ! Undo::fromArray($this->pendingUndo)->isExpired();
+    }
+
+    public function revokeInvite(string $invitationId): void
+    {
+        $result = app(RevokeInvitation::class)->handle($invitationId, Actor::current());
+
+        $this->showResult($result);
+
+        // The link and the undo of a just-revoked invitation are dead; stop showing them.
+        if ($result->isDone() && ($this->pendingUndo['params']['invitation_id'] ?? null) === $invitationId) {
+            $this->pendingUndo = null;
+            $this->acceptUrl = null;
+        }
 
         $this->loadData();
+    }
+
+    private function showResult(ActionResult $result): void
+    {
+        $this->resultMessage = $result->isFailed() ? null : $result->message;
+        $this->errorMessage = $result->isFailed() ? $result->message : null;
     }
 }; ?>
 
 <div class="p-6">
     <x-mortel::heading size="xl" level="1" class="mb-6">Gebruikersbeheer</x-mortel::heading>
-
-    {{-- Uitnodigingsformulier --}}
-    <x-mortel::card class="mb-8">
-        <x-mortel::heading size="lg" level="2" class="mb-4">Medewerker uitnodigen</x-mortel::heading>
-
-        @if($errorMessage)
-            <x-mortel::callout variant="danger" icon="exclamation-triangle" :heading="$errorMessage" class="mb-4" />
-        @endif
-
-        <form wire:submit="invite" class="flex items-end gap-4">
-            <x-mortel::input type="email" wire:model="inviteEmail" label="E-mailadres" placeholder="naam@voorbeeld.nl" required class="flex-1" />
-            <x-mortel::select wire:model="inviteRole" label="Rol">
-                <x-mortel::select.option value="member">Member</x-mortel::select.option>
-                <x-mortel::select.option value="observer">Observer</x-mortel::select.option>
-                <x-mortel::select.option value="owner">Owner</x-mortel::select.option>
-            </x-mortel::select>
-            <x-mortel::button type="submit" variant="primary">Uitnodiging versturen</x-mortel::button>
-        </form>
-    </x-mortel::card>
 
     {{-- Teamleden --}}
     <x-mortel::card class="mb-8 p-0">
@@ -165,12 +211,52 @@ class extends Component {
                 @empty
                     <x-mortel::table.row>
                         <x-mortel::table.cell colspan="5">
-                            <x-mortel::empty icon="users" heading="Nog geen teamleden" description="Nodig hierboven een medewerker uit." />
+                            <x-mortel::empty icon="users" heading="Nog geen teamleden" description="Nodig hieronder een medewerker uit." />
                         </x-mortel::table.cell>
                     </x-mortel::table.row>
                 @endforelse
             </x-mortel::table.rows>
         </x-mortel::table>
+    </x-mortel::card>
+
+    {{-- Uitnodigingsformulier. It sits below the member list and its messages below the form, so a
+         message that appears after an action does not push existing markup down (layout shift). --}}
+    <x-mortel::card class="mb-8">
+        <x-mortel::heading size="lg" level="2" class="mb-4">Medewerker uitnodigen</x-mortel::heading>
+
+        <form wire:submit="invite" class="flex items-end gap-4">
+            <x-mortel::input type="email" wire:model="inviteEmail" label="E-mailadres" placeholder="naam@voorbeeld.nl" required class="flex-1" />
+            <x-mortel::select wire:model="inviteRole" label="Rol">
+                @foreach($roles as $roleId => $roleName)
+                    <x-mortel::select.option value="{{ $roleId }}" wire:key="role-{{ $roleId }}">{{ $roleName }}</x-mortel::select.option>
+                @endforeach
+            </x-mortel::select>
+            <x-mortel::button type="submit" variant="primary">Uitnodigen</x-mortel::button>
+        </form>
+
+        @if($errorMessage)
+            <x-mortel::callout variant="danger" icon="exclamation-triangle" :heading="$errorMessage" class="mt-4" />
+        @endif
+
+        @if($resultMessage)
+            <x-mortel::callout variant="success" icon="check-circle" :heading="$resultMessage" class="mt-4">
+                @if($this->canUndo())
+                    <x-slot name="actions">
+                        <x-mortel::button size="sm" wire:click="undoInvite">Ongedaan maken</x-mortel::button>
+                    </x-slot>
+                @endif
+            </x-mortel::callout>
+        @endif
+
+        @if($acceptUrl)
+            <x-mortel::callout icon="link" heading="Uitnodigingslink" class="mt-4">
+                <x-mortel::callout.text>
+                    De starter stuurt geen mail. Kopieer de link en stuur hem zelf naar je nieuwe collega.
+                    Je ziet de link maar één keer. Wil je dat de app zelf mailt? Voeg dat dan toe in InviteUser.
+                </x-mortel::callout.text>
+                <x-mortel::input :value="$acceptUrl" readonly copyable aria-label="Uitnodigingslink" class="mt-3" />
+            </x-mortel::callout>
+        @endif
     </x-mortel::card>
 
     {{-- Openstaande uitnodigingen --}}
