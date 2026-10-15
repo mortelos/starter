@@ -62,7 +62,7 @@ new class extends Component {
 
         <div class="flex flex-col" data-sidebar-section wire:key="nav-section-{{ $section['label'] }}">
             <div class="px-3 py-2 in-data-flux-sidebar-collapsed-desktop:hidden">
-                <div class="text-sm text-zinc-400 font-medium leading-none">{{ $section['label'] }}</div>
+                <div class="text-sm text-zinc-500 dark:text-zinc-400 font-medium leading-none">{{ $section['label'] }}</div>
             </div>
 
             <div class="flex flex-col">
@@ -99,7 +99,7 @@ new class extends Component {
         <x-mortel::separator variant="subtle" />
         <div class="flex flex-col" data-sidebar-section>
             <div class="px-3 py-2 in-data-flux-sidebar-collapsed-desktop:hidden">
-                <div class="text-sm text-zinc-400 font-medium leading-none">Mijn overzichten</div>
+                <div class="text-sm text-zinc-500 dark:text-zinc-400 font-medium leading-none">Mijn overzichten</div>
             </div>
 
             <div class="flex flex-col">
@@ -120,10 +120,10 @@ new class extends Component {
         <x-mortel::separator variant="subtle" />
         <div class="flex flex-col" data-sidebar-section>
             <div class="px-3 py-2 in-data-flux-sidebar-collapsed-desktop:hidden">
-                <div class="text-sm text-zinc-400 font-medium leading-none">Mijn overzichten</div>
+                <div class="text-sm text-zinc-500 dark:text-zinc-400 font-medium leading-none">Mijn overzichten</div>
             </div>
 
-            <p class="px-3 py-2 text-xs text-zinc-400 in-data-flux-sidebar-collapsed-desktop:hidden">
+            <p class="px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400 in-data-flux-sidebar-collapsed-desktop:hidden">
                 Je hebt nog geen overzichten.<br>Stel een vraag om te beginnen.
             </p>
         </div>

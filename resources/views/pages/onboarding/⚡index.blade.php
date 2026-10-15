@@ -131,7 +131,7 @@ class extends Component {
                     @endif
                 @endforeach
             </div>
-            <span class="text-sm text-zinc-400">Stap {{ $step }} van 3</span>
+            <span class="text-sm text-zinc-500 dark:text-zinc-400">Stap {{ $step }} van 3</span>
         </div>
 
         {{-- Card --}}

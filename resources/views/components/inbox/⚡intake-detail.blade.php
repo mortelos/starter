@@ -93,7 +93,7 @@ new class extends Component
                             'ms-auto bg-zinc-100 dark:bg-zinc-800' => $message->role === 'user',
                             'border border-zinc-200 dark:border-zinc-800' => $message->role !== 'user',
                         ])>
-                            <x-mortel::text class="whitespace-pre-line">{{ $message->content }}</x-mortel::text>
+                            <x-mortel::text variant="strong" class="whitespace-pre-line">{{ $message->content }}</x-mortel::text>
                         </div>
                     @empty
                         <x-mortel::text>Stel een vraag over dit item. Het antwoord verschijnt hier.</x-mortel::text>
