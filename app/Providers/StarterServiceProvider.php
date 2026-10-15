@@ -28,6 +28,7 @@ final class StarterServiceProvider extends ServiceProvider
         // configured, so config/starter.php stays untouched.
         $this->app->bind(GovernanceGate::class, StarterGovernanceGate::class);
 
+        // Contract outlet of mortelos/framework: see `php artisan mortelos:outlets:list framework`.
         $this->app->scoped(TenantResolver::class, SingleTenantResolver::class);
 
         $this->app->bind(TenantInvitationService::class, StarterTenantInvitationService::class);
