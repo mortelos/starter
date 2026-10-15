@@ -247,8 +247,8 @@ class extends Component {
     <x-mortel::callout class="mb-6" icon="shield-check" variant="secondary">
         <x-mortel::callout.text>
             Een rol zonder <span class="font-medium">allow</span>-policy verleent geen enkele bevoegdheid. Voeg de actie
-            <code class="rounded bg-surface-hover px-1 py-0.5 text-xs">governance.manage</code> toe om beheer van dit scherm te geven,
-            of <code class="rounded bg-surface-hover px-1 py-0.5 text-xs">users.manage</code> voor gebruikersbeheer.
+            <code class="rounded bg-surface-hover px-1 py-0.5 text-xs text-zinc-700 dark:text-zinc-300">governance.manage</code> toe om beheer van dit scherm te geven,
+            of <code class="rounded bg-surface-hover px-1 py-0.5 text-xs text-zinc-700 dark:text-zinc-300">users.manage</code> voor gebruikersbeheer.
         </x-mortel::callout.text>
     </x-mortel::callout>
 
@@ -296,16 +296,15 @@ class extends Component {
                     </div>
                     <div class="flex shrink-0 gap-2">
                         <x-mortel::button type="button" variant="ghost" size="sm" wire:click="startEditRole('{{ $role['id'] }}')">Bewerken</x-mortel::button>
-                        <x-mortel::button type="button" variant="ghost" size="sm"
+                        <x-mortel::button type="button" variant="ghost" color="red" size="sm"
                             wire:click="deleteRole('{{ $role['id'] }}')"
-                            wire:confirm="Rol '{{ $role['name'] }}' en alle bijbehorende policies verwijderen?"
-                            class="text-red-600 hover:text-red-700">Verwijderen</x-mortel::button>
+                            wire:confirm="Rol '{{ $role['name'] }}' en alle bijbehorende policies verwijderen?">Verwijderen</x-mortel::button>
                     </div>
                 @endif
             </div>
 
             <div class="px-6 py-4">
-                <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Policies</p>
+                <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Policies</p>
 
                 @if($role['policies'] === [])
                     <p class="mb-4 text-sm text-zinc-500 dark:text-zinc-400">Geen policies. Deze rol verleent niets (deny-by-default).</p>
@@ -314,7 +313,7 @@ class extends Component {
                         @foreach($role['policies'] as $policy)
                             <div class="flex items-center justify-between gap-4 rounded-lg border border-zinc-100 bg-surface-alt/60 px-4 py-2.5 dark:border-zinc-800" wire:key="policy-{{ $policy['id'] }}">
                                 <div class="flex flex-wrap items-center gap-3">
-                                    <span class="text-xs text-zinc-400">{{ $policy['scope'] }}</span>
+                                    <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ $policy['scope'] }}</span>
                                     @foreach($policy['actions'] as $ability)
                                         <span class="flex items-center gap-1.5" wire:key="policy-{{ $policy['id'] }}-{{ $ability['action'] }}">
                                             @if($ability['effect'] === 'allow')
@@ -326,9 +325,8 @@ class extends Component {
                                         </span>
                                     @endforeach
                                 </div>
-                                <x-mortel::button type="button" variant="ghost" size="sm"
-                                    wire:click="deletePolicy('{{ $policy['id'] }}')"
-                                    class="text-red-600 hover:text-red-700">Verwijderen</x-mortel::button>
+                                <x-mortel::button type="button" variant="ghost" color="red" size="sm"
+                                    wire:click="deletePolicy('{{ $policy['id'] }}')">Verwijderen</x-mortel::button>
                             </div>
                         @endforeach
                     </div>

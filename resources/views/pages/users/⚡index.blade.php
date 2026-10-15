@@ -277,10 +277,10 @@ class extends Component {
                     @foreach($pendingInvites as $invite)
                         <x-mortel::table.row wire:key="invite-{{ $invite['id'] }}">
                             <x-mortel::table.cell>{{ $invite['email'] }}</x-mortel::table.cell>
-                            <x-mortel::table.cell><x-mortel::badge color="amber" size="sm">{{ $invite['role'] }}</x-mortel::badge></x-mortel::table.cell>
+                            <x-mortel::table.cell><x-mortel::badge size="sm">{{ $invite['role'] }}</x-mortel::badge></x-mortel::table.cell>
                             <x-mortel::table.cell>{{ $invite['expires_at'] }}</x-mortel::table.cell>
                             <x-mortel::table.cell align="end">
-                                <x-mortel::button variant="ghost" size="xs" class="text-red-600" wire:click="revokeInvite('{{ $invite['id'] }}')">Intrekken</x-mortel::button>
+                                <x-mortel::button variant="ghost" color="red" size="xs" wire:click="revokeInvite('{{ $invite['id'] }}')">Intrekken</x-mortel::button>
                             </x-mortel::table.cell>
                         </x-mortel::table.row>
                     @endforeach

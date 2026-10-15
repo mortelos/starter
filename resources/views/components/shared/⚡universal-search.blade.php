@@ -215,7 +215,7 @@ new class extends Component {
     >
         <x-mortel::icon name="magnifying-glass" variant="mini" class="size-4" />
         <span class="flex-1 text-left">Stel een vraag of zoek...</span>
-        <kbd class="hidden rounded border border-zinc-200 bg-surface-alt px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 dark:border-zinc-800 sm:inline-block">⌘K</kbd>
+        <kbd class="hidden rounded border border-zinc-200 bg-surface-alt px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 dark:text-zinc-400 dark:border-zinc-800 sm:inline-block">⌘K</kbd>
     </x-mortel::button>
 
     {{-- Modal overlay --}}
@@ -259,7 +259,7 @@ new class extends Component {
                         aria-controls="universal-search-results"
                         x-bind:aria-activedescendant="activeIndex >= 0 ? 'search-result-' + activeIndex : null"
                     />
-                    <kbd class="rounded border border-zinc-200 bg-surface-alt px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 dark:border-zinc-800">ESC</kbd>
+                    <kbd class="rounded border border-zinc-200 bg-surface-alt px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 dark:text-zinc-400 dark:border-zinc-800">ESC</kbd>
                 </div>
 
                 {{-- Results --}}
@@ -267,7 +267,7 @@ new class extends Component {
                     {{-- Entities group --}}
                     <template x-if="results.entities.length > 0">
                         <div>
-                            <div class="px-2 py-1.5 text-xs font-medium text-zinc-400">Entiteiten</div>
+                            <div class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">Entiteiten</div>
                             <template x-for="(entity, i) in results.entities" :key="'e-' + entity.id">
                                 <x-mortel::button
                                     variant="ghost"
@@ -282,7 +282,7 @@ new class extends Component {
                                 >
                                     <span x-html="iconHtml(entity.icon)"></span>
                                     <span class="flex-1 truncate text-zinc-900 dark:text-zinc-100" x-text="entity.name"></span>
-                                    <span class="text-xs text-zinc-400" x-text="entity.type"></span>
+                                    <span class="text-xs text-zinc-600 dark:text-zinc-400" x-text="entity.type"></span>
                                 </x-mortel::button>
                             </template>
                         </div>
@@ -292,7 +292,7 @@ new class extends Component {
                     <template x-if="results.inboxItems.length > 0">
                         <div>
                             <div
-                                class="px-2 py-1.5 text-xs font-medium text-zinc-400"
+                                class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400"
                                 :class="results.entities.length > 0 ? 'mt-2 border-t border-zinc-100 pt-2 dark:border-zinc-800' : ''"
                             >Inbox</div>
                             <template x-for="(item, j) in results.inboxItems" :key="'i-' + item.id">
@@ -310,9 +310,9 @@ new class extends Component {
                                     <span x-html="iconHtml(item.icon)"></span>
                                     <span class="min-w-0 flex-1">
                                         <span class="block truncate text-zinc-900 dark:text-zinc-100" x-text="item.title"></span>
-                                        <span class="block truncate text-xs text-zinc-400" x-text="item.summary"></span>
+                                        <span class="block truncate text-xs text-zinc-600 dark:text-zinc-400" x-text="item.summary"></span>
                                     </span>
-                                    <span class="text-xs text-zinc-400" x-text="item.status"></span>
+                                    <span class="text-xs text-zinc-600 dark:text-zinc-400" x-text="item.status"></span>
                                 </x-mortel::button>
                             </template>
                         </div>
@@ -322,7 +322,7 @@ new class extends Component {
                     <template x-if="results.chatItems.length > 0">
                         <div>
                             <div
-                                class="px-2 py-1.5 text-xs font-medium text-zinc-400"
+                                class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400"
                                 :class="(results.entities.length + results.inboxItems.length) > 0 ? 'mt-2 border-t border-zinc-100 pt-2 dark:border-zinc-800' : ''"
                             >Chat</div>
                             <template x-for="(chat, k) in results.chatItems" :key="'c-' + chat.id">
@@ -340,7 +340,7 @@ new class extends Component {
                                     <span x-html="iconHtml(chat.icon)"></span>
                                     <span class="min-w-0 flex-1">
                                         <span class="block truncate text-zinc-900 dark:text-zinc-100" x-text="chat.title"></span>
-                                        <span class="block truncate text-xs text-zinc-400" x-text="chat.summary"></span>
+                                        <span class="block truncate text-xs text-zinc-600 dark:text-zinc-400" x-text="chat.summary"></span>
                                     </span>
                                 </x-mortel::button>
                             </template>
@@ -351,7 +351,7 @@ new class extends Component {
                     <template x-if="results.navItems.length > 0">
                         <div>
                             <div
-                                class="px-2 py-1.5 text-xs font-medium text-zinc-400"
+                                class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400"
                                 :class="(results.entities.length + results.inboxItems.length + results.chatItems.length) > 0 ? 'mt-2 border-t border-zinc-100 pt-2 dark:border-zinc-800' : ''"
                             >Navigatie</div>
                             <template x-for="(nav, j) in results.navItems" :key="'n-' + nav.label">
@@ -378,9 +378,10 @@ new class extends Component {
                         <div class="px-2 py-2">
                             <x-mortel::button
                                 variant="ghost"
+                                color="teal"
                                 type="button"
                                 @click="askFreeSearch()"
-                                class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-teal-600 hover:bg-teal-50 w-full justify-start"
+                                class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm w-full justify-start"
                             >
                                 <x-mortel::icon name="chat-bubble-left-right" class="size-5 shrink-0" />
                                 <span>Stel een vraag over '<span x-text="query" class="font-medium"></span>'</span>

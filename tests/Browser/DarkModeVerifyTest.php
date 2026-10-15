@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Mortelos\Ui\Testing\LivewireMonitor;
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+
 // Every visible text on the page against its real background (translucent layers stacked up to the
 // first opaque ancestor), WCAG contrast below 4.5. Colours go through a canvas pixel, so oklch() counts.
 const LOW_CONTRAST_TEXTS = <<<'JS'
@@ -22,6 +26,18 @@ const LOW_CONTRAST_TEXTS = <<<'JS'
         const bg = background(e), [a, b] = [lum(px(getComputedStyle(e).color, bg.slice(0, 3))), lum(bg)];
         return [e.textContent.trim().slice(0, 40), +((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)).toFixed(2)];
     }).filter(([, ratio]) => ratio < 4.5);
+}
+JS;
+
+// Whether the text of the first button with this label is clearly red. A hand-written text-red-600 on a
+// ghost button loses to Flux' own text-zinc-800, so this is where a danger action that is not red shows up.
+const IS_RED_BUTTON = <<<'JS'
+() => {
+    const x = Object.assign(document.createElement('canvas'), { width: 1, height: 1 }).getContext('2d', { willReadFrequently: true });
+    const button = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === '%s');
+    x.fillStyle = getComputedStyle(button).color; x.fillRect(0, 0, 1, 1);
+    const [r, g, b] = x.getImageData(0, 0, 1, 1).data;
+    return r - g > 60 && r - b > 60;
 }
 JS;
 
@@ -49,3 +65,20 @@ it('keeps every text on the users screen readable in dark mode', function (strin
     'system preference' => ['dark', null],
     'flux.appearance against a light system' => ['light', 'dark'],
 ]);
+
+it('keeps the users screen readable and shows revoking an invitation in red', function (string $scheme): void {
+    $scheme === 'dark' ? pest()->browser()->inDarkMode() : pest()->browser()->inLightMode();
+
+    $page = verifyAsAdmin('/users');
+
+    LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page
+        ->fill('inviteEmail', 'collega@example.test')
+        ->click('form[wire\\:submit="invite"] button[type="submit"]'), 1);
+
+    // Measured after a reload: the success callout that inviting shows is Flux' green, 3.07 in light,
+    // which the mortelos/ui theme layer has to fix for every host (UTEQ-743).
+    $page->navigate('/users')->assertSee('Openstaande uitnodigingen');
+
+    expect($page->script(LOW_CONTRAST_TEXTS))->toBe([])
+        ->and($page->script(sprintf(IS_RED_BUTTON, 'Intrekken')))->toBeTrue();
+})->with(['light', 'dark']);

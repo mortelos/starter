@@ -104,7 +104,7 @@ new class extends Component
                     >
                         <span class="min-w-0 flex-1">
                             <span class="block truncate">{{ $item->title }}</span>
-                            <span class="block truncate text-xs font-normal text-zinc-500 dark:text-zinc-400">
+                            <span class="block truncate text-xs font-normal text-zinc-600 dark:text-zinc-300">
                                 {{ ucfirst(str_replace('_', ' ', $item->type)) }} · {{ ($filterArchive ? ($item->approved_at ?? $item->rejected_at ?? $item->created_at) : $item->created_at)?->diffForHumans() }}
                             </span>
                         </span>
