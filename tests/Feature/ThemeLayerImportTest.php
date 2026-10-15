@@ -16,6 +16,6 @@ it('requires a mortelos/ui release that ships the theme layer', function () {
     /** @var array{require: array<string, string>} $composer */
     $composer = json_decode((string) file_get_contents(base_path('composer.json')), true);
 
-    expect($composer['require']['mortelos/ui'])->toBe('^0.5.0')
+    expect($composer['require']['mortelos/ui'])->toBe('^0.5.1')
         ->and(file_exists(base_path('vendor/mortelos/ui/resources/css/mortel.css')))->toBeTrue();
 });
