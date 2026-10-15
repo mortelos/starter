@@ -154,8 +154,8 @@
             "hash": "tree-v2:136e1c4842ad97e503b64d6a3d443bf1fde0a156acf8794eb3c9533d4740d2d9"
         },
         "mortelos/ui": {
-            "version": "0.5.0",
-            "hash": "tree-v2:6285a8d497577b4832cf1e67eee4fec6b7218c3619879f99a82b24f50a8ef215"
+            "version": "0.5.1",
+            "hash": "tree-v2:74de3d6701b86d9867225a41e6529ec48f194ebeb1a6b3003e6a77711f394e86"
         },
         "nesbot/carbon": {
             "version": "3.14.2",

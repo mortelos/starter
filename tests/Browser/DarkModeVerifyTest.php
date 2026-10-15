@@ -75,9 +75,8 @@ it('keeps the users screen readable and shows revoking an invitation in red', fu
         ->fill('inviteEmail', 'collega@example.test')
         ->click('form[wire\\:submit="invite"] button[type="submit"]'), 1);
 
-    // Measured after a reload: the success callout that inviting shows is Flux' green, 3.07 in light,
-    // which the mortelos/ui theme layer has to fix for every host (UTEQ-743).
-    $page->navigate('/users')->assertSee('Openstaande uitnodigingen');
+    // Measured right after inviting, so the green success callout is on screen too (UTEQ-743).
+    $page->assertPresent('[data-flux-callout]')->assertSee('Openstaande uitnodigingen');
 
     expect($page->script(LOW_CONTRAST_TEXTS))->toBe([])
         ->and($page->script(sprintf(IS_RED_BUTTON, 'Intrekken')))->toBeTrue();
