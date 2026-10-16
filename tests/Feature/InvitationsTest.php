@@ -41,7 +41,7 @@ function invite(User $owner, string $email = 'nieuw@example.test'): ActionResult
     return app(InviteUser::class)->handle($email, modelKeyString(ownerRole()), Actor::user($owner));
 }
 
-/** Het platte token uit de accept_url van een geslaagde uitnodiging. */
+/** The plain token from the accept_url of a successful invitation. */
 function inviteToken(ActionResult $result): string
 {
     $url = $result->data['accept_url'];
@@ -50,7 +50,7 @@ function inviteToken(ActionResult $result): string
 }
 
 /**
- * De opgeslagen eventrij (tabel `events`) van dit type voor deze uitnodiging.
+ * The stored event row (table `events`) of this type for this invitation.
  *
  * @return array<mixed>
  */
@@ -95,7 +95,7 @@ it('refuses to invite without the ability', function (): void {
     invite($user);
 })->throws(AuthorizationException::class);
 
-/** Een gebruiker met een eigen rol 'uitnodiger' die alleen invitations.manage mag, naast een volle owner-rol. */
+/** A user with a role of their own, 'inviter', that is only allowed invitations.manage, next to a full owner role. */
 function inviterBesideOwnerRole(): User
 {
     $owner = createRole('owner');
@@ -104,7 +104,7 @@ function inviterBesideOwnerRole(): User
     grantPolicy($owner, 'invitations.manage');
 
     $inviter = User::factory()->create();
-    $role = createRole('uitnodiger');
+    $role = createRole('inviter');
     grantPolicy($role, 'invitations.manage');
     attachGovernanceMembership($inviter, $role);
 
@@ -124,7 +124,7 @@ it('refuses to invite into a role with more rights than the inviter', function (
 
 it('counts an allow in the actions map even when the policy effect says deny', function (): void {
     $inviter = inviterBesideOwnerRole();
-    $role = createRole('verkeerd-gelabeld');
+    $role = createRole('mislabeled');
     app(CreatePolicy::class)->handle(
         name: 'governance.manage',
         description: null,
@@ -150,16 +150,16 @@ it('counts an allow in the actions map even when the policy effect says deny', f
 
 it('invites into a role with no more rights than the inviter', function (): void {
     $inviter = inviterBesideOwnerRole();
-    $sameRights = Role::query()->where('name', 'uitnodiger')->firstOrFail();
-    $onlyDenies = createRole('lezer');
+    $sameRights = Role::query()->where('name', 'inviter')->firstOrFail();
+    $onlyDenies = createRole('reader');
     grantPolicy($onlyDenies, 'governance.manage', PolicyEffect::Deny);
 
     $handle = fn (Role $role, string $email): ActionResult => app(InviteUser::class)
         ->handle($email, modelKeyString($role), Actor::user($inviter));
 
     expect($handle($sameRights, 'collega@example.test')->isDone())->toBeTrue()
-        ->and($handle($onlyDenies, 'lezer@example.test')->isDone())->toBeTrue()
-        ->and($handle(createRole('leeg'), 'leeg@example.test')->isDone())->toBeTrue();
+        ->and($handle($onlyDenies, 'reader@example.test')->isDone())->toBeTrue()
+        ->and($handle(createRole('empty'), 'empty@example.test')->isDone())->toBeTrue();
 });
 
 it('lets the owner invite into the owner role', function (): void {
@@ -182,7 +182,7 @@ it('stores an agent actor of 32 characters in a column wide enough for it', func
     expect(strlen($actor->id()))->toBe(32)
         ->and(storedInvitationEvent(invitationId($result), 'created')['actor'])->toBe($actor->id())
         ->and(Schema::getColumnType('events', 'actor', fullDefinition: true))->toBe(match (DB::getDriverName()) {
-            'sqlite' => 'varchar', // SQLite bewaart geen lengte; MySQL en Postgres wel.
+            'sqlite' => 'varchar', // SQLite does not keep a length; MySQL and Postgres do.
             'pgsql' => 'character varying(255)',
             default => 'varchar(255)',
         });
@@ -199,7 +199,7 @@ it('refuses to invite a member or an address that already has an open invitation
 it('revokes an open invitation once', function (): void {
     $owner = invitationsManager();
     $id = invitationId(invite($owner));
-    app(EventContext::class)->reset(); // een nieuw request: de setup laat geen org of branch achter
+    app(EventContext::class)->reset(); // a new request: the setup leaves no org or branch behind
 
     $result = app(RevokeInvitation::class)->handle($id, Actor::user($owner));
 
@@ -225,9 +225,9 @@ it('undoes an invitation through the undo registry', function (): void {
 it('accepts an invitation into an account with a membership', function (): void {
     $owner = invitationsManager();
     $invited = invite($owner);
-    app(EventContext::class)->reset(); // een nieuw request: de setup laat geen org of branch achter
+    app(EventContext::class)->reset(); // a new request: the setup leaves no org or branch behind
 
-    $result = app(AcceptInvitation::class)->handle(inviteToken($invited), 'Nieuwe Collega', 'geheim-wachtwoord');
+    $result = app(AcceptInvitation::class)->handle(inviteToken($invited), 'Nieuwe Collega', 'secret-password');
 
     expect($result->isDone())->toBeTrue();
 
@@ -247,7 +247,7 @@ it('accepts an invitation into an account with a membership', function (): void 
 
 it('refuses to accept a revoked, expired or used invitation', function (): void {
     $owner = invitationsManager();
-    $accept = fn (string $token): ActionResult => app(AcceptInvitation::class)->handle($token, 'Iemand', 'geheim-wachtwoord');
+    $accept = fn (string $token): ActionResult => app(AcceptInvitation::class)->handle($token, 'Iemand', 'secret-password');
 
     $revoked = invite($owner, 'ingetrokken@example.test');
     app(RevokeInvitation::class)->handle(invitationId($revoked), Actor::user($owner));
@@ -261,7 +261,7 @@ it('refuses to accept a revoked, expired or used invitation', function (): void 
     $used = invite($owner, 'gebruikt@example.test');
     expect($accept(inviteToken($used))->isDone())->toBeTrue()
         ->and($accept(inviteToken($used))->message)->toBe('Deze uitnodiging is al gebruikt.')
-        ->and($accept('onbekend')->isFailed())->toBeTrue()
+        ->and($accept('unknown')->isFailed())->toBeTrue()
         ->and(User::query()->whereIn('email', ['ingetrokken@example.test', 'verlopen@example.test'])->exists())->toBeFalse();
 });
 
@@ -270,7 +270,7 @@ it('refuses to accept for an address that already has an account', function (): 
     $invited = invite($owner);
     User::factory()->create(['email' => 'nieuw@example.test']);
 
-    expect(app(AcceptInvitation::class)->handle(inviteToken($invited), 'Iemand', 'geheim-wachtwoord')->isFailed())->toBeTrue()
+    expect(app(AcceptInvitation::class)->handle(inviteToken($invited), 'Iemand', 'secret-password')->isFailed())->toBeTrue()
         ->and(Invitation::query()->findOrFail(invitationId($invited))->accepted_at)->toBeNull();
 });
 
@@ -279,7 +279,7 @@ it('rebuilds the invitations table from the events alone', function (): void {
     $revoked = invite($owner, 'ingetrokken@example.test');
     app(RevokeInvitation::class)->handle(invitationId($revoked), Actor::user($owner));
     $accepted = invite($owner, 'geaccepteerd@example.test');
-    app(AcceptInvitation::class)->handle(inviteToken($accepted), 'Iemand', 'geheim-wachtwoord');
+    app(AcceptInvitation::class)->handle(inviteToken($accepted), 'Iemand', 'secret-password');
     invite($owner, 'open@example.test');
 
     $before = DB::table('invitations')->orderBy('id')->get()->toArray();

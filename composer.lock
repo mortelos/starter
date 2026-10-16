@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8bd7bfa95c155c449f6563762671eeb9",
+    "content-hash": "55ddc26b699df3357599c639ee4c0521",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -2824,12 +2824,12 @@
         },
         {
             "name": "mortelos/app-standards",
-            "version": "0.1.3",
+            "version": "0.1.4",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/app-standards/0.1.3.zip",
-                "reference": "51225f7a656c4bce737a0230ebb3b0d640e74f5d",
-                "shasum": "0a519f7330208fbe8eb110f81e1ae6f1aefe2ff2"
+                "url": "https://packages.mortelos.com/dist/mortelos/app-standards/0.1.4.zip",
+                "reference": "91c9b13297752a0e858125ee06023a7e3043a25d",
+                "shasum": "3d85295236be74b4dc5f8ba68b27b41c5fb0be3a"
             },
             "require": {
                 "illuminate/database": "^13.0",
@@ -2859,16 +2859,16 @@
                 "proprietary"
             ],
             "description": "MortelOS-owned Laravel application defaults for new host applications.",
-            "time": "2026-10-14T09:47:11+02:00"
+            "time": "2026-10-16T06:52:55+02:00"
         },
         {
             "name": "mortelos/framework",
-            "version": "0.6.41",
+            "version": "0.7.1",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/framework/0.6.41.zip",
-                "reference": "24d2ee85bf3b75717af26cff175bf9cf816abd09",
-                "shasum": "fcbd40f40fb7d7f0811348c789b36f3e3a56febd"
+                "url": "https://packages.mortelos.com/dist/mortelos/framework/0.7.1.zip",
+                "reference": "2fed6f58e24b5ae8692fd9d98c786941d9b67ce6",
+                "shasum": "4b28400c771fb8991d55a73d2d1b305afeed09d3"
             },
             "require": {
                 "barryvdh/laravel-dompdf": "^3.1",
@@ -2896,7 +2896,7 @@
                     ]
                 },
                 "branch-alias": {
-                    "dev-main": "0.6.x-dev"
+                    "dev-main": "0.7.x-dev"
                 }
             },
             "autoload": {
@@ -2915,12 +2915,12 @@
         },
         {
             "name": "mortelos/ui",
-            "version": "0.5.1",
+            "version": "0.5.2",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/ui/0.5.1.zip",
-                "reference": "d6213530cc4c8b92860ecc076b06c54c9d349d39",
-                "shasum": "855f0b3f7041222b2cb3ad609a268d067ebe2e48"
+                "url": "https://packages.mortelos.com/dist/mortelos/ui/0.5.2.zip",
+                "reference": "b684ca79e9af35c6232f5da9d5c87d9f62bfe884",
+                "shasum": "69bc51eb55969d9e89f222b7be81bce126e0855b"
             },
             "require": {
                 "illuminate/support": "^13.0",
@@ -2947,7 +2947,8 @@
             "license": [
                 "proprietary"
             ],
-            "description": "Reusable UI primitives for MortelOS starter and packages"
+            "description": "Reusable UI primitives for MortelOS starter and packages",
+            "time": "2026-10-16T06:33:12+02:00"
         },
         {
             "name": "nesbot/carbon",
@@ -11177,12 +11178,12 @@
         },
         {
             "name": "mortelos/agent-standards",
-            "version": "0.1.14",
+            "version": "0.1.15",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/agent-standards/0.1.14.zip",
-                "reference": "fbde18d044175feb284d823b44f6e3b9debfedf2",
-                "shasum": "ca048175a9a7f554c5885ee300fd2a2594a22ab2"
+                "url": "https://packages.mortelos.com/dist/mortelos/agent-standards/0.1.15.zip",
+                "reference": "c14fd1bd0741bec0f73342a57985dda134a9337b",
+                "shasum": "e2b590799a797c11940da10bd39e04c355ff6dd0"
             },
             "require": {
                 "illuminate/support": "^13.0",
@@ -11208,16 +11209,16 @@
                 "proprietary"
             ],
             "description": "MortelOS-owned AI agent coding standards for Laravel portal work.",
-            "time": "2026-10-14T10:37:11+02:00"
+            "time": "2026-10-16T06:26:41+02:00"
         },
         {
             "name": "mortelos/dev-tools",
-            "version": "0.1.7",
+            "version": "0.1.8",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/dev-tools/0.1.7.zip",
-                "reference": "773ed18195baa5fe722fb481cb0f953a4cd1e8fd",
-                "shasum": "1dd1f2986a252ea62fb742c9adf710e0713c0c81"
+                "url": "https://packages.mortelos.com/dist/mortelos/dev-tools/0.1.8.zip",
+                "reference": "a2f2bffab9247bd590b0a247024ae1a91fdc0741",
+                "shasum": "1c7279f9b4a493c5afd457b0d3ba70bec60185cc"
             },
             "require": {
                 "illuminate/console": "^13.0",
@@ -11243,7 +11244,7 @@
                 "proprietary"
             ],
             "description": "Developer tooling for MortelOS package-ready feature decisions",
-            "time": "2026-10-14T09:42:30+02:00"
+            "time": "2026-10-16T06:21:55+02:00"
         },
         {
             "name": "myclabs/deep-copy",

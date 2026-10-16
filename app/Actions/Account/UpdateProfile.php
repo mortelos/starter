@@ -8,9 +8,9 @@ use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 
 /**
- * Naam en e-mailadres van het eigen account. Alleen de gebruiker zelf; een
- * beheerder die andermans profiel wil wijzigen hoort daar een eigen Action en
- * ability voor te krijgen, niet deze.
+ * Name and email address of your own account. Only the user themselves; an
+ * admin who wants to change someone else's profile needs a separate Action and
+ * ability for that, not this one.
  */
 final class UpdateProfile
 {

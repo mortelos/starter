@@ -12,7 +12,7 @@ const INBOX_LIST = 'nav[aria-label="Inbox navigatie"]';
 
 const INBOX_FILTERS = '[aria-controls="inbox-filter-groups"]';
 
-function inboxItemForAdmin(string $title, string $type = 'voorstel'): InboxItem
+function inboxItemForAdmin(string $title, string $type = 'proposal'): InboxItem
 {
     // @spine-ignore: test fixture, the starter itself never creates inbox items
     return InboxItem::factory()->forUser(User::query()->where('email', 'admin@example.test')->firstOrFail())->create([
@@ -34,7 +34,7 @@ it('shows the empty inbox within the verify budgets', function (): void {
 
 it('filters, opens an item and approves it on a wide screen', function (): void {
     inboxItemForAdmin('Factuur controleren');
-    inboxItemForAdmin('Nieuwe klant gemeld', 'notificatie');
+    inboxItemForAdmin('Nieuwe klant gemeld', 'notification');
 
     $page = verifyAsAdmin('/inbox');
     expectNoPostsSinceLoad($page);
@@ -43,7 +43,7 @@ it('filters, opens an item and approves it on a wide screen', function (): void 
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->click('#inbox-filter-groups >> text=Notificatie'), 2);
     $page->assertSeeIn(INBOX_LIST, 'Nieuwe klant gemeld')
         ->assertDontSeeIn(INBOX_LIST, 'Factuur controleren')
-        ->assertQueryStringHas('filterType', 'notificatie');
+        ->assertQueryStringHas('filterType', 'notification');
 
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->click('Wis filters'), 1);
     $page->assertSeeIn(INBOX_LIST, 'Factuur controleren')

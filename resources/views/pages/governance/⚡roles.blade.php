@@ -298,7 +298,7 @@ class extends Component {
                         <x-mortel::button type="button" variant="ghost" size="sm" wire:click="startEditRole('{{ $role['id'] }}')">Bewerken</x-mortel::button>
                         <x-mortel::button type="button" variant="ghost" color="red" size="sm"
                             wire:click="deleteRole('{{ $role['id'] }}')"
-                            wire:confirm="Rol '{{ $role['name'] }}' en alle bijbehorende policies verwijderen?">Verwijderen</x-mortel::button>
+                            wire:confirm="{{ sprintf('Rol \'%s\' en alle bijbehorende policies verwijderen?', $role['name']) }}">Verwijderen</x-mortel::button>
                     </div>
                 @endif
             </div>

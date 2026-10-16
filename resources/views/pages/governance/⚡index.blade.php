@@ -145,7 +145,7 @@ class extends Component {
         </div>
     @endif
 
-    {{-- Patronen zijn tenant-breed, niet rol-specifiek --}}
+    {{-- Patterns are tenant-wide, not role-specific --}}
     <div class="mt-6">
         @if($learningPatternsComponent !== null)
             <livewire:dynamic-component :component="$learningPatternsComponent" :key="'governance-learning-patterns'" />

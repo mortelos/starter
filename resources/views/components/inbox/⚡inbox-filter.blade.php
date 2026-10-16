@@ -58,9 +58,9 @@ new class extends Component
     {
         $groups = [
             'filterType' => ['label' => 'Type', 'value' => $this->filterType, 'options' => [
-                'voorstel' => 'Voorstel',
-                'notificatie' => 'Notificatie',
-                'actie' => 'Actie',
+                'proposal' => 'Voorstel',
+                'notification' => 'Notificatie',
+                'action' => 'Actie',
             ]],
             'filterRiskLevel' => ['label' => 'Urgentie', 'value' => $this->filterRiskLevel, 'options' => [
                 'low' => 'Laag',

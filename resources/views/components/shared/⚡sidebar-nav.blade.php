@@ -36,8 +36,8 @@ new class extends Component {
         $this->overviews = $resolver->overviews($user);
     }
 
-    #[On('overzicht-saved')]
-    public function onOverzichtSaved(): void
+    #[On('overview-saved')]
+    public function onOverviewSaved(): void
     {
         $this->loadOverviews();
     }
@@ -103,15 +103,15 @@ new class extends Component {
             </div>
 
             <div class="flex flex-col">
-                @foreach ($overviews as $overzicht)
+                @foreach ($overviews as $overview)
                     <x-mortel::sidebar.item
-                        wire:key="nav-overview-{{ $overzicht['id'] }}"
+                        wire:key="nav-overview-{{ $overview['id'] }}"
                         icon="table-cells"
-                        href="{{ route('overzichten.show', $overzicht['id']) }}"
+                        href="{{ route('overviews.show', $overview['id']) }}"
                         wire:navigate
-                        :current="request()->routeIs('overzichten.show')"
+                        :current="request()->routeIs('overviews.show')"
                     >
-                        {{ $overzicht['name'] }}
+                        {{ $overview['name'] }}
                     </x-mortel::sidebar.item>
                 @endforeach
             </div>
