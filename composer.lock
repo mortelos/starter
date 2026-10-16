@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "55ddc26b699df3357599c639ee4c0521",
+    "content-hash": "5bb0e21add39819b3799f2d3baf3a9c7",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -11213,12 +11213,12 @@
         },
         {
             "name": "mortelos/dev-tools",
-            "version": "0.1.8",
+            "version": "0.1.9",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/dev-tools/0.1.8.zip",
-                "reference": "a2f2bffab9247bd590b0a247024ae1a91fdc0741",
-                "shasum": "1c7279f9b4a493c5afd457b0d3ba70bec60185cc"
+                "url": "https://packages.mortelos.com/dist/mortelos/dev-tools/0.1.9.zip",
+                "reference": "5cf87ff4848f15cc9b976aa3701922f352a55b2a",
+                "shasum": "bb2c5bb5e45ecb7a4161b611ddd71fc8c7fd5c3a"
             },
             "require": {
                 "illuminate/console": "^13.0",
@@ -11244,7 +11244,7 @@
                 "proprietary"
             ],
             "description": "Developer tooling for MortelOS package-ready feature decisions",
-            "time": "2026-10-16T06:21:55+02:00"
+            "time": "2026-10-16T13:59:48+02:00"
         },
         {
             "name": "myclabs/deep-copy",
