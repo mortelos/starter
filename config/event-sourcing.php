@@ -32,9 +32,9 @@ return [
     'aggregate_event_order_column' => 'aggregate_version',
 
     /*
-    | Host-projectors en -reactors worden gevonden in app/ (app/Projectors, app/Reactors).
-    | Een host-event hoort hier onder zijn storedEventType(), zodat een hernoemde klasse
-    | een replay niet breekt: 'notes.note.created' => App\Events\Notes\NoteCreated::class.
+    | Host projectors and reactors are discovered in app/ (app/Projectors, app/Reactors).
+    | A host event belongs here under its storedEventType(), so a renamed class
+    | does not break a replay: 'notes.note.created' => App\Events\Notes\NoteCreated::class.
     */
     'auto_discover_projectors_and_reactors' => [app_path()],
     'event_class_map' => [
@@ -44,9 +44,9 @@ return [
     ],
 
     /*
-    | De projectors en reactors van mortelos/framework. Het framework meldt ze niet
-    | zelf aan; zonder deze lijst worden RoleCreated, PolicyCreated en de andere
-    | framework-events wel opgeslagen maar nooit in hun tabel geprojecteerd.
+    | The projectors and reactors of mortelos/framework. The framework does not
+    | register them itself; without this list RoleCreated, PolicyCreated and the other
+    | framework events are stored but never projected into their table.
     */
     'projectors' => [
         AiActionStatisticsProjector::class,
@@ -67,8 +67,8 @@ return [
         WorkflowStepWaitProjector::class,
     ],
     /*
-    | Mortel\Reactors\WorkflowReactor hoort hier pas bij als de host de tabel
-    | workflows heeft: de reactor bevraagt die tabel bij elk opgeslagen event.
+    | Mortel\Reactors\WorkflowReactor only belongs here once the host has the
+    | workflows table: the reactor queries that table on every stored event.
     */
     'reactors' => [],
 ];

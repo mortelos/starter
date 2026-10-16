@@ -15,7 +15,7 @@ it('saves the profile with an island-only round trip and leaves the password car
     expectNoPostsSinceLoad($page);
 
     $page->script("() => { document.querySelector('h1').__verifyProbe = 1; return true; }");
-    $page->fill('current_password', 'half-getypt');
+    $page->fill('current_password', 'half-typed');
 
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page
         ->fill('name', 'Admin Verify')
@@ -23,16 +23,16 @@ it('saves the profile with an island-only round trip and leaves the password car
 
     $page->assertSee('Profiel bijgewerkt.')
         ->assertScript("document.querySelector('h1').__verifyProbe === 1")
-        ->assertValue('current_password', 'half-getypt');
+        ->assertValue('current_password', 'half-typed');
 });
 
 it('shows a wrong current password inside the password island', function (): void {
     $page = verifyAsAdmin('/settings');
 
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page
-        ->fill('current_password', 'niet-het-wachtwoord')
-        ->fill('password', 'een-nieuw-wachtwoord')
-        ->fill('password_confirmation', 'een-nieuw-wachtwoord')
+        ->fill('current_password', 'not-the-password')
+        ->fill('password', 'a-new-password')
+        ->fill('password_confirmation', 'a-new-password')
         ->click(SETTINGS_PASSWORD_SUBMIT), 1, 'password');
 
     $page->assertSee('Huidige wachtwoord klopt niet.');
@@ -43,8 +43,8 @@ it('shows a server validation error inside the password island', function (): vo
 
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page
         ->fill('current_password', 'password')
-        ->fill('password', 'kort')
-        ->fill('password_confirmation', 'kort')
+        ->fill('password', 'short')
+        ->fill('password_confirmation', 'short')
         ->click(SETTINGS_PASSWORD_SUBMIT), 1, 'password');
 
     $page->assertSee('at least 12 characters');

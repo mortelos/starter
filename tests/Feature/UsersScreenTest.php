@@ -102,7 +102,7 @@ it('rejects an invalid email address before calling the Action', function (): vo
     actingAs(userInviter());
 
     Livewire::test('pages::users.index')
-        ->set('inviteEmail', 'geen-adres')
+        ->set('inviteEmail', 'no-address')
         ->call('invite')
         ->assertHasErrors(['inviteEmail' => 'email']);
 
@@ -133,7 +133,7 @@ it('undoes an invitation through the UndoRegistry', function (): void {
         ->assertSet('pendingInvites', [])
         ->assertDontSee('Ongedaan maken');
 
-    expect($component->get('resultMessage'))->toContain('ingetrokken')
+    expect($component->get('resultMessage'))->toContain('Uitnodiging voor nieuw@example.test ingetrokken.')
         ->and(Invitation::query()->sole()->revoked_at)->not->toBeNull();
 });
 

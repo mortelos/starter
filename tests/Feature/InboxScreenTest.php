@@ -30,7 +30,7 @@ function inboxUser(): User
 function inboxItem(User $user, array $attributes = []): InboxItem
 {
     // @spine-ignore: test fixture, the starter itself never creates inbox items
-    return InboxItem::factory()->forUser($user)->create(array_merge(['type' => 'voorstel', 'risk_level' => 'low'], $attributes));
+    return InboxItem::factory()->forUser($user)->create(array_merge(['type' => 'proposal', 'risk_level' => 'low'], $attributes));
 }
 
 it('resolves each inbox component to the starter components folder', function (string $name, string $file): void {
@@ -68,7 +68,7 @@ it('lists only the pending items of the signed-in user', function (): void {
 it('filters the list on each of the five url parameters', function (array $query, string $shown, string $hidden): void {
     $user = inboxUser();
     inboxItem($user, ['title' => 'Voorstel laag agent', 'source_type' => SourceType::AgentRun->value]);
-    inboxItem($user, ['title' => 'Notificatie hoog workflow', 'type' => 'notificatie', 'risk_level' => 'high', 'source_type' => SourceType::WorkflowRun->value]);
+    inboxItem($user, ['title' => 'Notificatie hoog workflow', 'type' => 'notification', 'risk_level' => 'high', 'source_type' => SourceType::WorkflowRun->value]);
     inboxItem($user, ['title' => 'Afgewezen voorstel', 'status' => 'rejected', 'rejected_at' => now()]);
     inboxItem($user, ['title' => 'Goedgekeurd voorstel', 'status' => 'approved', 'approved_at' => now()]);
 
@@ -77,7 +77,7 @@ it('filters the list on each of the five url parameters', function (array $query
         ->assertSee($shown)
         ->assertDontSee($hidden);
 })->with([
-    'type' => [['filterType' => 'notificatie'], 'Notificatie hoog workflow', 'Voorstel laag agent'],
+    'type' => [['filterType' => 'notification'], 'Notificatie hoog workflow', 'Voorstel laag agent'],
     'risk level' => [['filterRiskLevel' => 'low'], 'Voorstel laag agent', 'Notificatie hoog workflow'],
     'source' => [['filterSource' => SourceType::WorkflowRun->value], 'Notificatie hoog workflow', 'Voorstel laag agent'],
     'archive' => [['archive' => 1], 'Afgewezen voorstel', 'Voorstel laag agent'],
@@ -88,16 +88,16 @@ it('sends set-filter from the filter and the page keeps each choice in its url p
     inboxUser();
 
     $filter = Livewire::test('inbox.inbox-filter', ['filterRiskLevel' => 'high']);
-    $filter->call('toggle', 'filterType', 'voorstel');
-    $filter->assertDispatched('set-filter', filterType: 'voorstel', filterRiskLevel: 'high', filterSource: '', filterStatus: '');
+    $filter->call('toggle', 'filterType', 'proposal');
+    $filter->assertDispatched('set-filter', filterType: 'proposal', filterRiskLevel: 'high', filterSource: '', filterStatus: '');
     $filter->call('toggle', 'filterRiskLevel', 'high');
     $filter->assertDispatched('set-filter', filterType: '', filterRiskLevel: '', filterSource: '', filterStatus: '');
     $filter->call('setArchive', true);
     $filter->assertDispatched('set-filter', filterArchive: true);
 
     $page = Livewire::test('pages::inbox.index');
-    $page->dispatch('set-filter', filterType: 'voorstel', filterRiskLevel: 'high', filterSource: 'agent_run', filterArchive: true, filterStatus: 'approved');
-    $page->assertSet('filterType', 'voorstel');
+    $page->dispatch('set-filter', filterType: 'proposal', filterRiskLevel: 'high', filterSource: 'agent_run', filterArchive: true, filterStatus: 'approved');
+    $page->assertSet('filterType', 'proposal');
     $page->assertSet('filterRiskLevel', 'high');
     $page->assertSet('filterSource', 'agent_run');
     $page->assertSet('filterArchive', true);
@@ -189,7 +189,7 @@ it('opens the intake detail for an intake type and the inbox detail for any othe
         ->assertDontSee('wire:name="'.$skips.'"', false);
 })->with([
     'intake type' => ['compliance_intake', 'inbox.intake-detail', 'inbox.inbox-detail'],
-    'other type' => ['voorstel', 'inbox.inbox-detail', 'inbox.intake-detail'],
+    'other type' => ['proposal', 'inbox.inbox-detail', 'inbox.intake-detail'],
 ]);
 
 it('answers a question in the intake conversation through the framework action', function (): void {

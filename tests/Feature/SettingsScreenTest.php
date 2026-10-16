@@ -29,22 +29,22 @@ it('saves the profile without writing back a password changed in the meantime', 
     actingAs($user);
 
     // The password island may save while the profile island runs; this user instance is then stale.
-    User::query()->whereKey($user->getKey())->update(['password' => 'hash-van-het-wachtwoord-island']);
+    User::query()->whereKey($user->getKey())->update(['password' => 'hash-of-the-password-island']);
 
     Livewire::test('pages::settings.index')
         ->set('name', 'Nieuwe Naam')
         ->call('updateProfile');
 
-    expect(User::query()->whereKey($user->getKey())->value('password'))->toBe('hash-van-het-wachtwoord-island');
+    expect(User::query()->whereKey($user->getKey())->value('password'))->toBe('hash-of-the-password-island');
 });
 
 it('shows the wrong current password error', function (): void {
     actingAs(User::factory()->create());
 
     Livewire::test('pages::settings.index')
-        ->set('current_password', 'niet-het-wachtwoord')
-        ->set('password', 'een-nieuw-wachtwoord')
-        ->set('password_confirmation', 'een-nieuw-wachtwoord')
+        ->set('current_password', 'not-the-password')
+        ->set('password', 'a-new-password')
+        ->set('password_confirmation', 'a-new-password')
         ->call('updatePassword')
         ->assertSee('Huidige wachtwoord klopt niet.')
         ->assertHasErrors(['current_password']);
