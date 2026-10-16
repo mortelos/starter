@@ -64,6 +64,7 @@
     "setup": [
       "composer install",
       "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+      "@php -r \"file_put_contents('.env', str_replace('DB_DATABASE=mortelos', 'DB_DATABASE='.trim(preg_replace('/[^a-z0-9]+/', '_', strtolower(basename(getcwd()))), '_'), file_get_contents('.env')));\"",
       "@php artisan key:generate",
       "@php artisan migrate --force",
       "@php artisan db:seed --force",
@@ -94,8 +95,8 @@
     ],
     "post-create-project-cmd": [
       "@php artisan key:generate --ansi",
-      "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
-      "@php artisan migrate --graceful --ansi",
+      "@php -r \"file_put_contents('.env', str_replace('DB_DATABASE=mortelos', 'DB_DATABASE='.trim(preg_replace('/[^a-z0-9]+/', '_', strtolower(basename(getcwd()))), '_'), file_get_contents('.env')));\"",
+      "@php artisan migrate --force --graceful --ansi",
       "@php artisan db:seed --force --ansi"
     ],
     "pre-package-uninstall": [
