@@ -13,8 +13,8 @@ use Mortel\Models\Policy;
 use Mortel\Models\Role;
 
 /*
- * Testhulpen voor rollen en policies. Alles loopt via de framework-Actions (dus via
- * de aggregates en projectors), precies zoals de schermen en de seeder dat doen.
+ * Test helpers for roles and policies. Everything goes through the framework Actions (so
+ * through the aggregates and projectors), exactly like the screens and the seeder do.
  */
 
 function governanceTenantId(): string
@@ -82,7 +82,7 @@ function attachGovernanceMembership(User $user, ?Role $role, string $pivotRole =
     ]);
 }
 
-/** Een gebruiker met een rol die governance.manage mag. */
+/** A user with a role that is allowed governance.manage. */
 function ownerUser(): User
 {
     $user = User::factory()->create();
@@ -93,7 +93,7 @@ function ownerUser(): User
     return $user;
 }
 
-/** Een gebruiker met een rol die users.manage mag. */
+/** A user with a role that is allowed users.manage. */
 function usersScreenManager(): User
 {
     $user = User::factory()->create();
@@ -115,7 +115,7 @@ function modelKeyString(Role|Policy|User $model): string
     return (string) $key;
 }
 
-/** Of een policy van deze rol de ability met dit effect bevat (de json-kolom `actions`). */
+/** Whether a policy of this role holds the ability with this effect (the json column `actions`). */
 function roleHasPolicy(Role $role, string $ability, string $effect = 'allow'): bool
 {
     return Policy::query()
@@ -124,7 +124,7 @@ function roleHasPolicy(Role $role, string $ability, string $effect = 'allow'): b
         ->contains(fn (Policy $policy): bool => is_array($policy->actions) && ($policy->actions[$ability] ?? null) === $effect);
 }
 
-/** Een gebruiker met de rol 'owner' die invitations.manage mag. */
+/** A user with the role 'owner' that is allowed invitations.manage. */
 function invitationsManager(): User
 {
     $user = User::factory()->create();

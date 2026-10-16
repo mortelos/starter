@@ -47,7 +47,7 @@ new class extends Component {
 
         $this->universalSearchResolver()?->saveOverview(trim($query), trim($name), auth()->id());
 
-        $this->dispatch('overzicht-saved');
+        $this->dispatch('overview-saved');
     }
 
     private function loadResults(string $query): void

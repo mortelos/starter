@@ -63,7 +63,11 @@ jobs:
           cp .env.example .env
           php artisan key:generate --no-interaction
 
+      - name: Agent rules are up to date
+        run: php artisan mortelos:agent-rules:check
+
       - name: Unit and Feature
+        # Includes the architecture, UI, outlets and code-language guards.
         run: composer test
 
       - name: Browser verify

@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Het eigen wachtwoord wijzigen, met het huidige wachtwoord als bewijs. Niet
- * terug te draaien (het oude wachtwoord is weg), daarom geen Undo.
+ * Change your own password, with the current password as proof. Not
+ * reversible (the old password is gone), so there is no Undo.
  */
 final class ChangePassword
 {

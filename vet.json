@@ -146,16 +146,16 @@
             "hash": "tree-v2:bb7a293a3ba00d6ca00220a74a07a194fa22bdde721ae8533e8773c7c3589cc4"
         },
         "mortelos/app-standards": {
-            "version": "0.1.3",
-            "hash": "tree-v2:88d16cb531bebb81ab2ee93619e2d225aede42cd85ec39184549206f37457b88"
+            "version": "0.1.4",
+            "hash": "tree-v2:943bf2413be502209c4ce6a6e03de8c8390b698772b3c9eee7e62ed1dad9c8ea"
         },
         "mortelos/framework": {
-            "version": "0.6.41",
-            "hash": "tree-v2:136e1c4842ad97e503b64d6a3d443bf1fde0a156acf8794eb3c9533d4740d2d9"
+            "version": "0.7.1",
+            "hash": "tree-v2:f3c37a14aeef9c07986e3e4f47fd200e32403433c688c09323b3ab84b8dbb78f"
         },
         "mortelos/ui": {
-            "version": "0.5.1",
-            "hash": "tree-v2:74de3d6701b86d9867225a41e6529ec48f194ebeb1a6b3003e6a77711f394e86"
+            "version": "0.5.2",
+            "hash": "tree-v2:60b97cdc5b3c078c09054bebff31db39d1b06d9f49a82475beed19917e43ba65"
         },
         "nesbot/carbon": {
             "version": "3.14.2",
@@ -608,12 +608,12 @@
             "hash": "tree-v2:4bc0e2fbaea02a9469caa0f1105242dca2907278bc1fd8a3f9c6c8a2ddf920d7"
         },
         "mortelos/agent-standards": {
-            "version": "0.1.14",
-            "hash": "tree-v2:a57947d8e8f05790e3f58680be409a5e05632807a6e8ea806e8eb61d7600a289"
+            "version": "0.1.15",
+            "hash": "tree-v2:5563b657c4e220f5927be616bdd4607cf5037c7d502c310e58ae5870845475a0"
         },
         "mortelos/dev-tools": {
-            "version": "0.1.7",
-            "hash": "tree-v2:df4ff3f1f7df549a86b71d7bf5188288d6f4f80c0fb4a084c03ee8d1b59384db"
+            "version": "0.1.8",
+            "hash": "tree-v2:25ac006d913fa3a4276a72374e4e81ec5bfd2d1c384e62b6557ac43891c3589b"
         },
         "myclabs/deep-copy": {
             "version": "1.14.0",

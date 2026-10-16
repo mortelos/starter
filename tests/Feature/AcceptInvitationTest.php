@@ -38,7 +38,7 @@ it('shows the form with the invited email address', function (): void {
 });
 
 it('answers 404 for an unknown token', function (): void {
-    get(route('invite.show', ['token' => 'onbekend']))->assertNotFound();
+    get(route('invite.show', ['token' => 'unknown']))->assertNotFound();
 });
 
 it('explains a revoked invitation without a form', function (): void {
@@ -56,8 +56,8 @@ it('creates the account with its membership and logs it in', function (): void {
 
     post(route('invite.store', ['token' => $token]), [
         'name' => 'Gast',
-        'password' => 'een-goed-wachtwoord',
-        'password_confirmation' => 'een-goed-wachtwoord',
+        'password' => 'a-good-password',
+        'password_confirmation' => 'a-good-password',
     ])->assertRedirect(route('dashboard'));
 
     $user = User::query()->where('email', 'gast@example.test')->sole();
@@ -73,8 +73,8 @@ it('sends a revoked invitation back with the message and creates no user', funct
 
     from($url)->post(route('invite.store', ['token' => $token]), [
         'name' => 'Gast',
-        'password' => 'een-goed-wachtwoord',
-        'password_confirmation' => 'een-goed-wachtwoord',
+        'password' => 'a-good-password',
+        'password_confirmation' => 'a-good-password',
     ])->assertRedirect($url)->assertSessionHasErrors('email');
 
     assertGuest();
@@ -84,8 +84,8 @@ it('sends a revoked invitation back with the message and creates no user', funct
 it('rejects a password confirmation that does not match', function (): void {
     post(route('invite.store', ['token' => acceptableInviteToken()]), [
         'name' => 'Gast',
-        'password' => 'een-goed-wachtwoord',
-        'password_confirmation' => 'iets-anders',
+        'password' => 'a-good-password',
+        'password_confirmation' => 'something-else',
     ])->assertSessionHasErrors('password');
 
     assertGuest();
