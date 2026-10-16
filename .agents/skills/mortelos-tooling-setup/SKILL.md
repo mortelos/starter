@@ -41,10 +41,10 @@ Required:
 
 Database tooling:
 
-1. SQLite is enough for the first local boot when no customer database choice exists yet.
-2. Use DBngin when the portal needs local MySQL, PostgreSQL, or Redis and the developer is not using Herd Pro services.
+1. The starter runs on PostgreSQL by default, so a local PostgreSQL service must run before `mortelos new` or `composer setup`.
+2. Use DBngin for PostgreSQL (and Redis when needed) unless the developer uses Herd Pro services.
 3. Use Herd Pro services instead of DBngin if the team has Herd Pro and wants database services managed inside Herd.
-4. Use TablePlus to inspect SQLite, MySQL, PostgreSQL, and Redis connections during setup and debugging.
+4. Use TablePlus to inspect PostgreSQL and Redis connections during setup and debugging.
 
 Optional but useful:
 
@@ -72,17 +72,13 @@ Configure GitHub access
 Install MortelOS CLI
     |
     v
-Choose database path
-    |-----------------------------|
-    v                             v
-SQLite only                  MySQL/PostgreSQL/Redis
-    |                             |
-    v                             v
-No DB service needed          DBngin or Herd Pro
-    |                             |
-    |-------------|---------------|
-                  v
-            Add TablePlus
+Start PostgreSQL
+    |
+    v
+DBngin or Herd Pro
+    |
+    v
+Add TablePlus
                   |
                   v
         Create and verify host app
@@ -152,14 +148,14 @@ type -a mortelos
 
 Use this decision rule:
 
-1. If the new portal can start on SQLite, skip DBngin for the first boot.
-2. If the customer or integration requires MySQL, PostgreSQL, or Redis locally, install DBngin or use Herd Pro services.
+1. Run PostgreSQL locally through DBngin or Herd Pro services. The starter `.env.example` expects `127.0.0.1:5432` with user `postgres` and an empty password (the DBngin default); change `DB_USERNAME` and `DB_PASSWORD` in `.env` when the service uses other credentials.
+2. Add Redis through the same tool only when queues, cache, broadcasts, or connector work need it.
 3. Install TablePlus for visual inspection and quick connection checks.
 
 Expected local connection checks:
 
-1. SQLite: open the project's `database/database.sqlite` in TablePlus after the app is created.
-2. MySQL or PostgreSQL: create the local service first, then create a matching database and update `.env`.
+1. PostgreSQL: `composer setup` names the database after the project folder (`mijn-portal` becomes `mijn_portal`) and creates it during the first migration; open it in TablePlus afterwards.
+2. SQLite stays available for a quick throwaway check: set `DB_CONNECTION=sqlite` in `.env` and remove the other `DB_` lines. Do not ship a portal on SQLite: it allows one writer at a time, and a slow workflow step then blocks every other write.
 3. Redis: start the Redis service only when queues, cache, broadcasts, or connector work need it.
 
 ## Step 5: Create a Smoke Host
@@ -192,7 +188,7 @@ When setup succeeds, report only:
 
 1. Installed or verified tools.
 2. PHP, Composer, Node, Herd, and MortelOS CLI versions.
-3. Database path chosen: SQLite, DBngin, or Herd Pro.
+3. PostgreSQL service used: DBngin or Herd Pro.
 4. TablePlus connection status.
 5. Smoke host verification results.
 6. Next step: use `setup-portal` for the actual portal kickoff.

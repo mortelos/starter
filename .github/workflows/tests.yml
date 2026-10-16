@@ -13,6 +13,27 @@ jobs:
     runs-on: ubuntu-latest
     # A hanging browser test fails the job instead of blocking it for the 6 h default.
     timeout-minutes: 20
+    # The tests run on Postgres, like a deployed app. phpunit.xml keeps SQLite for a quick local run.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testing
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: testing
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
     steps:
       - uses: actions/checkout@v4
 
