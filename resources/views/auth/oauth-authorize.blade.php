@@ -22,6 +22,17 @@
                     </ul>
                 </div>
 
+                @if ($redirectHost || $selfRegistered)
+                    <div class="space-y-2">
+                        @if ($redirectHost)
+                            <x-mortel::text>Na toestemming gaat je browser naar <strong>{{ $redirectHost }}</strong>.</x-mortel::text>
+                        @endif
+                        @if ($selfRegistered)
+                            <x-mortel::text>Deze app heeft zichzelf aangemeld. Sta alleen toe als je deze app zelf net hebt gekoppeld.</x-mortel::text>
+                        @endif
+                    </div>
+                @endif
+
                 <div class="flex gap-3">
                     <form method="POST" action="{{ route('passport.authorizations.deny') }}" class="flex-1">
                         @csrf
