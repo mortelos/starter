@@ -10,6 +10,7 @@ use App\Contracts\GovernanceGate;
 use App\Support\SingleTenantResolver;
 use App\Support\StarterTenantInvitationService;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 use Mortel\Actions\ActionResult;
 use Mortel\Actions\Inbox\AuthorizeInboxItemAccess;
 use Mortel\Actions\Inbox\OwnerScopedInboxItemAccess;
@@ -39,6 +40,9 @@ final class StarterServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // The consent screen of /oauth/authorize, for MCP clients and other OAuth apps.
+        Passport::authorizationView('auth.oauth-authorize');
+
         // Counter-Actions: an Undo in an ActionResult names one of these.
         app(UndoRegistry::class)->register(
             RevokeInvitation::class,

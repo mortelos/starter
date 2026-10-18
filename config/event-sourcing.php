@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Events\Invitations\InvitationAccepted;
 use App\Events\Invitations\InvitationCreated;
 use App\Events\Invitations\InvitationRevoked;
+use Mortel\Api\Live\ChangeNotifier;
 use Mortel\Models\UteqStoredEvent;
 use Mortel\Projectors\AiActionStatisticsProjector;
 use Mortel\Projectors\ChannelProjector;
@@ -65,6 +66,8 @@ return [
         WorkflowRunProjector::class,
         WorkflowScheduleProjector::class,
         WorkflowStepWaitProjector::class,
+        // Sends BrainChanged on private-mortel.brain.{brain} when a named query of the Mortel API changes.
+        ChangeNotifier::class,
     ],
     /*
     | Mortel\Reactors\WorkflowReactor only belongs here once the host has the

@@ -65,8 +65,8 @@ it('exposes the starter view namespaces and shell pages', function (): void {
 });
 
 it('reports the doctor command as green for the default config', function (): void {
-    /** @var TestCase $this */
-    $this->seed(DatabaseSeeder::class);
+    // Seeds the starter and adds what starter:api-setup adds: the Passport keys and a personal access client.
+    apiSlice();
 
     $command = artisan('starter:doctor');
 
@@ -77,7 +77,18 @@ it('reports the doctor command as green for the default config', function (): vo
         ->expectsOutputToContain('starter.navigation.sidebar_resolver is empty: the sidebar stays empty')
         ->expectsOutputToContain('starter.onboarding.resolver is empty: /onboarding shows an empty state')
         ->expectsOutputToContain('starter.inbox.item_type_resolver is empty: the inbox never opens the intake detail pane')
+        ->expectsOutputToContain('Personal access client aanwezig')
+        ->expectsOutputToContain('Route /api/mortel/v1 aanwezig')
         ->assertSuccessful();
+});
+
+it('fails the doctor command without a personal access client', function (): void {
+    /** @var TestCase $this */
+    $this->seed(DatabaseSeeder::class);
+
+    $command = artisan('starter:doctor');
+    assert($command instanceof PendingCommand);
+    $command->expectsOutputToContain('Er is geen personal access client')->assertFailed();
 });
 
 it('fails the doctor command when a host resolver points to nothing', function (): void {
