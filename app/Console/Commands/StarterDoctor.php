@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Routing\Route as RegisteredRoute;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
+use Laravel\Passport\ClientRepository;
+use Laravel\Passport\Passport;
 use Mortel\Contracts\TenantResolver;
 use Mortel\Models\UteqStoredEvent;
 use Mortel\Repositories\UteqStoredEventRepository;
+use RuntimeException;
 use Spatie\EventSourcing\StoredEvents\Repositories\StoredEventRepository;
 
 final class StarterDoctor extends Command
@@ -100,6 +105,7 @@ final class StarterDoctor extends Command
 
         $this->checkEventStore($missing, $invalid);
         $this->checkSingleTenantFrameworkBaseline($missing, $invalid);
+        $this->checkMortelApi($missing);
 
         // The spine rails of mortelos/app-standards. EnforcePolicy only sits on the routes
         // after step 2b (governance on the framework); until then it is skipped on purpose.
@@ -235,6 +241,47 @@ final class StarterDoctor extends Command
             } else {
                 $this->components->info('default tenant row present');
             }
+        }
+    }
+
+    /**
+     * The Mortel API needs Passport keys, a personal access client and its routes
+     * (routes/api.php, routes/ai.php and the bearer channel auth in bootstrap/app.php).
+     *
+     * @param  list<string>  $missing
+     */
+    private function checkMortelApi(array &$missing): void
+    {
+        if (! is_file(Passport::keyPath('oauth-private.key')) || ! is_file(Passport::keyPath('oauth-public.key'))) {
+            $missing[] = 'passport.keys';
+            $this->components->error('De Passport-sleutels ontbreken. Draai php artisan starter:api-setup.');
+        } else {
+            $this->components->info('Passport-sleutels aanwezig');
+        }
+
+        try {
+            if (! Schema::hasTable('oauth_clients')) {
+                throw new RuntimeException('oauth_clients is missing');
+            }
+
+            app(ClientRepository::class)->personalAccessClient('users');
+            $this->components->info('Personal access client aanwezig');
+        } catch (RuntimeException) {
+            $missing[] = 'passport.personal_access_client';
+            $this->components->error('Er is geen personal access client. Draai php artisan migrate en daarna php artisan starter:api-setup.');
+        }
+
+        $uris = array_map(fn (RegisteredRoute $route): string => $route->uri(), Route::getRoutes()->getRoutes());
+
+        foreach (['api/mortel/v1', 'api/broadcasting/auth', 'mcp/mortel'] as $uri) {
+            if (! in_array($uri, $uris, true)) {
+                $missing[] = 'routes.'.$uri;
+                $this->components->error('De route /'.$uri.' ontbreekt. Kijk in routes/api.php, routes/ai.php en bootstrap/app.php.');
+
+                continue;
+            }
+
+            $this->components->info('Route /'.$uri.' aanwezig');
         }
     }
 }

@@ -28,6 +28,15 @@ final class PasswordLoginController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->route('home');
+        // Passport (and the auth middleware) stores the page the person came from, e.g. the OAuth consent page.
+        // For a non-GET request Laravel takes that URL from the Referer header, which any other site can set,
+        // so only follow it when it points at this app.
+        $intended = $request->session()->get('url.intended');
+
+        if (is_string($intended) && parse_url($intended, PHP_URL_HOST) !== $request->getHost()) {
+            $request->session()->forget('url.intended');
+        }
+
+        return redirect()->intended(route('home'));
     }
 }

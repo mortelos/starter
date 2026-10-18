@@ -33,13 +33,19 @@ return [
     | users are actually retrieved out of your database or other storage
     | system used by the application. Typically, Eloquent is utilized.
     |
-    | Supported: "session"
+    | Supported: "session", "passport"
     |
     */
 
     'guards' => [
         'web' => [
             'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        // Bearer tokens for the Mortel API, MCP and live channels (routes/api.php, routes/ai.php).
+        'api' => [
+            'driver' => 'passport',
             'provider' => 'users',
         ],
     ],

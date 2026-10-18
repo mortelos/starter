@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Mortel\Actions\Policy\CreatePolicy;
 use Mortel\Actions\Role\CreateRole;
 use Mortel\Enums\PolicyEffect;
+use Mortel\Enums\PolicyScope;
 use Mortel\Models\Policy;
 use Mortel\Models\Role;
 
@@ -53,7 +54,15 @@ final class DatabaseSeeder extends Seeder
         // re-seeding finds them by name instead of creating them twice.
         $ownerId = $this->ownerRoleId($tenantId, $branchId);
 
-        foreach (StarterGovernanceGate::SCOPES as $ability => $scope) {
+        // The owner may also read and rename entities, so the Mortel API (routes/api.php)
+        // does not refuse everything on a fresh starter.
+        $abilities = [
+            ...StarterGovernanceGate::SCOPES,
+            'entity:read' => PolicyScope::Entity,
+            'entity:update' => PolicyScope::Entity,
+        ];
+
+        foreach ($abilities as $ability => $scope) {
             $exists = Policy::query()
                 ->where('role_id', $ownerId)
                 ->where('scope', $scope->value)
