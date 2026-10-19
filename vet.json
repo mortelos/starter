@@ -129,6 +129,10 @@
             "version": "7.8.1",
             "hash": "tree-v2:227c217ed67b9cd48cc589867bf18379e95858e068724b8fbef94713311b024e"
         },
+        "livewire/blaze": {
+            "version": "v1.0.19",
+            "hash": "tree-v2:9d7d6362a743889a586294c7284328f9bfc9e9be8280467136403964f716ce6c"
+        },
         "livewire/flux": {
             "version": "v2.20.1",
             "hash": "tree-v2:92c3ec7c6008986ba28d313f71d8bfcb479f713603de2993c5571c6a5b260821"
