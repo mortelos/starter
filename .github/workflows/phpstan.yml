@@ -11,6 +11,9 @@ permissions:
 jobs:
   phpstan:
     runs-on: ubuntu-latest
+    env:
+      MORTEL_UI_KIT: own
+      APP_LOCALE: nl
     steps:
       - uses: actions/checkout@v4
 

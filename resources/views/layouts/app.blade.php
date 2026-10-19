@@ -7,9 +7,9 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%2309090b'/%3E%3Cpath d='M4 8h8' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @fluxAppearance
+    @mortelAppearance
 </head>
-<body class="min-h-screen bg-surface font-sans antialiased">
+<body class="min-h-screen bg-surface text-foreground font-sans antialiased">
     @php
         $sidebarNavComponent = config('starter.layout.sidebar_nav_component');
         $topbarComponent = config('starter.layout.topbar_component');
@@ -24,7 +24,7 @@
                 name="{{ config('app.name') }}"
             />
             <x-mortel::sidebar.toggle class="lg:hidden min-h-[44px] -me-2" icon="x-mark" />
-            <x-mortel::sidebar.collapse class="max-lg:hidden min-h-[44px] in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
+            <x-mortel::sidebar.collapse class="max-lg:hidden min-h-[44px] lg:not-in-[[data-mortel-sidebar][data-collapsed]]:-mr-2" />
         </x-mortel::sidebar.header>
 
         @if (is_string($sidebarNavComponent))
@@ -100,6 +100,6 @@
     @endif
 
     @livewireScriptConfig
-    @fluxScripts
+    @mortelScripts
 </body>
 </html>

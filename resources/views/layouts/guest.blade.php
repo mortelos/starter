@@ -6,14 +6,14 @@
     <title>{{ config('app.name') }}</title>
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @fluxAppearance
+    @mortelAppearance
 </head>
-<body class="min-h-screen bg-surface font-sans antialiased">
+<body class="min-h-screen bg-surface text-foreground font-sans antialiased">
     <x-mortel::main>
         {{ $slot }}
     </x-mortel::main>
 
     @livewireScriptConfig
-    @fluxScripts
+    @mortelScripts
 </body>
 </html>

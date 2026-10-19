@@ -49,8 +49,9 @@ it('shows the second user after closing the first', function (): void {
 });
 
 it('closes the access panel with a tap next to it on a narrow screen', function (): void {
-    $page = verifyAsAdmin('/users');
-    $page->resize(375, 800);
+    $page = verifyAsAdmin('/dashboard');
+    $page->resize(375, 800)->navigate('/users');
+    expectNoPostsSinceLoad($page);
 
     $page->click('Bekijk toegang')->assertSeeIn('[data-access-panel]', 'admin@example.test');
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->click('[data-access-close]'), 1, 'access');

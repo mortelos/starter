@@ -1,12 +1,11 @@
 @import 'tailwindcss';
-@import '../../vendor/livewire/flux/dist/flux.css';
 @import '../../vendor/mortelos/ui/resources/css/mortel.css';
+@import '../../vendor/mortelos/ui/resources/css/kit.css';
 
-/* dark: follows the .dark class that @fluxAppearance sets (system or flux.appearance), not only the media query. */
+/* Follow the appearance controller, including a stored preference over the system scheme. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
 @source '../../vendor/mortelos/*/resources/**/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';

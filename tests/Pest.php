@@ -13,6 +13,7 @@ use function Pest\Laravel\seed;
 use function Pest\Laravel\withVite;
 
 require __DIR__.'/Support/Governance.php';
+require __DIR__.'/Browser/Support/Contrast.php';
 
 uses(TestCase::class)->in('Feature');
 

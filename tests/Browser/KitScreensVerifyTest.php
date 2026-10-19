@@ -14,6 +14,12 @@ it('keeps the main screens readable at each viewport and appearance', function (
     expectNoPostsSinceLoad($page);
     $page->assertScript("document.documentElement.classList.contains('dark')", $appearance === 'dark');
 
+    expect($page->script(LOW_CONTRAST_TEXTS))->toBe([]);
+
+    if ($screen === 'users') {
+        $page->assertScript("document.querySelector('[name=inviteEmail]').getBoundingClientRect().width >= 180");
+    }
+
     $name = 'kit-'.$screen.'-'.$width.'-'.$appearance;
     $page->screenshot(true, $name);
 
