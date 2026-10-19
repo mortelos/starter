@@ -30,6 +30,7 @@ it('shows the empty inbox within the verify budgets', function (): void {
 
     $page->assertSee('Je inbox is leeg')
         ->assertSee('Kies een item');
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 });
 
 it('filters, opens an item and approves it on a wide screen', function (): void {
@@ -56,6 +57,7 @@ it('filters, opens an item and approves it on a wide screen', function (): void 
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->click('Goedkeuren'), 2);
     $page->assertDontSeeIn(INBOX_LIST, 'Factuur controleren')
         ->assertSee('Kies een item');
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 });
 
 it('hides the list behind the detail on a phone and a tablet and brings it back', function (int $width): void {
@@ -75,6 +77,7 @@ it('hides the list behind the detail on a phone and a tablet and brings it back'
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->click('Terug naar lijst'), 1);
     $page->assertVisible(INBOX_LIST)
         ->assertSeeIn(INBOX_LIST, 'Factuur controleren');
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 })->with([
     'phone' => 375,
     'tablet' => 800,

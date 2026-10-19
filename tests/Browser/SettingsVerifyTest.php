@@ -24,6 +24,7 @@ it('saves the profile with an island-only round trip and leaves the password car
     $page->assertSee('Profiel bijgewerkt.')
         ->assertScript("document.querySelector('h1').__verifyProbe === 1")
         ->assertValue('current_password', 'half-typed');
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 });
 
 it('shows a wrong current password inside the password island', function (): void {
@@ -36,6 +37,7 @@ it('shows a wrong current password inside the password island', function (): voi
         ->click(SETTINGS_PASSWORD_SUBMIT), 1, 'password');
 
     $page->assertSee('Huidige wachtwoord klopt niet.');
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 });
 
 it('shows a server validation error inside the password island', function (): void {
@@ -48,4 +50,5 @@ it('shows a server validation error inside the password island', function (): vo
         ->click(SETTINGS_PASSWORD_SUBMIT), 1, 'password');
 
     $page->assertSee('at least 12 characters');
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 });

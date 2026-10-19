@@ -61,6 +61,7 @@ it('keeps every text on the users screen readable in dark mode', function (strin
         ->assertScript('getComputedStyle(document.body).backgroundColor', 'rgb(24, 24, 27)');
 
     expect($page->script(LOW_CONTRAST_TEXTS))->toBe([]);
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 })->with([
     'system preference' => ['dark', null],
     'flux.appearance against a light system' => ['light', 'dark'],
@@ -80,4 +81,5 @@ it('keeps the users screen readable and shows revoking an invitation in red', fu
 
     expect($page->script(LOW_CONTRAST_TEXTS))->toBe([])
         ->and($page->script(sprintf(IS_RED_BUTTON, 'Intrekken')))->toBeTrue();
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 })->with(['light', 'dark']);

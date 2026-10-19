@@ -25,6 +25,7 @@ it('opens search from the sidebar without a server round trip', function (): voi
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->click('Zoeken'), 0);
 
     $page->assertScript(SEARCH_IS_OPEN);
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 });
 
 it('sends nothing when Escape or an outside click hits a closed search', function (): void {
@@ -37,6 +38,7 @@ it('sends nothing when Escape or an outside click hits a closed search', functio
         ->click('h1 >> nth=0')
         ->click('h1 >> nth=0')
         ->click('h1 >> nth=0'), 0);
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 });
 
 it('resets the server query once when search closes after a query, and not again', function (): void {
@@ -50,4 +52,5 @@ it('resets the server query once when search closes after a query, and not again
     $page->click('Zoeken')->assertScript(SEARCH_IS_OPEN);
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->keys(SEARCH_INPUT, 'Escape'), 0);
     $page->assertScript(SEARCH_IS_OPEN, false);
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 });
