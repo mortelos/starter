@@ -26,6 +26,7 @@ it('opens and closes the access panel with island-only round trips', function ()
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->keys('html > body', 'Escape'), 1, 'access');
     $page->assertScript(USERS_PANEL_GONE)
         ->assertScript("document.querySelector('h1').__verifyProbe === 1");
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 });
 
 it('shows the second user after closing the first', function (): void {
@@ -44,13 +45,16 @@ it('shows the second user after closing the first', function (): void {
 
     $page->assertSeeIn('[data-access-panel]', 'lid@example.test')
         ->assertDontSeeIn('[data-access-panel]', 'admin@example.test');
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 });
 
 it('closes the access panel with a tap next to it on a narrow screen', function (): void {
-    $page = verifyAsAdmin('/users');
-    $page->resize(375, 800);
+    $page = verifyAsAdmin('/dashboard');
+    $page->resize(375, 800)->navigate('/users');
+    expectNoPostsSinceLoad($page);
 
     $page->click('Bekijk toegang')->assertSeeIn('[data-access-panel]', 'admin@example.test');
     LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->click('[data-access-close]'), 1, 'access');
     $page->assertScript(USERS_PANEL_GONE);
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 });

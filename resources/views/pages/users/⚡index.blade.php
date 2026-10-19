@@ -225,8 +225,8 @@ class extends Component {
     <x-mortel::card class="mb-8">
         <x-mortel::heading size="lg" level="2" class="mb-4">Medewerker uitnodigen</x-mortel::heading>
 
-        <form wire:submit="invite" class="flex items-end gap-4">
-            <x-mortel::input type="email" wire:model="inviteEmail" label="E-mailadres" placeholder="naam@voorbeeld.nl" required class="flex-1" />
+        <form wire:submit="invite" class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
+            <x-mortel::input type="email" wire:model="inviteEmail" label="E-mailadres" placeholder="naam@voorbeeld.nl" required />
             <x-mortel::select wire:model="inviteRole" label="Rol">
                 @foreach($roles as $roleId => $roleName)
                     <x-mortel::select.option value="{{ $roleId }}" wire:key="role-{{ $roleId }}">{{ $roleName }}</x-mortel::select.option>

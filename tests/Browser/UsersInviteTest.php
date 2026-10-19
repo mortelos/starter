@@ -23,4 +23,5 @@ it('invites, shows the link and undoes the invitation', function (): void {
 
     $page->assertSee('Uitnodiging voor collega@example.test ingetrokken.')
         ->assertDontSee('Uitnodigingslink');
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 });

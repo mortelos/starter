@@ -61,7 +61,7 @@ new class extends Component {
         @endif
 
         <div class="flex flex-col" data-sidebar-section wire:key="nav-section-{{ $section['label'] }}">
-            <div class="px-3 py-2 in-data-flux-sidebar-collapsed-desktop:hidden">
+            <div class="px-3 py-2 in-[[data-mortel-sidebar][data-collapsed]]:hidden">
                 <div class="text-sm text-zinc-500 dark:text-zinc-400 font-medium leading-none">{{ $section['label'] }}</div>
             </div>
 
@@ -98,7 +98,7 @@ new class extends Component {
     @if (count($overviews) > 0)
         <x-mortel::separator variant="subtle" />
         <div class="flex flex-col" data-sidebar-section>
-            <div class="px-3 py-2 in-data-flux-sidebar-collapsed-desktop:hidden">
+            <div class="px-3 py-2 in-[[data-mortel-sidebar][data-collapsed]]:hidden">
                 <div class="text-sm text-zinc-500 dark:text-zinc-400 font-medium leading-none">Mijn overzichten</div>
             </div>
 
@@ -119,11 +119,11 @@ new class extends Component {
     @else
         <x-mortel::separator variant="subtle" />
         <div class="flex flex-col" data-sidebar-section>
-            <div class="px-3 py-2 in-data-flux-sidebar-collapsed-desktop:hidden">
+            <div class="px-3 py-2 in-[[data-mortel-sidebar][data-collapsed]]:hidden">
                 <div class="text-sm text-zinc-500 dark:text-zinc-400 font-medium leading-none">Mijn overzichten</div>
             </div>
 
-            <p class="px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400 in-data-flux-sidebar-collapsed-desktop:hidden">
+            <p class="px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400 in-[[data-mortel-sidebar][data-collapsed]]:hidden">
                 Je hebt nog geen overzichten.<br>Stel een vraag om te beginnen.
             </p>
         </div>
