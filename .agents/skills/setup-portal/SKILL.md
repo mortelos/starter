@@ -184,6 +184,7 @@ and request approval again.
    abstractions.
 6. Use deny-by-default policies for new abilities.
 7. Keep user-facing Dutch prose free of em-dashes.
+8. Never opt text fields out of the draft journal; follow the deploy-safe rules in agent-standards.
 
 ## Gate 7: Verification
 
