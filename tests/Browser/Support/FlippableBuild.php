@@ -21,12 +21,12 @@ final class FlippableBuild implements BuildId
         config(['livewire.release_token' => 'mortel:'.$build]);
     }
 
-    public function id(): ?string
+    public function id(): string
     {
         return self::$build;
     }
 
-    public function label(): ?string
+    public function label(): string
     {
         return 'v'.self::$build;
     }

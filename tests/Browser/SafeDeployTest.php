@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Mortelos\Ui\Updates\BuildId;
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
 use Tests\Browser\Support\FlippableBuild;
 
 /*
@@ -25,7 +27,7 @@ beforeEach(function (): void {
 });
 
 /** Run $script in the page, retrying while a reload replaces it. */
-function safeDeployScript(mixed $page, string $script): mixed
+function safeDeployScript(PendingAwaitablePage|AwaitableWebpage $page, string $script): mixed
 {
     $last = null;
 
@@ -42,7 +44,7 @@ function safeDeployScript(mixed $page, string $script): mixed
 }
 
 /** Wait until the page function returns something truthy. */
-function safeDeployUntil(mixed $page, string $script, float $seconds = 10.0): void
+function safeDeployUntil(PendingAwaitablePage|AwaitableWebpage $page, string $script, float $seconds = 10.0): void
 {
     $deadline = microtime(true) + $seconds;
 
