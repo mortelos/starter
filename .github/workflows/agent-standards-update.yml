@@ -1,0 +1,478 @@
+name: Update agent standards
+
+# Trusts only mortelos/agent-standards without an agent review; approved exception, 2026-10-21.
+# App-specific: default base, runner labels, Composer credentials, and CHECK_WORKFLOWS below.
+# GITHUB_TOKEN does not trigger PR/push checks, so dispatch both normal PR checks explicitly.
+# Public-repository schedules are disabled after 60 days without repository activity.
+on:
+  schedule:
+    - cron: '55 0 * * *'
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Base branch (override only for scratch-branch tests)
+        required: false
+        default: main
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: agent-standards-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      BASE: ${{ inputs.base || 'main' }}
+      CHECK_WORKFLOWS: phpstan.yml tests.yml
+    steps:
+      - name: Checkout base
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.base || 'main' }}
+          fetch-depth: 0
+          clean: true
+          persist-credentials: false
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        env:
+          COMPOSER_AUTH: '{"http-basic": {"packages.mortelos.com": {"username": "uteq", "password": "${{ secrets.MORTELOS_REGISTRY_TOKEN }}"}}}'
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Create the environment file from the example
+        run: |
+          test -f .env || cp .env.example .env
+          php artisan key:generate --no-interaction
+
+      - name: Determine locked and newest stable versions
+        id: versions
+        env:
+          COMPOSER_AUTH: '{"http-basic": {"packages.mortelos.com": {"username": "uteq", "password": "${{ secrets.MORTELOS_REGISTRY_TOKEN }}"}}}'
+        run: |
+          set -euo pipefail
+          composer show mortelos/agent-standards --all --format=json > "$RUNNER_TEMP/agent-standards-versions.json"
+          php <<'PHP' >> "$GITHUB_OUTPUT"
+          <?php
+          $package = 'mortelos/agent-standards';
+          $available = json_decode(file_get_contents(getenv('RUNNER_TEMP').'/agent-standards-versions.json'), true, flags: JSON_THROW_ON_ERROR);
+          $versions = array_values(array_filter(array_map(fn ($v) => ltrim($v, 'v'), $available['versions']), fn ($v) => preg_match('/^\d+\.\d+\.\d+(?:-p\d+)?$/D', $v)));
+          if ($versions === []) { throw new RuntimeException('Composer reported no stable X.Y.Z or X.Y.Z-pN versions.'); }
+          $latest = array_reduce($versions, fn ($latest, $version) => $latest === null || version_compare($version, $latest, '>') ? $version : $latest);
+          $lock = json_decode(file_get_contents('composer.lock'), true, flags: JSON_THROW_ON_ERROR);
+          $locked = array_values(array_filter(array_merge($lock['packages'], $lock['packages-dev']), fn ($p) => $p['name'] === $package));
+          if (count($locked) !== 1) { throw new RuntimeException('Expected exactly one locked agent-standards entry.'); }
+          $current = ltrim($locked[0]['version'], 'v');
+          echo "current=$current\nlatest=$latest\n";
+          echo 'update='.(version_compare($current, $latest, '<') ? 'true' : 'false')."\n";
+          PHP
+          cat "$GITHUB_OUTPUT"
+
+      - name: Report current version
+        if: steps.versions.outputs.update != 'true'
+        env:
+          CURRENT: ${{ steps.versions.outputs.current }}
+        run: echo "agent-standards is up to date ($CURRENT)"
+
+      - name: Reuse safe PRs and clean stale bot branches
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LATEST: ${{ steps.versions.outputs.latest }}
+          CURRENT: ${{ steps.versions.outputs.current }}
+          UPDATE: ${{ steps.versions.outputs.update }}
+        run: |
+          set -euo pipefail
+          # Checkout leaves no token on disk; git authenticates only in steps with GH_TOKEN.
+          git config --local credential.helper '!gh auth git-credential'
+          branch="bot/agent-standards-v$LATEST"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          cat > "$RUNNER_TEMP/agent-standards-pr-guard.py" <<'PY'
+          import json, os, sys
+          from pathlib import Path
+          pr = json.loads(Path(sys.argv[1]).read_text())
+          bots = {'github-actions[bot]', 'app/github-actions'}
+          allowed = {'composer.json', 'composer.lock', 'vet.json', 'AGENTS.md'}
+          def fail(message):
+              raise SystemExit(f'Unsafe bot PR: {message}. Refusing to merge.')
+          if pr['author']['login'] not in bots:
+              fail('the PR author is not github-actions[bot]')
+          commits = pr['commits']
+          if len(commits) != 1:
+              fail(f'expected exactly one bot commit, found {len(commits)}')
+          authors = commits[0]['authors']
+          if len(authors) != 1 or authors[0]['login'] not in bots:
+              fail('the commit must have exactly one author, github-actions[bot]')
+          unexpected = {file['path'] for file in pr['files']} - allowed
+          if unexpected:
+              fail('unexpected files: ' + ', '.join(sorted(unexpected)))
+          if pr['state'] != 'OPEN' or pr['headRefOid'] != os.environ['SHA'] or pr['baseRefName'] != os.environ['BASE']:
+              fail('the PR state, head SHA, or base changed')
+          print('PR scope guard passed: exactly one bot commit; only allowed files.')
+          PY
+          git ls-remote --heads origin 'refs/heads/bot/agent-standards-v*' > "$RUNNER_TEMP/agent-standards-branches.tsv"
+          # Query open PRs separately so a long closed history cannot hide an active branch.
+          gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 1000 \
+            --json number,headRefName,headRefOid,baseRefName,author,state,mergedAt > "$RUNNER_TEMP/agent-standards-open-prs.json"
+          gh pr list --repo "$GITHUB_REPOSITORY" --base "$BASE" --head "$branch" --state closed --limit 1000 \
+            --json number,headRefName,headRefOid,baseRefName,author,state,mergedAt > "$RUNNER_TEMP/agent-standards-closed-prs.json"
+          php <<'PHP' > "$RUNNER_TEMP/agent-standards-pr-actions.tsv"
+          <?php
+          $pattern = '/^bot\/agent-standards-v(\d+\.\d+\.\d+(?:-p\d+)?)$/D';
+          $read = fn ($path) => json_decode(file_get_contents(getenv('RUNNER_TEMP').$path), true, flags: JSON_THROW_ON_ERROR);
+          $prs = array_merge($read('/agent-standards-open-prs.json'), $read('/agent-standards-closed-prs.json'));
+          $openHeads = [];
+          $latestOpen = $latestClosed = null;
+          $emit = fn ($action, $pr, $head, $sha) => print implode("\t", [$action, $pr, $head, $sha])."\n";
+          foreach ($prs as $pr) {
+              if ($pr['state'] === 'OPEN') { $openHeads[$pr['headRefName']] = true; }
+              if ($pr['baseRefName'] !== getenv('BASE') || !in_array($pr['author']['login'], ['github-actions[bot]', 'app/github-actions'], true)) { continue; }
+              if (!preg_match($pattern, $pr['headRefName'], $m)) { continue; }
+              $cleanup = getenv('UPDATE') === 'true' ? version_compare($m[1], getenv('LATEST'), '<') : version_compare($m[1], getenv('CURRENT'), '<=');
+              if ($pr['state'] === 'OPEN' && $cleanup) { $emit('close', $pr['number'], $pr['headRefName'], $pr['headRefOid']); }
+              if (getenv('UPDATE') !== 'true' || $m[1] !== getenv('LATEST')) { continue; }
+              if ($pr['state'] === 'OPEN') { $latestOpen = $pr; }
+              if ($pr['state'] === 'CLOSED' && $pr['mergedAt'] === null && ($latestClosed === null || $pr['number'] > $latestClosed['number'])) { $latestClosed = $pr; }
+          }
+          if (getenv('UPDATE') === 'true' && $latestOpen === null && isset($openHeads['bot/agent-standards-v'.getenv('LATEST')])) {
+              throw new RuntimeException('The latest bot branch has an open PR outside this base or bot author. Refusing to regenerate it.');
+          }
+          if ($latestOpen !== null) {
+              $emit('reuse', $latestOpen['number'], $latestOpen['headRefName'], $latestOpen['headRefOid']);
+          } elseif ($latestClosed !== null) {
+              $emit('rejected', $latestClosed['number'], $latestClosed['headRefName'], $latestClosed['headRefOid']);
+          }
+          foreach (file(getenv('RUNNER_TEMP').'/agent-standards-branches.tsv', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+              [$sha, $ref] = preg_split('/\s+/', $line);
+              $head = substr($ref, strlen('refs/heads/'));
+              if (!preg_match($pattern, $head, $m) || isset($openHeads[$head])) { continue; }
+              $cleanup = getenv('UPDATE') === 'true' ? version_compare($m[1], getenv('LATEST'), '<=') : version_compare($m[1], getenv('CURRENT'), '<=');
+              if ($cleanup && !($latestClosed !== null && $m[1] === getenv('LATEST') && getenv('UPDATE') === 'true')) { $emit('delete', 0, $head, $sha); }
+          }
+          PHP
+          while IFS=$'\t' read -r action pr head sha; do
+            case "$action" in
+              reuse)
+                # Scope-check before interpreting an extra commit as a stale base.
+                gh pr view "$pr" --repo "$GITHUB_REPOSITORY" \
+                  --json files,commits,author,state,headRefOid,baseRefName > "$RUNNER_TEMP/agent-standards-pr.json"
+                SHA="$sha" python3 "$RUNNER_TEMP/agent-standards-pr-guard.py" "$RUNNER_TEMP/agent-standards-pr.json"
+                mergeable=UNKNOWN
+                for _attempt in $(seq 1 12); do
+                  mergeable="$(gh pr view "$pr" --repo "$GITHUB_REPOSITORY" --json mergeable --jq '.mergeable')"
+                  if [ "$mergeable" != UNKNOWN ]; then break; fi
+                  sleep 5
+                done
+                if [ "$mergeable" = UNKNOWN ]; then
+                  echo "::error::GitHub could not determine whether PR #$pr merges cleanly."
+                  exit 1
+                fi
+                git fetch --quiet origin "$BASE" "$head"
+                base_tip="$(git rev-parse "refs/remotes/origin/$BASE")"
+                # A one-commit PR's parent records the base used to build and check it.
+                parent="$(git rev-parse "$sha^")"
+                if [ "$mergeable" = CONFLICTING ] || [ "$parent" != "$base_tip" ]; then
+                  gh pr close "$pr" --repo "$GITHUB_REPOSITORY" --delete-branch \
+                    --comment 'Regenerating this update against the current base because it is stale or conflicting. [agent-standards-bot:regenerate]'
+                  echo "::notice::Closed stale/conflicting PR #$pr; regenerating in this run."
+                else
+                  echo "pr=$pr" >> "$GITHUB_OUTPUT"
+                  echo "sha=$sha" >> "$GITHUB_OUTPUT"
+                fi
+                ;;
+              rejected)
+                # Distinguish automatic regeneration from a human rejecting this version.
+                automatic="$(gh pr view "$pr" --repo "$GITHUB_REPOSITORY" --json comments --jq \
+                  '[.comments[] | select((.author.login == "app/github-actions" or .author.login == "github-actions[bot]") and (.body | contains("[agent-standards-bot:regenerate]")))] | length')"
+                if [ "$automatic" -eq 0 ]; then
+                  echo 'skip=true' >> "$GITHUB_OUTPUT"
+                  echo "::notice::Agent-standards v$LATEST was rejected in closed PR #$pr; waiting for a newer version."
+                elif git ls-remote --exit-code --heads origin "refs/heads/$head" >/dev/null 2>&1; then
+                  git push origin --delete "$head"
+                fi
+                ;;
+              close)
+                gh pr close "$pr" --repo "$GITHUB_REPOSITORY" --delete-branch \
+                  --comment "This automated update is superseded by agent-standards already locked at v$CURRENT or available at v$LATEST."
+                ;;
+              delete)
+                git push origin --delete "$head"
+                echo "::notice::Deleted bot branch $head without an open PR."
+                ;;
+            esac
+          done < "$RUNNER_TEMP/agent-standards-pr-actions.tsv"
+
+      - name: Update only agent-standards and publish rules
+        if: steps.versions.outputs.update == 'true' && steps.existing.outputs.skip != 'true' && steps.existing.outputs.pr == ''
+        env:
+          COMPOSER_AUTH: '{"http-basic": {"packages.mortelos.com": {"username": "uteq", "password": "${{ secrets.MORTELOS_REGISTRY_TOKEN }}"}}}'
+          LATEST: ${{ steps.versions.outputs.latest }}
+        run: |
+          set -euo pipefail
+          # Keep the existing constraint when it accepts the new version, including patch tags.
+          section="$(php <<'PHP'
+          <?php
+          $manifest = json_decode(file_get_contents('composer.json'), true, flags: JSON_THROW_ON_ERROR);
+          foreach (['require', 'require-dev'] as $section) {
+              if (isset($manifest[$section]['mortelos/agent-standards'])) {
+                  echo $section;
+                  exit;
+              }
+          }
+          throw new RuntimeException('agent-standards is not a direct dependency.');
+          PHP
+          )"
+          # Composer checks its own constraints; no composer/semver dependency in the app is needed.
+          constraint_status=0
+          composer why-not mortelos/agent-standards "$LATEST" --locked --no-interaction || constraint_status=$?
+          if [ "$constraint_status" -eq 1 ]; then
+            args=()
+            if [ "$section" = require-dev ]; then args+=(--dev); fi
+            composer require "mortelos/agent-standards:^$LATEST" "${args[@]}" --no-update --no-scripts --no-interaction
+          elif [ "$constraint_status" -ne 0 ]; then
+            echo "::error::Composer could not check the agent-standards constraint (exit $constraint_status)."
+            exit "$constraint_status"
+          fi
+          # Vet 0.1.4 runs its post-update audit even with --no-scripts and VET_INSIDE_COMPOSER=1.
+          # Defer plugins for this update only; audit/trust below, then install with plugins enabled.
+          composer update "mortelos/agent-standards:$LATEST" \
+            --no-plugins --no-scripts --no-interaction --no-progress --prefer-dist
+          php artisan mortelos:agent-rules:publish --target=AGENTS.md --no-interaction
+
+      - name: Assert that only agent-standards needs trust
+        if: steps.versions.outputs.update == 'true' && steps.existing.outputs.skip != 'true' && steps.existing.outputs.pr == ''
+        run: |
+          set -euo pipefail
+          status=0
+          ./vendor/bin/vet --no-ansi --no-interaction > "$RUNNER_TEMP/agent-standards-vet.txt" 2>&1 || status=$?
+          cat "$RUNNER_TEMP/agent-standards-vet.txt"
+          test "$status" -eq 1
+          python3 <<'PY'
+          import os, re
+          from pathlib import Path
+          output = Path(os.environ['RUNNER_TEMP'], 'agent-standards-vet.txt').read_text()
+          # Parse vet's own summary and package row. Fail closed on an unknown output format.
+          summary = re.findall(r'^\s*Packages: (\d+) to review, \d+ trusted\s*$', output, re.M)
+          rows = re.findall(r'^\s{2}([a-z0-9_.-]+/[a-z0-9_.-]+)\s+[^\n]*\.{2,}[^\n]*$', output, re.M)
+          if summary != ['1'] or rows != ['mortelos/agent-standards'] or 'The installed tree does not match composer.lock' in output:
+              raise SystemExit(f'Unsafe vet audit: expected only mortelos/agent-standards; found {rows}, review counts {summary}. No PR will be opened.')
+          print('Vet guard passed: only mortelos/agent-standards is untrusted.')
+          PY
+
+      - name: Record authorized trust and verify rules
+        env:
+          COMPOSER_AUTH: '{"http-basic": {"packages.mortelos.com": {"username": "uteq", "password": "${{ secrets.MORTELOS_REGISTRY_TOKEN }}"}}}'
+        if: steps.versions.outputs.update == 'true' && steps.existing.outputs.skip != 'true' && steps.existing.outputs.pr == ''
+        run: |
+          set -euo pipefail
+          bin/vet-agent --no-review
+          ./vendor/bin/vet --no-ansi --no-interaction
+          composer install --no-interaction --no-progress --prefer-dist
+          php artisan mortelos:agent-rules:check --target=AGENTS.md
+
+      - name: Guard the complete update diff
+        if: steps.versions.outputs.update == 'true' && steps.existing.outputs.skip != 'true' && steps.existing.outputs.pr == ''
+        env:
+          LATEST: ${{ steps.versions.outputs.latest }}
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import json, os, re, subprocess
+          from pathlib import Path
+          package = 'mortelos/agent-standards'
+          allowed = {'composer.json', 'composer.lock', 'vet.json', 'AGENTS.md'}
+          def fail(message):
+              raise SystemExit(f'Unsafe update: {message}. No PR will be opened.')
+          def git(*args):
+              return subprocess.check_output(['git', *args])
+          changed = set(git('diff', 'HEAD', '--name-only', '-z').decode().split('\0')) - {''}
+          changed |= set(git('ls-files', '--others', '--exclude-standard', '-z').decode().split('\0')) - {''}
+          if changed - allowed:
+              fail('unexpected changed files: ' + ', '.join(sorted(changed - allowed)))
+          def pair(path):
+              return json.loads(git('show', f'HEAD:{path}')), json.loads(Path(path).read_text())
+          before, after = pair('composer.lock')
+          for data in (before, after):
+              data.pop('content-hash', None)
+              for section in ('packages', 'packages-dev'):
+                  data[section] = [p for p in data[section] if p['name'] != package]
+          if before != after:
+              fail('composer.lock changed outside agent-standards and content-hash')
+          # Also require the target to remain in the same dependency section, at the selected version.
+          old_lock, new_lock = pair('composer.lock')
+          for section in ('packages', 'packages-dev'):
+              old = [p for p in old_lock[section] if p['name'] == package]
+              new = [p for p in new_lock[section] if p['name'] == package]
+              if len(old) != len(new) or (new and new[0]['version'].lstrip('v') != os.environ['LATEST']):
+                  fail('unexpected agent-standards lock location or version')
+          before, after = pair('vet.json')
+          for data in (before, after):
+              for section in ('require', 'require-dev'):
+                  data.get(section, {}).pop(package, None)
+          if before != after:
+              fail('vet.json changed outside the agent-standards entry')
+          before, after = pair('composer.json')
+          for data in (before, after):
+              for section in ('require', 'require-dev'):
+                  data.get(section, {}).pop(package, None)
+          if before != after:
+              fail('composer.json changed outside the agent-standards constraint')
+          # A semantic JSON comparison alone would allow unrelated whitespace rewrites.
+          old = git('show', 'HEAD:composer.json').decode()
+          new = Path('composer.json').read_text()
+          mask = lambda s: re.sub(r'("mortelos/agent-standards"\s*:\s*)"[^"\n]+"', r'\1"<constraint>"', s)
+          if mask(old) != mask(new):
+              fail('composer.json changed outside the constraint line')
+          print('Diff guard passed: ' + ', '.join(sorted(changed)))
+          print('composer.lock: only agent-standards + content-hash; vet.json: only agent-standards; composer.json: only its constraint.')
+          PY
+
+      - name: Commit, push, and open the update PR
+        if: steps.versions.outputs.update == 'true' && steps.existing.outputs.skip != 'true' && steps.existing.outputs.pr == ''
+        id: created
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.existing.outputs.branch }}
+          CURRENT: ${{ steps.versions.outputs.current }}
+          LATEST: ${{ steps.versions.outputs.latest }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$BRANCH"
+          git add composer.json composer.lock vet.json AGENTS.md
+          git commit -m "chore: update mortelos/agent-standards to v$LATEST"
+          # Never overwrite an existing branch, even if an earlier run stopped before creating its PR.
+          git push origin "$BRANCH"
+          body="$RUNNER_TEMP/agent-standards-pr-body.md"
+          cat > "$body" <<EOF
+          Automated update of mortelos/agent-standards from v$CURRENT to v$LATEST, with regenerated agent rules.
+
+          Trusts only mortelos/agent-standards without an agent review: approved exception, 2026-10-21.
+
+          Compare: https://github.com/mortelos/agent-standards/compare/v$CURRENT...v$LATEST
+          EOF
+          url="$(gh pr create --repo "$GITHUB_REPOSITORY" --base "$BASE" --head "$BRANCH" \
+            --title "chore: update mortelos/agent-standards to v$LATEST" --body-file "$body")"
+          echo "pr=${url##*/}" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch or watch both exact PR checks, then merge
+        if: steps.versions.outputs.update == 'true' && steps.existing.outputs.skip != 'true'
+        timeout-minutes: 25
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ steps.existing.outputs.pr || steps.created.outputs.pr }}
+          SHA: ${{ steps.existing.outputs.sha || steps.created.outputs.sha }}
+          BRANCH: ${{ steps.existing.outputs.branch }}
+        run: |
+          set -euo pipefail
+          watch_deadline=$((SECONDS + 1200))
+          for check_workflow in $CHECK_WORKFLOWS; do
+            run_id=''
+            run_url=''
+            exclude_run=0
+            retried=false
+            comment_on_failure=false
+            check_passed=false
+            report_failure() {
+              message="Agent-standards checks failed or timed out. The PR remains open."
+              if [ -n "$run_url" ]; then message="$message Check run: $run_url"; fi
+              # Reused failed runs already have their report; do not comment again every night.
+              if [ "$comment_on_failure" = true ]; then
+                gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "$message" || true
+              fi
+              echo "::error::$message"
+            }
+            trap report_failure ERR
+            find_run() {
+              gh run list --repo "$GITHUB_REPOSITORY" --workflow "$check_workflow" \
+                --branch "$BRANCH" --event workflow_dispatch --limit 100 \
+                --json databaseId,headSha,createdAt --jq \
+                "[.[] | select(.headSha == \"$SHA\" and .databaseId != $exclude_run)] | sort_by(.createdAt) | last | .databaseId // empty"
+            }
+            run_id="$(find_run)"
+            for _round in 1 2; do
+              if [ -n "$run_id" ]; then
+                conclusion="$(gh run view "$run_id" --repo "$GITHUB_REPOSITORY" --json conclusion --jq '.conclusion // ""')"
+                case "$conclusion" in
+                  cancelled|timed_out|startup_failure)
+                    if [ "$retried" = false ]; then
+                      retried=true
+                      exclude_run="$run_id"
+                      run_id=''
+                    fi
+                    ;;
+                esac
+              fi
+              if [ -z "$run_id" ]; then
+                # At most one infrastructure-failure retry per workflow per night, always for the same SHA.
+                gh workflow run "$check_workflow" --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
+                comment_on_failure=true
+                for _attempt in $(seq 1 24); do
+                  run_id="$(find_run)"
+                  if [ -n "$run_id" ]; then break; fi
+                  sleep 5
+                done
+              fi
+              if [ -z "$run_id" ]; then
+                echo '::error::The dispatched PR check did not appear for the expected head SHA.'
+                false
+              fi
+              run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$run_id"
+              echo "Checking $run_url at $SHA"
+              remaining=$((watch_deadline - SECONDS))
+              watch_status=124
+              if [ "$remaining" -gt 0 ]; then
+                watch_status=0
+                timeout "${remaining}s" gh run watch "$run_id" --repo "$GITHUB_REPOSITORY" --exit-status --compact --interval 10 || watch_status=$?
+              fi
+              result="$(gh run view "$run_id" --repo "$GITHUB_REPOSITORY" --json conclusion,headSha --jq '.conclusion + " " + .headSha')"
+              if [ "$watch_status" -eq 0 ] && [ "$result" = "success $SHA" ]; then
+                comment_on_failure=false
+                check_passed=true
+                break
+              fi
+              case "$result" in
+                "cancelled $SHA"|"timed_out $SHA"|"startup_failure $SHA")
+                  if [ "$retried" = false ]; then
+                    retried=true
+                    exclude_run="$run_id"
+                    run_id=''
+                    continue
+                  fi
+                  ;;
+              esac
+              report_failure
+              if [ "$watch_status" -eq 0 ]; then watch_status=1; fi
+              exit "$watch_status"
+            done
+            test "$check_passed" = true
+          done
+          # Checks passed. Validation and merge failures must not be reported as check failures.
+          trap - ERR
+          gh pr view "$PR" --repo "$GITHUB_REPOSITORY" \
+            --json files,commits,author,state,headRefOid,baseRefName > "$RUNNER_TEMP/agent-standards-pr.json"
+          python3 "$RUNNER_TEMP/agent-standards-pr-guard.py" "$RUNNER_TEMP/agent-standards-pr.json"
+          base_tip="$(git ls-remote --heads origin "refs/heads/$BASE" | cut -f1)"
+          parent="$(git rev-parse "$SHA^")"
+          if [ "$parent" != "$base_tip" ]; then
+            echo '::error::The base advanced while checks ran. Refusing to merge the outdated result; the next run will regenerate the PR.'
+            exit 1
+          fi
+          method="$(gh api "repos/$GITHUB_REPOSITORY" --jq 'if .allow_squash_merge then "--squash" elif .allow_merge_commit then "--merge" elif .allow_rebase_merge then "--rebase" else error("No merge method is enabled") end')"
+          if ! gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" "$method" --delete-branch --match-head-commit "$SHA"; then
+            echo "::error::Checks passed, but GitHub could not merge PR #$PR. The PR remains open."
+            exit 1
+          fi
