@@ -13,11 +13,11 @@ Files with any other name (this README, `draft.md`, `notes.txt`) are ignored. Da
 
 ## What goes in a note
 
-Write one note per release and list only what is new in that release, in plain language a customer understands: what they can do now, not how it was built. No ticket numbers, no internal names. Markdown is allowed; raw HTML is escaped.
+Write one note per release and list only what is new in that release, in plain language a customer understands: what they can do now, not how it was built. No ticket numbers, no internal names. A note is plain text, not markdown: one line per item, written `- `; any other line is a paragraph. Everything is escaped, so links, images, emphasis and HTML show literally.
 
 Example, saved as `v1.2.0.md`:
 
-```markdown
+```text
 - Je kunt nu je profielfoto aanpassen onder Instellingen.
 - Uitnodigingen voor nieuwe gebruikers komen sneller aan.
 ```
