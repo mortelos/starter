@@ -28,7 +28,7 @@
     "livewire/livewire": "^4.4.4",
     "mortelos/app-standards": "^0.1.4",
     "mortelos/framework": "^0.7",
-    "mortelos/ui": "^0.5.29",
+    "mortelos/ui": "^0.5.32",
     "spatie/laravel-flare": "^3.2"
   },
   "require-dev": {
