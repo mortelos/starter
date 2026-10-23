@@ -39,7 +39,7 @@
     "laravel/vet": "^0.1",
     "mockery/mockery": "^1.6",
     "mortelos/agent-standards": "^0.1.20",
-    "mortelos/dev-tools": "^0.1.9",
+    "mortelos/dev-tools": "^0.6",
     "nunomaduro/collision": "^8.6",
     "orchestra/testbench": "^11.0",
     "pestphp/pest": "^4.0",
@@ -76,7 +76,11 @@
       "Composer\\Config::disableProcessTimeout",
       "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --queue=agents,default --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
     ],
-    "test": "vendor/bin/pest --exclude-testsuite Browser",
+    "test:tenant-isolation": "tenant-isolation-check --no-markers",
+    "test": [
+      "@test:tenant-isolation @no_additional_args",
+      "vendor/bin/pest --exclude-testsuite Browser"
+    ],
     "test:browser": "vendor/bin/pest --testsuite Browser",
     "test:arch": "vendor/bin/pest --filter='ArchGuard|UiGuard|OutletsGuard|CodeLanguageGuard'",
     "analyse": "vendor/bin/phpstan analyse --memory-limit=2G",

@@ -58,7 +58,7 @@ new class extends Component
 
     public function reject(): void
     {
-        $this->validate(['rejectReason' => ['required', 'string', 'min:3', 'max:1000']], [], ['rejectReason' => 'reden']);
+        $this->validate(['rejectReason' => ['required', 'string', 'min:3', 'max:1000']], [], ['rejectReason' => __('validation.attributes.rejectReason', locale: 'nl')]);
 
         $item = $this->item;
         $user = auth()->user();

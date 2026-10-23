@@ -88,9 +88,8 @@ class extends Component {
     }
 
     /**
-     * Detail-type voor het geselecteerde item: intake-types krijgen
-     * een chat+widgets-pane, andere types krijgen de bestaande
-     * approval-flow.
+     * Detail type for the selected item: intake types get a chat and widgets
+     * pane; other types use the existing approval flow.
      */
     #[Computed]
     public function selectedItemType(): string

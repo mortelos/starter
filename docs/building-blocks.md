@@ -92,3 +92,5 @@ Read this before you propose code (rule `reuse-inventory` in AGENTS.md); update 
 | Portal workflow | Interview, package decisions, build plan and build for a new portal | Skill `setup-portal` | `.agents/skills/setup-portal/SKILL.md` | Run it first for a portal request |
 | Machine setup | Gets a clean machine to the point where a host app boots | Skill `mortelos-tooling-setup` | `.agents/skills/mortelos-tooling-setup/SKILL.md` | |
 | Scaffold command | Creates a new portal from the starter without its git history | `bin/mortelos new <name>` | `bin/mortelos` | |
+
+The tenant isolation guard runs through `composer test:tenant-isolation` and CI. Users and invitations use the central connection; the baseline permits only Laravel's fixed test password hash cache.

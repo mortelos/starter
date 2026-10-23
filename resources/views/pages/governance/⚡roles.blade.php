@@ -252,7 +252,7 @@ class extends Component {
         </x-mortel::callout.text>
     </x-mortel::callout>
 
-    {{-- Nieuwe rol --}}
+    {{-- New role --}}
     <x-mortel::card class="mb-8">
         <x-mortel::heading size="lg" level="2" class="mb-4">Nieuwe rol</x-mortel::heading>
 

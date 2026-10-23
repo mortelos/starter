@@ -48,7 +48,7 @@ new class extends Component
     /** Asks the assistant about this item; the answer comes back in the same request. */
     public function sendMessage(): void
     {
-        $this->validate(['newMessage' => ['required', 'string', 'max:2000']], [], ['newMessage' => 'bericht']);
+        $this->validate(['newMessage' => ['required', 'string', 'max:2000']], [], ['newMessage' => __('validation.attributes.newMessage', locale: 'nl')]);
 
         $item = $this->item;
         $userId = auth()->id();

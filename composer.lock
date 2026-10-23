@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "959e8b8e1076db87ac799bd151231bb0",
+    "content-hash": "3f09783987f7da8f808e75982d867d7f",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -11270,12 +11270,12 @@
         },
         {
             "name": "mortelos/dev-tools",
-            "version": "0.1.9",
+            "version": "0.6.0",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/dev-tools/0.1.9.zip",
-                "reference": "5cf87ff4848f15cc9b976aa3701922f352a55b2a",
-                "shasum": "bb2c5bb5e45ecb7a4161b611ddd71fc8c7fd5c3a"
+                "url": "https://packages.mortelos.com/dist/mortelos/dev-tools/0.6.0.zip",
+                "reference": "ddf8426c2f2862221a123f2e0d96d19f7f80b89b",
+                "shasum": "c1776f9909344896234b28716e997b2f1e867277"
             },
             "require": {
                 "illuminate/console": "^13.0",
@@ -11284,6 +11284,10 @@
                 "illuminate/support": "^13.0",
                 "php": "^8.4"
             },
+            "bin": [
+                "bin/livewire-api-check",
+                "bin/tenant-isolation-check"
+            ],
             "type": "library",
             "extra": {
                 "laravel": {
@@ -11301,7 +11305,7 @@
                 "proprietary"
             ],
             "description": "Developer tooling for MortelOS package-ready feature decisions",
-            "time": "2026-10-16T13:59:48+02:00"
+            "time": "2026-10-21T07:31:25+02:00"
         },
         {
             "name": "myclabs/deep-copy",
