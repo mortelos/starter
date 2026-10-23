@@ -34,8 +34,8 @@ new class extends Component {
             return;
         }
 
-        // De rol van een lid staat op de tenant-membership (tenant_user.role_id),
-        // precies waar het framework hem ook leest (ActorContextResolver).
+        // The member role lives on the tenant membership (tenant_user.role_id),
+        // where the framework reads it too (ActorContextResolver).
         $roleId = DB::table('tenant_user')
             ->where('user_id', $user->getKey())
             ->where('tenant_id', app(TenantResolver::class)->id())

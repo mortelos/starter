@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 /**
  * Read model of an invitation, written only by App\Projectors\InvitationProjector.
@@ -29,6 +30,8 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable(['id', 'tenant_id', 'email', 'role_id', 'invited_by', 'token_hash', 'expires_at', 'revoked_at', 'accepted_at', 'accepted_user_id', 'created_at', 'updated_at'])]
 final class Invitation extends Model
 {
+    use CentralConnection;
+
     public $incrementing = false;
 
     protected $keyType = 'string';

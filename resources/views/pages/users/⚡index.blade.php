@@ -260,7 +260,7 @@ class extends Component {
         @endif
     </x-mortel::card>
 
-    {{-- Openstaande uitnodigingen --}}
+    {{-- Pending invitations --}}
     @if($pendingInvites !== [])
         <x-mortel::card class="p-0">
             <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">

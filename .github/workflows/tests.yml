@@ -5,6 +5,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 permissions:
   contents: read
@@ -39,6 +40,8 @@ jobs:
       DB_PASSWORD: postgres
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -60,6 +63,27 @@ jobs:
           npx playwright install --with-deps chromium
         env:
           MORTELOS_REGISTRY_TOKEN: ${{ secrets.MORTELOS_REGISTRY_TOKEN }}
+
+      - name: Check tenant isolation
+        shell: bash
+        env:
+          # Escape hatch for a legitimate new exception: the label is applied only by the orchestrator after review.
+          # It counts only in the run that the labeling itself starts, i.e. for the commit that was reviewed: a later
+          # push (synchronize) is checked with --base again until the label is removed and applied again.
+          # The guard still runs and every baseline entry still needs a reason and an issue.
+          EXCEPTION_LABEL: ${{ github.event.action == 'labeled' && github.event.label.name == 'tenant-isolation-exception' }}
+        run: |
+          git rev-parse --verify origin/main
+          # Bootstrap only while main has no baseline; subsequent PRs must shrink it.
+          baseline=$(git ls-tree --name-only origin/main -- .mortelos/tenant-isolation.php)
+          if [[ "$EXCEPTION_LABEL" == "true" ]]; then
+            echo "::notice::Label tenant-isolation-exception: the guard runs without --base, so the baseline may grow in this PR."
+            composer test:tenant-isolation
+          elif [[ -n "$baseline" ]]; then
+            composer test:tenant-isolation -- --base=origin/main
+          else
+            composer test:tenant-isolation
+          fi
 
       - name: Prepare environment
         run: |
