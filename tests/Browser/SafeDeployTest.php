@@ -104,6 +104,7 @@ it('shows the update icon right of the user name in the sidebar after a deploy',
     safeDeployUntil($page, "() => document.documentElement.hasAttribute('data-mortel-update')");
     safeDeployUntil($page, "() => document.querySelector('[data-mortel-update-notice-icon]').getClientRects().length > 0");
 
+    /** @var array{inSidebar: bool, rows: int, userInRow: bool, rightOfUser: float|int, offCentre: float|int, insideRow: bool} $place */
     $place = $page->script(<<<'JS'
         () => {
             const icon = document.querySelector('[data-mortel-update-notice-icon]');
