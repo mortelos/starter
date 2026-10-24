@@ -26,6 +26,7 @@ new class extends Component {
     }
 }; ?>
 
+@php ob_start(); @endphp
 <x-mortel::dropdown :position="$position" :align="$align">
     @if ($sidebar)
         <x-mortel::sidebar.profile
@@ -61,3 +62,11 @@ new class extends Component {
         </form>
     </x-mortel::menu>
 </x-mortel::dropdown>
+@php $userMenu = new \Illuminate\Support\HtmlString(ob_get_clean()); @endphp
+
+{{-- Sidebar only: the update icon sits right of the user's name. The mobile header has its own pill. --}}
+@if ($sidebar)
+    <x-mortel::update-notice>{{ $userMenu }}</x-mortel::update-notice>
+@else
+    {{ $userMenu }}
+@endif
