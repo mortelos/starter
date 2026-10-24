@@ -89,19 +89,47 @@ it('puts the typed text back after a deploy and saves exactly once', function ()
         ->and(User::query()->where('email', 'admin@example.test')->value('name'))->toBe('Admin Na Deploy');
 });
 
-it('shows the update notice in the sidebar after a deploy', function (): void {
+it('shows the update icon right of the user name in the sidebar after a deploy', function (): void {
     $page = verifyAsAdmin('/dashboard');
     safeDeployUntil($page, "() => !!window.Livewire && !!window.__mortelResilience && document.readyState === 'complete'");
 
-    $page->assertScript("getComputedStyle(document.querySelector('[data-mortel-update-notice]')).display === 'none'");
+    // One notice, wrapped around the sidebar's user menu (the mobile header's menu stays unwrapped), hidden until a deploy.
+    $page->assertScript("document.querySelectorAll('[data-mortel-update-notice]').length === 1")
+        ->assertScript("document.querySelector('[data-mortel-update-notice]').hasAttribute('data-wrapped')")
+        ->assertScript("getComputedStyle(document.querySelector('[data-mortel-update-notice]')).display === 'none'");
 
     FlippableBuild::deploy('1.0.1');
     // The page asks the version endpoint when it comes back online or a poll fires.
     $page->script("() => window.dispatchEvent(new Event('online'))");
     safeDeployUntil($page, "() => document.documentElement.hasAttribute('data-mortel-update')");
+    safeDeployUntil($page, "() => document.querySelector('[data-mortel-update-notice-icon]').getClientRects().length > 0");
 
-    $page->assertScript("document.querySelector('[data-mortel-update-notice]').closest('[data-mortel-sidebar]') !== null")
-        ->assertScript("getComputedStyle(document.querySelector('[data-mortel-update-notice-caption]')).display !== 'none'")
-        ->assertSeeIn('[data-mortel-update-notice-caption]', 'Update beschikbaar')
-        ->assertSeeIn('[data-mortel-update-notice-caption]', 'v1.0.1');
+    $place = $page->script(<<<'JS'
+        () => {
+            const icon = document.querySelector('[data-mortel-update-notice-icon]');
+            const row = icon.closest('[data-mortel-update-notice-row]');
+            const user = row.querySelector('[data-mortel-update-notice-slot]');
+            const centre = (box) => (box.top + box.bottom) / 2;
+
+            return {
+                inSidebar: row.closest('[data-mortel-sidebar]') !== null,
+                rows: document.querySelectorAll('[data-mortel-update-notice-row]').length,
+                userInRow: user.textContent.includes('Admin'),
+                rightOfUser: icon.getBoundingClientRect().left - user.getBoundingClientRect().right,
+                offCentre: Math.abs(centre(icon.getBoundingClientRect()) - centre(user.getBoundingClientRect())),
+                insideRow: icon.getBoundingClientRect().right <= row.getBoundingClientRect().right + 0.5,
+            };
+        }
+        JS);
+
+    expect($place['inSidebar'])->toBeTrue()
+        ->and($place['rows'])->toBe(1)
+        ->and($place['userInRow'])->toBeTrue()
+        ->and($place['rightOfUser'])->toBeGreaterThanOrEqual(0)
+        ->and($place['offCentre'])->toBeLessThan(2)
+        ->and($place['insideRow'])->toBeTrue();
+
+    // The user menu still opens from the profile button.
+    $page->click('[data-mortel-update-notice-slot] [data-mortel-sidebar-profile]')
+        ->assertScript("document.querySelector('[data-mortel-update-notice-slot] [data-mortel-sidebar-profile]').getAttribute('aria-expanded') === 'true'");
 });
