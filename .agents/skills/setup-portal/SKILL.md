@@ -67,6 +67,16 @@ Record concrete evidence that the target is a MortelOS Starter host app:
 
 Stop if the target is a package worktree, a vendor package or a non-MortelOS app.
 
+### CI runner
+
+Ask who will use the system (`ci-runner` in AGENTS.md) and record the answer in
+the gate artifact. For UTEQ itself, set `runs-on: [self-hosted, uteq-dev]` in
+every file under `.github/workflows/`; this requires a private repository in
+the GitHub organization `uteq` or `mortelos`. For a customer, partner or anyone
+else, keep GitHub-hosted runners; the owner needs Actions minutes.
+In both cases, delete `.github/workflows/trigger-registry-rebuild.yml`; it
+belongs to the starter package itself.
+
 ## Gate 2: Docs Checked
 
 For every required public docs page, record:
@@ -192,9 +202,13 @@ For portal behavior changes, run:
 
 ```bash
 php artisan starter:doctor --no-interaction
-vendor/bin/pest
+vendor/bin/pest <changed test files or directories>
 vendor/bin/pint --dirty
 ```
+
+Run the tests for what you built locally. If running in parallel, always pass
+`--processes=4`. Run the full suite locally only while CI is not yet running
+for this repository (`ci-local-tests` in AGENTS.md); otherwise CI runs it.
 
 Also record manual smoke evidence:
 

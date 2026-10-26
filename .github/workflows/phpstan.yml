@@ -4,21 +4,31 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths-ignore: ['docs/**']
   pull_request:
+    paths-ignore: ['docs/**']
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   phpstan:
+    # ci-runner: choose by who uses the system; UTEQ itself uses [self-hosted, uteq-dev].
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     env:
+      COMPOSER_AUTH: '{"http-basic":{"packages.mortelos.com":{"username":"uteq","password":"${{ secrets.MORTELOS_REGISTRY_TOKEN }}"}}}'
       MORTEL_UI_KIT: own
       APP_LOCALE: nl
     steps:
       - uses: actions/checkout@v4
 
       - uses: shivammathur/setup-php@v2
+        if: runner.environment == 'github-hosted'
         with:
           php-version: '8.4'
           coverage: none
@@ -26,10 +36,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer config --global http-basic.packages.mortelos.com uteq "$MORTELOS_REGISTRY_TOKEN"
           composer install --no-interaction --no-progress --prefer-dist
-        env:
-          MORTELOS_REGISTRY_TOKEN: ${{ secrets.MORTELOS_REGISTRY_TOKEN }}
 
       - name: Run PHPStan (level max)
         run: composer analyse
