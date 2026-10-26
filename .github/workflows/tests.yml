@@ -4,32 +4,25 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths-ignore: ['docs/**']
   pull_request:
+    paths-ignore: ['docs/**']
     types: [opened, synchronize, reopened, labeled, unlabeled]
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   tests:
+    # ci-runner: choose by who uses the system; UTEQ itself uses [self-hosted, uteq-dev].
     runs-on: ubuntu-24.04
-    # A hanging browser test fails the job instead of blocking it for the 6 h default.
-    timeout-minutes: 20
-    # The tests run on Postgres, like a deployed app. phpunit.xml keeps SQLite for a quick local run.
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: testing
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
+    timeout-minutes: 30
     env:
+      COMPOSER_AUTH: '{"http-basic":{"packages.mortelos.com":{"username":"uteq","password":"${{ secrets.MORTELOS_REGISTRY_TOKEN }}"}}}'
       MORTEL_UI_KIT: own
       APP_LOCALE: nl
       DB_CONNECTION: pgsql
@@ -44,25 +37,53 @@ jobs:
           fetch-depth: 0
 
       - uses: shivammathur/setup-php@v2
+        if: runner.environment == 'github-hosted'
         with:
           php-version: '8.4'
           coverage: none
           tools: composer:v2
 
       - uses: actions/setup-node@v4
+        if: runner.environment == 'github-hosted'
         with:
           node-version: lts/*
 
-      - name: Install dependencies
-        # Zelfde registry-token als phpstan.yml.
+      - name: Start PostgreSQL on GitHub-hosted
+        if: runner.environment == 'github-hosted'
         run: |
-          composer config --global http-basic.packages.mortelos.com uteq "$MORTELOS_REGISTRY_TOKEN"
+          sudo systemctl start postgresql
+          sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+          sudo -u postgres createdb testing
+
+      - name: Prepare self-hosted database and browser environment
+        if: runner.environment == 'self-hosted'
+        env:
+          TEST_DATABASE: mortelos_ci_${{ github.run_id }}_${{ github.run_attempt }}
+        run: |
+          echo "DB_HOST=/srv/ci-pg" >> "$GITHUB_ENV"
+          echo "DB_PORT=5433" >> "$GITHUB_ENV"
+          echo "DB_USERNAME=$(id -un)" >> "$GITHUB_ENV"
+          echo "DB_PASSWORD=" >> "$GITHUB_ENV"
+          echo "DB_DATABASE=$TEST_DATABASE" >> "$GITHUB_ENV"
+          echo "TENANCY_DATABASE_PREFIX=${TEST_DATABASE}_tenant_" >> "$GITHUB_ENV"
+          # Playwright versions without Ubuntu 26.04 support use the runner's cached libraries.
+          echo "PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$HOME/.local/chromium-libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+          PGPASSWORD= createdb -h /srv/ci-pg -p 5433 "$TEST_DATABASE"
+
+      - name: Install dependencies
+        run: |
           composer install --no-interaction --no-progress --prefer-dist
           npm ci
           npm run build
-          npx playwright install --with-deps chromium
-        env:
-          MORTELOS_REGISTRY_TOKEN: ${{ secrets.MORTELOS_REGISTRY_TOKEN }}
+
+      - name: Install Chromium on GitHub-hosted
+        if: runner.environment == 'github-hosted'
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Chromium on self-hosted
+        if: runner.environment == 'self-hosted'
+        run: npx playwright install chromium
 
       - name: Check tenant isolation
         shell: bash
@@ -107,3 +128,13 @@ jobs:
           name: verify-screenshots
           path: tests/Browser/Screenshots
           if-no-files-found: ignore
+
+      - name: Drop self-hosted test databases
+        if: always() && runner.environment == 'self-hosted'
+        env:
+          TEST_DATABASE: mortelos_ci_${{ github.run_id }}_${{ github.run_attempt }}
+          PGPASSWORD: ''
+        run: |
+          psql -h /srv/ci-pg -p 5433 -d postgres -Atc \
+            "select datname from pg_database where datname = '$TEST_DATABASE' or starts_with(datname, '${TEST_DATABASE}_')" |
+            while read -r db; do dropdb -h /srv/ci-pg -p 5433 --if-exists --force "$db"; done

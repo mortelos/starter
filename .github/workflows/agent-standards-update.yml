@@ -26,6 +26,7 @@ concurrency:
 
 jobs:
   update:
+    # ci-runner: choose by who uses the system; UTEQ itself uses [self-hosted, uteq-dev].
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -41,6 +42,7 @@ jobs:
           persist-credentials: false
 
       - uses: shivammathur/setup-php@v2
+        if: runner.environment == 'github-hosted'
         with:
           php-version: '8.4'
           coverage: none
