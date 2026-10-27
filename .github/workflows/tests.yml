@@ -24,7 +24,6 @@ jobs:
     timeout-minutes: 30
     env:
       COMPOSER_AUTH: '{"http-basic":{"packages.mortelos.com":{"username":"uteq","password":"${{ secrets.MORTELOS_REGISTRY_TOKEN }}"}}}'
-      MORTEL_UI_KIT: own
       APP_LOCALE: nl
       DB_CONNECTION: pgsql
       DB_HOST: 127.0.0.1
