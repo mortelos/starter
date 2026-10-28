@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Migrations\Migration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -15,6 +16,7 @@ it('widens every present actor copy column on Postgres', function (): void {
     }
 
     $migration = require database_path('migrations/2026_10_28_100000_widen_event_actor_copy_columns.php');
+    assert($migration instanceof Migration);
     /** @var array<string, array<string, bool>> $columns */
     $columns = (new ReflectionClass($migration))->getConstant('COLUMNS');
     $checked = [];
@@ -66,6 +68,9 @@ it('preserves explicit SQLite indexes through resizing in both directions', func
     }
 
     $migration = require database_path('migrations/2026_10_28_100000_widen_event_actor_copy_columns.php');
+    assert($migration instanceof Migration);
+    assert(method_exists($migration, 'up'));
+    assert(method_exists($migration, 'down'));
     $migration->down();
     DB::statement("CREATE UNIQUE INDEX actor_test_partial ON entities (name) WHERE status = 'active'");
     DB::statement("CREATE INDEX actor_test_expression ON entities (json_extract(attributes, '$.code'))");
