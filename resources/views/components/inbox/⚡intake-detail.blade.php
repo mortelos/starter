@@ -7,6 +7,7 @@ use Livewire\Component;
 use Mortel\Actions\Inbox\RespondToInboxItemMessage;
 use Mortel\Models\AiConversationMessage;
 use Mortel\Models\InboxItem;
+use Mortel\Services\Markdown\PlainText;
 use Mortel\Support\AiConversationRepository;
 
 new class extends Component
@@ -80,7 +81,7 @@ new class extends Component
             <x-mortel::badge size="sm">{{ ucfirst(str_replace('_', ' ', $item->type)) }}</x-mortel::badge>
             <x-mortel::heading size="lg" level="2" class="mt-2">{{ $item->title }}</x-mortel::heading>
             @if ($item->summary)
-                <x-mortel::text class="mt-1">{{ $item->summary }}</x-mortel::text>
+                <x-mortel::text class="mt-1">{{ PlainText::line($item->summary, 240) }}</x-mortel::text>
             @endif
         </div>
 
@@ -113,7 +114,7 @@ new class extends Component
                         <div wire:key="intake-artifact-{{ $item->id }}-{{ $index }}" class="mt-2">
                             <x-mortel::text size="sm" class="font-medium">{{ $artifact['label'] ?? 'Artefact' }}</x-mortel::text>
                             @if (! empty($artifact['summary']))
-                                <x-mortel::text size="sm">{{ $artifact['summary'] }}</x-mortel::text>
+                                <x-mortel::text size="sm">{{ PlainText::line($artifact['summary'], 240) }}</x-mortel::text>
                             @endif
                         </div>
                     @empty

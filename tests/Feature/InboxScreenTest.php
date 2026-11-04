@@ -65,6 +65,34 @@ it('lists only the pending items of the signed-in user', function (): void {
         ->assertDontSee('Van een ander');
 });
 
+it('shows AI inbox titles as plain single lines', function (string $markdown, string $expected): void {
+    inboxItem(inboxUser(), ['title' => $markdown]);
+
+    Livewire::test('inbox.inbox-list')
+        ->assertSeeHtml('<span class="block truncate">'.$expected.'</span>')
+        ->assertDontSee($markdown);
+})->with([
+    'markdown formatting' => ["**Vet**\n## kop `code` [link](https://example.invalid)", 'Vet kop code link'],
+    'word boundary' => [str_repeat('preview ', 16).'ending', rtrim(str_repeat('preview ', 15)).'…'],
+]);
+
+it('shows AI intake summaries as plain single lines', function (string $field, string $markdown, string $expected): void {
+    $attributes = $field === 'summary'
+        ? ['summary' => $markdown]
+        : ['metadata' => ['artifacts' => [['label' => 'Document', 'summary' => $markdown]]]];
+    $item = inboxItem(inboxUser(), $attributes);
+    $stored = $item->only(array_keys($attributes));
+
+    Livewire::test('inbox.intake-detail', ['itemId' => $item->id])
+        ->assertSeeHtml('>'.$expected.'</p>')
+        ->assertDontSee($markdown);
+
+    expect($item->refresh()->only(array_keys($attributes)))->toBe($stored);
+})->with(['item summary' => 'summary', 'artifact summary' => 'artifact'])->with([
+    'markdown formatting' => ["**Vet**\n## kop `code` [link](https://example.invalid)", 'Vet kop code link'],
+    'word boundary' => [str_repeat('preview ', 32).'ending', rtrim(str_repeat('preview ', 30)).'…'],
+]);
+
 it('filters the list on each of the five url parameters', function (array $query, string $shown, string $hidden): void {
     $user = inboxUser();
     inboxItem($user, ['title' => 'Voorstel laag agent', 'source_type' => SourceType::AgentRun->value]);

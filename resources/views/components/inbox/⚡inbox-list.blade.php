@@ -6,6 +6,7 @@ use Livewire\Attributes\Reactive;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Mortel\Models\InboxItem;
+use Mortel\Services\Markdown\PlainText;
 
 new class extends Component
 {
@@ -103,7 +104,7 @@ new class extends Component
                         wire:click="$dispatch('item-selected', { itemId: '{{ $item->id }}' })"
                     >
                         <span class="min-w-0 flex-1">
-                            <span class="block truncate">{{ $item->title }}</span>
+                            <span class="block truncate">{{ PlainText::line($item->title, 120) }}</span>
                             <span class="block truncate text-xs font-normal text-zinc-600 dark:text-zinc-300">
                                 {{ ucfirst(str_replace('_', ' ', $item->type)) }} · {{ ($filterArchive ? ($item->approved_at ?? $item->rejected_at ?? $item->created_at) : $item->created_at)?->diffForHumans() }}
                             </span>

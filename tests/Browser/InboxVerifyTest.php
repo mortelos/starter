@@ -33,6 +33,37 @@ it('shows the empty inbox within the verify budgets', function (): void {
     fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
 });
 
+it('shows plain AI lines in the inbox list and intake pane', function (): void {
+    app()->instance('inbox.test-type-resolver', new class
+    {
+        public function resolve(string $itemId): string
+        {
+            return InboxItem::query()->find($itemId)->type ?? '';
+        }
+    });
+    config(['starter.inbox.item_type_resolver' => 'inbox.test-type-resolver']);
+    $markdown = "**Vet**\n## kop `code` [link](https://example.invalid)";
+
+    // @spine-ignore: test fixture, the starter itself never creates inbox items
+    InboxItem::factory()->forUser(User::query()->where('email', 'admin@example.test')->firstOrFail())->create([
+        'title' => $markdown,
+        'summary' => $markdown,
+        'type' => 'compliance_intake',
+        'metadata' => ['artifacts' => [['label' => 'Document', 'summary' => str_repeat('preview ', 32).'unshownfinalword']]],
+    ]);
+
+    $page = verifyAsAdmin('/inbox');
+    expectNoPostsSinceLoad($page);
+    $page->assertSeeIn(INBOX_LIST, 'Vet kop code link')
+        ->assertDontSeeIn(INBOX_LIST, '**Vet**');
+
+    LivewireMonitor::expect($page, fn (PendingAwaitablePage|AwaitableWebpage $page) => $page->click(INBOX_LIST.' >> text=Vet kop code link'), 1);
+    $page->assertSee('Vet kop code link')
+        ->assertSee(rtrim(str_repeat('preview ', 30)).'…')
+        ->assertDontSee('unshownfinalword');
+    fwrite(STDERR, 'LivewireSummary '.json_encode(LivewireMonitor::summary($page), JSON_THROW_ON_ERROR).PHP_EOL);
+});
+
 it('filters, opens an item and approves it on a wide screen', function (): void {
     inboxItemForAdmin('Factuur controleren');
     inboxItemForAdmin('Nieuwe klant gemeld', 'notification');

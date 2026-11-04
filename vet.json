@@ -1,6 +1,10 @@
 {
     "schema": 4,
     "require": {
+        "amphp/redis": {
+            "version": "v2.0.4",
+            "hash": "tree-v2:a2be9c8e04fa146bcbeeb350320ac0153141cace173893ca8c30d7a5d4604eaa"
+        },
         "barryvdh/laravel-dompdf": {
             "version": "v3.1.2",
             "hash": "tree-v2:b2205e6585db200cdde2b11f5f6443f01de1dc53380eab8344355495e86e076f"
@@ -154,8 +158,8 @@
             "hash": "tree-v2:943bf2413be502209c4ce6a6e03de8c8390b698772b3c9eee7e62ed1dad9c8ea"
         },
         "mortelos/framework": {
-            "version": "0.7.1",
-            "hash": "tree-v2:f3c37a14aeef9c07986e3e4f47fd200e32403433c688c09323b3ab84b8dbb78f"
+            "version": "0.7.63",
+            "hash": "tree-v2:06a7dd3e9fd5b79ba3de843e2dd81e7ae1ef0b55ed0aed8608d021d07d84e218"
         },
         "mortelos/ui": {
             "version": "0.6.0",
