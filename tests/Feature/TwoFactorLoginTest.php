@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\SerializeTwoFactorChallenge;
 use App\Models\User;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Testing\TestResponse;
@@ -163,4 +165,76 @@ it('does not expose the secret or the recovery codes when a user is serialised',
     $array = userWithTwoFactor()->toArray();
 
     expect($array)->not->toHaveKeys(['two_factor_secret', 'two_factor_recovery_codes', 'password']);
+});
+
+it('checks one code at a time per waiting user: a second check meets the lock of the first', function (): void {
+    config(['starter.auth.two_factor_lock_wait' => 0]);
+    $user = userWithTwoFactor();
+    postPassword($user);
+
+    // Another request for this user is in the middle of its check (Fortify reads the codes, then saves the replacement).
+    $running = Cache::lock(SerializeTwoFactorChallenge::key(modelKeyString($user)), 30);
+    expect($running->get())->toBeTrue();
+
+    post(route('two-factor.login.store'), ['recovery_code' => 'bbbbbbbbbb-2222222222'])->assertStatus(429);
+
+    assertGuest();
+    expect($user->fresh()?->recoveryCodes())->toBe(twoFactorRecoveryCodes());
+
+    // The first request is done: the check goes on.
+    $running->release();
+
+    post(route('two-factor.login.store'), ['recovery_code' => 'bbbbbbbbbb-2222222222'])->assertRedirect(route('home'));
+
+    assertAuthenticatedAs($user);
+});
+
+it('refuses a recovery code a second time, whether the second check waited for the first or came after it', function (): void {
+    config(['starter.auth.two_factor_lock_wait' => 0]);
+    $user = userWithTwoFactor();
+    $key = SerializeTwoFactorChallenge::key(modelKeyString($user));
+
+    // Check 1 is running; check 2 (same code) is turned away without being looked at.
+    postPassword($user);
+    $running = Cache::lock($key, 30);
+    $running->get();
+    post(route('two-factor.login.store'), ['recovery_code' => 'aaaaaaaaaa-1111111111'])->assertStatus(429);
+    $running->release();
+
+    // Check 1 finishes and replaces the code.
+    post(route('two-factor.login.store'), ['recovery_code' => 'aaaaaaaaaa-1111111111'])->assertRedirect(route('home'));
+    auth()->logout();
+
+    // Check 2 comes again: the code is gone.
+    postPassword($user);
+    post(route('two-factor.login.store'), ['recovery_code' => 'aaaaaaaaaa-1111111111'])
+        ->assertSessionHasErrors(['recovery_code']);
+
+    assertGuest();
+});
+
+it('lets the check of another waiting user go on while one is locked', function (): void {
+    config(['starter.auth.two_factor_lock_wait' => 0]);
+    $locked = userWithTwoFactor();
+    $other = userWithTwoFactor();
+    postPassword($other);
+
+    $running = Cache::lock(SerializeTwoFactorChallenge::key(modelKeyString($locked)), 30);
+    $running->get();
+
+    post(route('two-factor.login.store'), ['code' => twoFactorCode($other)])->assertRedirect(route('home'));
+
+    assertAuthenticatedAs($other);
+    $running->release();
+});
+
+it('frees the lock after a check, a failed one too', function (): void {
+    $user = userWithTwoFactor();
+    postPassword($user);
+
+    post(route('two-factor.login.store'), ['code' => '000000'])->assertRedirect(route('two-factor.login'));
+
+    $lock = Cache::lock(SerializeTwoFactorChallenge::key(modelKeyString($user)), 5);
+    expect($lock->get())->toBeTrue();
+    $lock->release();
 });

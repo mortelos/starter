@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Support\PasswordConfirmation;
 use Laravel\Fortify\Fortify;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 new class extends Component {
@@ -17,8 +18,11 @@ new class extends Component {
 
     public string $code = '';
 
+    // Locked: only the actions below set it, after the password. A public property alone can be set by the browser.
+    #[Locked]
     public bool $showRecoveryCodes = false;
 
+    #[Locked]
     public ?string $message = null;
 
     public function enable(): void

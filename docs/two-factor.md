@@ -10,7 +10,7 @@ its own login, password and invitation flow.
 2. They scan the QR code (or type the key) in an authenticator app and enter the first code. Only then does it count
    (`two_factor_confirmed_at`), so a half-finished setup never locks anyone out. **Annuleren** drops an unconfirmed setup
    without a password.
-3. The page shows eight recovery codes once. Each works one time, instead of the app. **Toon herstelcodes** shows them
+3. The page shows eight recovery codes once (the display flag is a locked Livewire property: the browser cannot switch it on, only the actions after the password do). Each works one time, instead of the app. **Toon herstelcodes** shows them
    again, **Nieuwe herstelcodes** replaces them all, **Tweestaps uitzetten** deletes the secret and the codes. All three
    ask for the password.
 
@@ -21,6 +21,13 @@ its own login, password and invitation flow.
   (route `two-factor.login`). Fortify signs them in when the code or a recovery code is right, so the `Login` event
   fires once, after the code.
 - Social login: `mortelos/social-login` does the same hand-over (see [social-login.md](social-login.md)).
+- One code check at a time per waiting user: Fortify reads the recovery codes, accepts a code and only then saves the
+  replacement, so two requests at the same moment could both accept the same recovery code. The route runs
+  `app/Http/Middleware/SerializeTwoFactorChallenge.php`, which holds `Cache::lock('two-factor-challenge:<user id>')`
+  around the whole check. The second request then starts after the first replaced the code and is refused; one that
+  cannot get the lock within `starter.auth.two_factor_lock_wait` seconds (5) gets a 429 and is not checked. The lock
+  needs a cache store that can lock (the starter's `database` store, Redis, `array`; not `file` over several servers).
+  Chosen over a row lock on the user because it also covers the code check, which does not lock the row.
 - The limiter `two-factor` allows five attempts a minute per waiting user and IP (`AppServiceProvider`). Without a limiter
   Fortify's challenge route answers every code with a 500.
 
@@ -30,7 +37,7 @@ its own login, password and invitation flow.
 | --- | --- |
 | Settings card | `resources/views/components/settings/⚡two-factor.blade.php` |
 | Actions (password as proof, own account only) | `app/Actions/Account/EnableTwoFactor.php`, `ConfirmTwoFactor.php`, `DisableTwoFactor.php`, `RegenerateRecoveryCodes.php` |
-| Challenge page and routes | `resources/views/auth/two-factor-challenge.blade.php`, `routes/starter.php` |
+| Challenge page and routes | `resources/views/auth/two-factor-challenge.blade.php`, `routes/starter.php`, `app/Http/Middleware/SerializeTwoFactorChallenge.php` |
 | Fortify config | `config/fortify.php` (only the two-factor feature; `fortify.guard` must stay `web`, the default guard) |
 | Columns on `users` | `database/migrations/2014_10_12_200000_add_two_factor_columns_to_users_table.php` |
 
