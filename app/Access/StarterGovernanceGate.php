@@ -12,6 +12,7 @@ use Mortel\Actions\Policies\CheckPolicy;
 use Mortel\Contracts\TenantResolver;
 use Mortel\Enums\PolicyScope;
 use Mortel\Support\Actor;
+use Mortel\Support\Scalar;
 
 /**
  * Fail-closed governance gate (R7), single-tenant baseline, deny-by-default.
@@ -42,6 +43,7 @@ final class StarterGovernanceGate implements GovernanceGate
         'users.manage' => PolicyScope::Role,
         'invitations.manage' => PolicyScope::Action,
         'horizon.view' => PolicyScope::Action,
+        'changelog.view' => PolicyScope::Action,
     ];
 
     public function __construct(
@@ -88,7 +90,15 @@ final class StarterGovernanceGate implements GovernanceGate
     {
         $userId = $actor->userId();
 
-        return $userId !== null && $this->allows(User::query()->find($userId), $action, $scope);
+        if ($userId === null) {
+            return false;
+        }
+
+        // The signed-in user acting for themselves needs no second read of `users`.
+        $current = auth()->user();
+        $user = $current !== null && (string) Scalar::scalarString($current->getAuthIdentifier()) === $userId ? $current : User::query()->find($userId);
+
+        return $this->allows($user, $action, $scope);
     }
 
     public static function scopeFor(string $action): PolicyScope

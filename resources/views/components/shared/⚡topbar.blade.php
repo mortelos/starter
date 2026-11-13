@@ -13,6 +13,8 @@ new class extends Component {
 
     public bool $sidebar = false;
 
+    public bool $canViewChangeLog = false;
+
     public function mount(): void
     {
         $user = auth()->user();
@@ -23,6 +25,7 @@ new class extends Component {
 
         $this->userName = $user->name;
         $this->userEmail = $user->email;
+        $this->canViewChangeLog = \App\Support\ChangeLog\ChangeLogAccessCheck::allows($user);
     }
 }; ?>
 
@@ -51,6 +54,12 @@ new class extends Component {
         <x-mortel::menu.item icon="cog-6-tooth" href="{{ route('settings') }}" wire:navigate>
             Instellingen
         </x-mortel::menu.item>
+
+        @if ($canViewChangeLog)
+            <x-mortel::menu.item icon="clock" href="{{ route('changelog') }}" wire:navigate>
+                Wijzigingslog
+            </x-mortel::menu.item>
+        @endif
 
         <x-mortel::menu.separator />
 

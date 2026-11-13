@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Access\StarterGovernanceGate;
 use App\Contracts\GovernanceGate;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
@@ -45,6 +46,6 @@ it('is idempotent when re-seeding does not duplicate the owner role or policies'
     $owner = Role::query()->where('name', 'owner')->firstOrFail();
 
     expect(Role::query()->where('name', 'owner')->count())->toBe(1);
-    expect(Policy::query()->where('role_id', modelKeyString($owner))->count())->toBe(4);
+    expect(Policy::query()->where('role_id', modelKeyString($owner))->count())->toBe(count(StarterGovernanceGate::SCOPES));
     expect(UteqStoredEvent::where('event_class', RoleCreated::class)->count())->toBe(1);
 });

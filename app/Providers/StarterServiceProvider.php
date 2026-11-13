@@ -6,9 +6,19 @@ namespace App\Providers;
 
 use App\Access\StarterGovernanceGate;
 use App\Actions\Invitations\RevokeInvitation;
+use App\Contracts\ChangeLog\ChangeLogAccess;
+use App\Contracts\ChangeLog\ChangeLogAgents;
+use App\Contracts\ChangeLog\ChangeLogArchive;
 use App\Contracts\GovernanceGate;
+use App\Support\ChangeLog\ChangeLogDescriptions;
+use App\Support\ChangeLog\ChangeLogReader;
+use App\Support\ChangeLog\GenericChangeLogAgents;
+use App\Support\ChangeLog\NoChangeLogArchive;
+use App\Support\ChangeLog\StarterChangeDescriptions;
+use App\Support\ChangeLog\ViewersSeeEverything;
 use App\Support\SingleTenantResolver;
 use App\Support\StarterTenantInvitationService;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Mortel\Actions\ActionResult;
 use Mortel\Actions\Inbox\AuthorizeInboxItemAccess;
@@ -21,6 +31,7 @@ use Mortel\SocialLogin\Contracts\ProvisionsSocialUsers;
 use Mortel\SocialLogin\Provisioning\RefuseUnknownUsers;
 use Mortel\SocialLogin\Support\SignInMethods;
 use Mortel\Support\Actor;
+use Mortel\Support\PolicyCache;
 use Mortel\Support\Scalar;
 
 final class StarterServiceProvider extends ServiceProvider
@@ -46,6 +57,22 @@ final class StarterServiceProvider extends ServiceProvider
 
         // The framework denies every inbox item by default; the owner may view and decide on their own items.
         $this->app->bind(AuthorizeInboxItemAccess::class, OwnerScopedInboxItemAccess::class);
+
+        // One policy cache per request or job instead of one per CheckPolicy: a screen that checks several rights
+        // (the change log checks one per row action, the topbar one) reads `policies` once. The framework's
+        // PolicyProjector invalidates this same instance when a policy changes, and a queue worker gets a fresh one
+        // per job, so a revoked right is not served from an old cache.
+        $this->app->scoped(PolicyCache::class);
+
+        // Change log (docs/change-log.md): the registry of sentences per event type, built from the classes tagged
+        // ChangeLogDescriptions::TAG (no shared state), and the three contract outlets with their defaults (bindIf: a
+        // binding of the app wins, in whichever provider it sits).
+        $this->app->bind(ChangeLogDescriptions::class, fn (Application $app): ChangeLogDescriptions => new ChangeLogDescriptions($app->tagged(ChangeLogDescriptions::TAG)));
+        $this->app->tag([StarterChangeDescriptions::class], ChangeLogDescriptions::TAG);
+        $this->app->scoped(ChangeLogReader::class);
+        $this->app->bindIf(ChangeLogAgents::class, GenericChangeLogAgents::class);
+        $this->app->bindIf(ChangeLogAccess::class, ViewersSeeEverything::class);
+        $this->app->bindIf(ChangeLogArchive::class, NoChangeLogArchive::class);
     }
 
     public function boot(): void

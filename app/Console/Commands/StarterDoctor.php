@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Contracts\ChangeLog\ChangeLogAccess;
+use App\Contracts\ChangeLog\ChangeLogAgents;
+use App\Contracts\ChangeLog\ChangeLogArchive;
 use App\Support\HorizonAccess;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Gate;
@@ -109,6 +112,7 @@ final class StarterDoctor extends Command
         $this->checkTwoFactor($missing, $invalid);
         $this->checkSocialLogin($missing, $invalid);
         $this->checkHorizon($invalid);
+        $this->checkChangeLog($missing, $invalid);
         $this->checkSingleTenantFrameworkBaseline($missing, $invalid);
 
         // The spine rails of mortelos/app-standards. EnforcePolicy only sits on the routes
@@ -270,6 +274,40 @@ final class StarterDoctor extends Command
         } catch (\Throwable $exception) {
             $invalid[] = 'horizon.redis';
             $this->components->error('Redis does not answer (check REDIS_HOST, REDIS_PORT and REDIS_PASSWORD): '.$exception->getMessage());
+        }
+    }
+
+    /**
+     * The change log (docs/change-log.md): its routes, the three contract outlets and the indexes it reads
+     * `events` with.
+     *
+     * @param  list<string>  $missing
+     * @param  list<string>  $invalid
+     */
+    private function checkChangeLog(array &$missing, array &$invalid): void
+    {
+        foreach (['changelog', 'changelog.export'] as $route) {
+            if (! Route::has($route)) {
+                $missing[] = 'route.'.$route;
+                $this->components->error("route {$route} is missing (routes/starter.php)");
+            }
+        }
+
+        foreach ([ChangeLogAgents::class, ChangeLogAccess::class, ChangeLogArchive::class] as $contract) {
+            try {
+                $this->components->info('change log outlet '.class_basename($contract).' → '.get_class(app($contract)));
+            } catch (\Throwable $exception) {
+                $invalid[] = 'changelog.'.class_basename($contract);
+                $this->components->error(class_basename($contract).' cannot be resolved: '.$exception->getMessage());
+            }
+        }
+
+        if (Schema::hasTable('events')) {
+            foreach (['events_created_at_id_index', 'events_actor_created_at_index'] as $index) {
+                if (! Schema::hasIndex('events', $index)) {
+                    $this->components->warn("index {$index} is missing: the change log reads the whole events table (run php artisan migrate)");
+                }
+            }
         }
     }
 

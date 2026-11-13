@@ -14,6 +14,9 @@ use function Pest\Laravel\withVite;
 
 require __DIR__.'/Support/Governance.php';
 require __DIR__.'/Support/TwoFactor.php';
+require __DIR__.'/Support/ChangeLog/helpers.php';
+require __DIR__.'/Support/ChangeLog/Fixtures.php';
+require __DIR__.'/Support/ChangeLog/OwnTableConflictStub.php';
 require __DIR__.'/Browser/Support/Contrast.php';
 
 uses(TestCase::class)->in('Feature');

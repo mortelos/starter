@@ -1,13 +1,44 @@
 # Upgrading
 
-## To 0.15.0
+## To 0.18.0
+
+The starter gains a change log at `/changelog`: every stored event as a readable line with who, what, part and when,
+filters, a CSV export and Ongedaan maken through the `UndoRegistry`. Guide: `docs/change-log.md`. Nothing changes for a
+user without the new ability `changelog.view`.
+
+| 0.17 | 0.18 |
+| --- | --- |
+| no change log | page `changelog` and export `changelog.export` in `routes/starter.php`, a link in the profile menu |
+| abilities `governance.manage`, `users.manage`, `invitations.manage`, `horizon.view` | also `changelog.view` (scope Action) |
+| `events` with indexes on `created_at` and `event_class` | also `events_created_at_id_index` and `events_actor_created_at_index` |
+| one `PolicyCache` per `CheckPolicy` | one per request or job (`scoped` in `StarterServiceProvider`) |
+| no outlets of the starter itself | `resources/mortelos/outlets.json`: the registry `ChangeLogDescriptions` (tag `changelog.descriptions`) and the contracts `DescribesChanges`, `ChangeLogAgents`, `ChangeLogAccess`, `ChangeLogArchive` |
+
+What an app built on the starter must do:
+
+1. Take the new files: `app/Actions/ChangeLog/`, `app/Aggregates/ChangeLogAggregate.php`, `app/Events/ChangeLog/`,
+   `app/Contracts/ChangeLog/`, `app/Support/ChangeLog/`, `app/Enums/ChangeLogActorKind.php`,
+   `app/Enums/ChangeLogUndoState.php`, `app/Exceptions/ChangeAlreadyUndoneException.php`,
+   `app/Exceptions/UndoRefusedException.php`, `app/Http/Controllers/ChangeLogExportController.php`,
+   `resources/views/pages/changelog/`, `resources/mortelos/outlets.json`, the two migrations `2026_11_13_2000*` and the
+   tests `tests/Feature/ChangeLog*`, `tests/Feature/DoctorChangeLogTest.php`, `tests/Browser/ChangeLogVerifyTest.php`
+   with `tests/Support/ChangeLog/` (required in `tests/Pest.php`).
+2. Take the changes in `routes/starter.php`, `StarterServiceProvider` (bindings, the tag, `PolicyCache`),
+   `StarterGovernanceGate` (`SCOPES` and `allowsActor`), `config/event-sourcing.php` (`changelog.change.undone`), the
+   topbar, `StarterDoctor` and `tests/Feature/GovernanceSeederTest.php`.
+3. Run `php artisan migrate`: it adds the indexes and gives an existing `owner` role `changelog.view`.
+4. Register a sentence and a part for each of your own event types in a `DescribesChanges` class tagged
+   `changelog.descriptions`, and bind the outlets you need (`docs/change-log.md`). Until then your events read "Wijziging vastgelegd" under "Overig", without undo.
+5. Run `php artisan starter:doctor`.
+
+## To 0.17.0
 
 The starter gains two-factor sign-in (Laravel Fortify, two-factor features only), sign-in with Google and Microsoft
 (`mortelos/social-login`) and Horizon. Nothing changes for a user who does not use them: no button shows without keys,
 two-factor is off until a user sets it up, and Horizon is off until `QUEUE_CONNECTION=redis`. Guides:
 `docs/two-factor.md`, `docs/social-login.md`, `docs/horizon.md`.
 
-| 0.14 | 0.15 |
+| 0.14 | 0.17 |
 | --- | --- |
 | no second factor; `PasswordLoginController` runs `Auth::attempt()` | `PasswordLoginController` checks the password and, with two-factor on, hands over to Fortify's code challenge (route `two-factor.login`) |
 | `users` without two-factor columns | `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at` (migration `2014_10_12_200000_add_two_factor_columns_to_users_table`, Fortify's own name, skips existing columns) |
