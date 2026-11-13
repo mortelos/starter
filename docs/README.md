@@ -12,3 +12,5 @@ Local agent workflow guidance lives in `.agents/skills`:
 | New portal kickoff after a host app can boot and verify | `setup-portal` |
 
 Deploying (build id, assets of the previous build, release notes): [deploying.md](deploying.md).
+
+Sign-in: [two-factor.md](two-factor.md) (authenticator app and recovery codes), [social-login.md](social-login.md) (Google and Microsoft).

@@ -21,12 +21,14 @@
   ],
   "require": {
     "php": "^8.4",
+    "laravel/fortify": "*",
     "laravel/framework": "^13.8",
     "laravel/tinker": "^3.0",
     "livewire/blaze": "^1.0.19",
     "livewire/livewire": "^4.4.4",
     "mortelos/app-standards": "^0.1.4",
     "mortelos/framework": "^0.7",
+    "mortelos/social-login": "*",
     "mortelos/ui": "^0.6",
     "spatie/laravel-flare": "^3.2"
   },

@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Laravel\Fortify\Http\Controllers\TwoFactorAuthenticatedSessionController;
 
 $starterClass = static function (string $key): string {
     $class = config($key);
@@ -15,9 +17,17 @@ $starterClass = static function (string $key): string {
     return $class;
 };
 
-Route::get('/', function () use ($starterClass) {
+Route::get('/', function (Request $request) use ($starterClass) {
     if (! Auth::check()) {
         return redirect()->route('login');
+    }
+
+    // mortelos/social-login sends a refused link home with the reason (its `redirect` is one setting for both
+    // signing in and linking). Show the reason where linking starts, not on a dashboard that never reads it.
+    $refusal = $request->session()->get('errors')?->getBag('default')->first('social_login');
+
+    if (is_string($refusal) && $refusal !== '') {
+        return redirect()->route('settings')->withErrors(['social_login' => $refusal]);
     }
 
     return redirect(app($starterClass('starter.auth.post_login_redirect_resolver'))
@@ -42,6 +52,15 @@ Route::middleware(['web'])->group(function () use ($starterClass): void {
         ->middleware('throttle:auth')
         ->name('auth.password-login');
 
+    // Laravel Fortify's code challenge, after the password (PasswordLoginController) or after social login
+    // (mortelos/social-login). Fortify's own routes are off (AppServiceProvider); these two are the only ones used.
+    Route::get('/two-factor-challenge', [TwoFactorAuthenticatedSessionController::class, 'create'])
+        ->middleware('guest:'.config('fortify.guard'))
+        ->name('two-factor.login');
+    Route::post('/two-factor-challenge', [TwoFactorAuthenticatedSessionController::class, 'store'])
+        ->middleware(['guest:'.config('fortify.guard'), 'throttle:two-factor'])
+        ->name('two-factor.login.store');
+
     Route::get('/invite/{token}', [$starterClass('starter.auth.controllers.accept_invitation'), 'show'])->name('invite.show');
     Route::post('/invite/{token}', [$starterClass('starter.auth.controllers.accept_invitation'), 'store'])
         ->middleware('throttle:auth')
@@ -55,6 +74,14 @@ Route::middleware(['web'])->group(function () use ($starterClass): void {
         Route::livewire('/governance/roles', 'pages::governance.roles')->name('governance.roles');
         Route::livewire('/users', 'pages::users.index')->name('users');
         Route::livewire('/settings', 'pages::settings.index')->name('settings');
+
+        // Link Google or Microsoft to your own account: the package's link route, with the settings page as the
+        // place to come back to. Linking itself (and its refusals) is the package's.
+        Route::get('/settings/social-login/{provider}', function (Request $request, string $provider) {
+            $request->session()->put('url.intended', route('settings'));
+
+            return redirect()->route('social-login.link', ['provider' => $provider]);
+        })->where('provider', '[a-z]+')->name('settings.social-login.link');
 
         Route::post('/logout', function () {
             Auth::logout();
