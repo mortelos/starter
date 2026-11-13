@@ -14,3 +14,5 @@ Local agent workflow guidance lives in `.agents/skills`:
 Deploying (build id, assets of the previous build, release notes): [deploying.md](deploying.md).
 
 Sign-in: [two-factor.md](two-factor.md) (authenticator app and recovery codes), [social-login.md](social-login.md) (Google and Microsoft).
+
+Queue: [horizon.md](horizon.md) (Redis, supervisors, dashboard access, timeouts).

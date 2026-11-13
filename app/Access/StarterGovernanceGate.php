@@ -41,6 +41,7 @@ final class StarterGovernanceGate implements GovernanceGate
         'governance.manage' => PolicyScope::Policy,
         'users.manage' => PolicyScope::Role,
         'invitations.manage' => PolicyScope::Action,
+        'horizon.view' => PolicyScope::Action,
     ];
 
     public function __construct(

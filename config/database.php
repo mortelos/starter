@@ -154,7 +154,13 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
+            // Before every Redis key, the queue keys included. On a local machine (APP_ENV=local) with REDIS_PREFIX empty
+            // each worktree gets its own, with the same hash as the Horizon prefix (config/horizon.php): worktrees with
+            // the same app name share one Redis and would run each other's jobs. Elsewhere it stays stable, so a deploy
+            // keeps its queue.
+            'prefix' => filled(env('REDIS_PREFIX'))
+                ? (string) env('REDIS_PREFIX')
+                : Str::slug((string) env('APP_NAME', 'laravel')).'-database-'.(env('APP_ENV') === 'local' ? substr(hash('sha256', base_path()), 0, 12).'-' : ''),
             'persistent' => env('REDIS_PERSISTENT', false),
         ],
 
