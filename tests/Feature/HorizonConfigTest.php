@@ -84,7 +84,8 @@ function horizonSupervisors(string $environment): array
 }
 
 /**
- * The jobs of mortelos/framework that name a queue of their own, as the framework dispatches them.
+ * The jobs of mortelos/framework that name a queue of their own, as the framework dispatches them. Built inside the
+ * test: the constructors (0.7.84 too) read the config, which does not exist while Pest collects the data sets.
  *
  * @return array<class-string<ShouldQueue>, ShouldQueue>
  */
@@ -116,9 +117,9 @@ it('keeps the timeout of every job of the app under its supervisor, and that und
     expect(true)->toBeTrue();
 });
 
-it('keeps the timeout of the framework jobs under the supervisor, and that under retry_after', function (ShouldQueue $job): void {
-    assertJobFits($job);
-})->with(fn (): array => array_map(fn (ShouldQueue $job): array => [$job], frameworkJobs()));
+it('keeps the timeout of the framework jobs under the supervisor, and that under retry_after', function (string $class): void {
+    assertJobFits(frameworkJobs()[$class]);
+})->with([ExecuteAgentRunJob::class, ContinueAgentRunJob::class, DeliverWebhookJob::class]);
 
 it('reads every queue the framework sends jobs to', function (): void {
     $named = [];
@@ -142,13 +143,13 @@ it('fails for a job whose timeout is not below the timeout of its supervisor', f
     {
         use Dispatchable, Queueable;
 
-        public int $timeout = 250; // the supervisor `default` stops a job after 200 s
+        public int $timeout = 400; // the supervisor `default` stops a job after 360 s
 
         public function handle(): void {}
     };
 
     // One finding per environment of config/horizon.php.
-    expect(QueueTimeouts::violations($job))->toHaveCount(3)->and(QueueTimeouts::violations($job)[0])->toContain('times out after 250 s, not below the 200 s of supervisor default (production)');
+    expect(QueueTimeouts::violations($job))->toHaveCount(3)->and(QueueTimeouts::violations($job)[0])->toContain('times out after 400 s, not below the 360 s of supervisor default (production)');
     expect(fn () => assertJobFits($job))->toThrow(ExpectationFailedException::class);
 });
 
@@ -157,7 +158,7 @@ it('fails for a job whose timeout equals the timeout of its supervisor', functio
     {
         use Dispatchable, Queueable;
 
-        public int $timeout = 200;
+        public int $timeout = 360;
 
         public function handle(): void {}
     };
@@ -166,7 +167,7 @@ it('fails for a job whose timeout equals the timeout of its supervisor', functio
 });
 
 it('fails when the supervisor does not time out before retry_after of its connection', function (): void {
-    config(['queue.connections.redis.retry_after' => 200]);
+    config(['queue.connections.redis.retry_after' => 360]);
 
     $job = new class implements ShouldQueue
     {
@@ -175,7 +176,7 @@ it('fails when the supervisor does not time out before retry_after of its connec
         public function handle(): void {}
     };
 
-    expect(QueueTimeouts::violations($job)[0] ?? '')->toContain('supervisor default times out after 200 s, not below retry_after 200 s');
+    expect(QueueTimeouts::violations($job)[0] ?? '')->toContain('supervisor default times out after 360 s, not below retry_after 360 s');
     expect(fn () => assertJobFits($job))->toThrow(ExpectationFailedException::class);
 });
 

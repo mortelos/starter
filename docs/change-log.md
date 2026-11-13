@@ -27,10 +27,11 @@ The button calls `UndoChange`, which in one transaction:
 2. runs the counter-Action through the `UndoRegistry` with the Undo recipe the describer returned.
 
 When the counter-Action does not return `done`, or throws, the transaction rolls back and the page shows a Dutch message.
-A refusal that names conflicts in the shape of `RevertOwnTableChanges` (`data.conflicts`, framework 0.7.68 and later)
-or an `OwnTableConflict` says what changed in the meantime: "Bij Fase 12 zijn de begindatum en de einddatum intussen
-gewijzigd. Er is niets teruggedraaid." Give your tables and columns words with `table()` (below). Any other refusal
-shows its own message. A counter-Action that answers `approval_needed` is rolled back as well: an undo button does not
+When the framework's own-table undo (`Mortel\OwnTables\RevertOwnTableChanges`) refuses, it names the rows that changed
+in `data.conflicts`, and the message says what changed in the meantime: "Bij Fase 12 zijn de begindatum en de einddatum
+intussen gewijzigd. Er is niets teruggedraaid." The revision column and the timestamps are left out. Give your tables
+and columns words with `table()` (below). An `OwnTableConflict` thrown by a stale own-table write in a counter-Action
+says that someone changed it in the meantime. Any other refusal shows its own message. A counter-Action that answers `approval_needed` is rolled back as well: an undo button does not
 start an approval.
 
 The undone row then shows "Ongedaan gemaakt" with a link to the row of the undo. A row without an undo shows the reason

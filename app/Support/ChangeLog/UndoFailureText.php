@@ -6,39 +6,48 @@ namespace App\Support\ChangeLog;
 
 use Illuminate\Database\UniqueConstraintViolationException;
 use Mortel\Actions\ActionResult;
+use Mortel\Actions\Undo;
+use Mortel\OwnTables\OwnTableChanges;
+use Mortel\OwnTables\OwnTableConflict;
+use Mortel\OwnTables\RevertOwnTableChanges;
 use Mortel\Support\Scalar;
 use Spatie\EventSourcing\AggregateRoots\Exceptions\CouldNotPersistAggregate;
 use Throwable;
 
 /**
- * The Dutch message for an undo that did not go through. It says what changed in the meantime when the counter-Action
- * names it: the `conflicts` of RevertOwnTableChanges, or an OwnTableConflict thrown by an own-table write. Both come
- * from mortelos/framework 0.7.68 and later; they are recognised by shape and class name, so this also runs on an
- * older framework.
+ * The Dutch message for an undo that did not go through. For the framework's own-table undo (RevertOwnTableChanges)
+ * it says which rows changed in the meantime: that action names them in `data.conflicts` (table, key, reason
+ * `changed`, `missing` or `exists`, and the changed fields). Table and column words come from
+ * ChangeLogDescriptions::table().
  */
 final readonly class UndoFailureText
 {
     public const string NOTHING_CHANGED = 'Er is niets teruggedraaid.';
 
-    private const string OWN_TABLE_CONFLICT = 'Mortel\\OwnTables\\OwnTableConflict';
+    private const string CHANGED_IN_THE_MEANTIME = 'Dit kan niet meer ongedaan worden gemaakt, want er is intussen iets veranderd.';
+
+    /** Columns that change on every own-table write: naming them tells a user nothing. */
+    private const array BOOKKEEPING = ['created_at', 'updated_at'];
 
     public function __construct(private ChangeLogDescriptions $descriptions) {}
 
-    public function forResult(ActionResult $result): string
+    public function forResult(Undo $undo, ActionResult $result): string
     {
         $lines = [];
 
-        foreach (Scalar::listOfArrays($result->data['conflicts'] ?? null) as $conflict) {
-            $lines[] = $this->conflictLine(
-                Scalar::string($conflict['table'] ?? ''),
-                $this->keyText($conflict['key'] ?? null),
-                Scalar::string($conflict['reason'] ?? ''),
-                array_values(array_filter(is_array($conflict['fields'] ?? null) ? $conflict['fields'] : [], is_string(...))),
-            );
+        if ($undo->action === RevertOwnTableChanges::class) {
+            foreach (Scalar::listOfArrays($result->data['conflicts'] ?? null) as $conflict) {
+                $lines[] = $this->conflictLine(
+                    Scalar::string($conflict['table'] ?? ''),
+                    is_array($conflict['key'] ?? null) ? $conflict['key'] : [],
+                    Scalar::string($conflict['reason'] ?? ''),
+                    array_values(array_filter(is_array($conflict['fields'] ?? null) ? $conflict['fields'] : [], is_string(...))),
+                );
+            }
         }
 
         if ($lines !== []) {
-            return 'Dit kan niet meer ongedaan worden gemaakt, want er is intussen iets veranderd. '.implode(' ', $lines).' '.self::NOTHING_CHANGED;
+            return self::CHANGED_IN_THE_MEANTIME.' '.implode(' ', $lines).' '.self::NOTHING_CHANGED;
         }
 
         return 'Ongedaan maken lukte niet: '.rtrim($result->message, '.').'. '.self::NOTHING_CHANGED;
@@ -46,30 +55,26 @@ final readonly class UndoFailureText
 
     public function forException(Throwable $exception): ?string
     {
-        if (is_a($exception, self::OWN_TABLE_CONFLICT)
-            && preg_match('/^(\S+) (\S+) (changed in the meantime|does not exist|already exists)/', $exception->getMessage(), $match) === 1) {
-            $reason = match ($match[3]) {
-                'does not exist' => 'missing',
-                'already exists' => 'exists',
-                default => 'changed',
-            };
-
-            return 'Dit kan niet meer ongedaan worden gemaakt, want er is intussen iets veranderd. '
-                .$this->conflictLine($match[1], $this->keyText($match[2]), $reason, []).' '.self::NOTHING_CHANGED;
-        }
-
-        if ($exception instanceof CouldNotPersistAggregate || $exception instanceof UniqueConstraintViolationException) {
-            return 'Iemand anders heeft deze wijziging net ongedaan gemaakt of aangepast. '.self::NOTHING_CHANGED;
-        }
-
-        return null;
+        return match (true) {
+            // Thrown when a row is not in the state an own-table write expects; nothing is written.
+            $exception instanceof OwnTableConflict => self::CHANGED_IN_THE_MEANTIME.' Iemand heeft het intussen aangepast. '.self::NOTHING_CHANGED,
+            $exception instanceof CouldNotPersistAggregate, $exception instanceof UniqueConstraintViolationException => 'Iemand anders heeft deze wijziging net ongedaan gemaakt of aangepast. '.self::NOTHING_CHANGED,
+            default => null,
+        };
     }
 
-    /** @param  list<string>  $fields */
-    private function conflictLine(string $table, string $key, string $reason, array $fields): string
+    /**
+     * @param  array<mixed>  $key
+     * @param  list<string>  $fields
+     */
+    private function conflictLine(string $table, array $key, string $reason, array $fields): string
     {
-        $subject = trim($this->descriptions->tableLabel($table).' '.$key);
-        $labels = array_map(fn (string $field): string => $this->descriptions->fieldLabel($table, $field), $fields);
+        $subject = trim($this->descriptions->tableLabel($table).' '.implode(', ', array_map(fn (mixed $value): string => Scalar::scalarString($value), $key)));
+        $hidden = [...self::BOOKKEEPING, OwnTableChanges::revisionColumn()];
+        $labels = array_values(array_map(
+            fn (string $field): string => $this->descriptions->fieldLabel($table, $field),
+            array_filter($fields, fn (string $field): bool => ! in_array($field, $hidden, true)),
+        ));
 
         return match ($reason) {
             'missing' => "{$subject} bestaat niet meer.",
@@ -78,16 +83,6 @@ final readonly class UndoFailureText
                 ? "{$subject} is intussen gewijzigd."
                 : "Bij {$subject} ".(count($labels) === 1 ? 'is ' : 'zijn ').$this->list($labels).' intussen gewijzigd.',
         };
-    }
-
-    private function keyText(mixed $key): string
-    {
-        if (is_string($key)) {
-            // OwnTableConflict::key(): "id=12" or "a=1,b=2"
-            $key = array_column(array_map(fn (string $pair): array => explode('=', $pair, 2) + [1 => ''], explode(',', $key)), 1, 0);
-        }
-
-        return is_array($key) ? implode(', ', array_map(fn (mixed $value): string => Scalar::scalarString($value), $key)) : '';
     }
 
     /** @param  non-empty-list<string>  $items */

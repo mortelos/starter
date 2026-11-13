@@ -4,10 +4,13 @@
 
 The starter gains a change log at `/changelog`: every stored event as a readable line with who, what, part and when,
 filters, a CSV export and Ongedaan maken through the `UndoRegistry`. Guide: `docs/change-log.md`. Nothing changes for a
-user without the new ability `changelog.view`.
+user without the new ability `changelog.view`. It also moves to `mortelos/framework` 0.7.84.
 
 | 0.17 | 0.18 |
 | --- | --- |
+| `mortelos/framework` `^0.7` (0.7.1) | `^0.7.84`: own tables (`Mortel\OwnTables`), the tenant creation lock, agent run jobs of 270 s |
+| supervisor `default` 200 s, `retry_after` 300 s | 360 s and 420 s (`config/horizon.php`, `config/queue.php`), above the 270 s of the agent run jobs |
+| `tests/TestCase.php` without `tearDown()` | `tearDown()` calls `$this->app->terminate()`, so a test lets go of the tenant creation lock |
 | no change log | page `changelog` and export `changelog.export` in `routes/starter.php`, a link in the profile menu |
 | abilities `governance.manage`, `users.manage`, `invitations.manage`, `horizon.view` | also `changelog.view` (scope Action) |
 | `events` with indexes on `created_at` and `event_class` | also `events_created_at_id_index` and `events_actor_created_at_index` |
@@ -16,20 +19,31 @@ user without the new ability `changelog.view`.
 
 What an app built on the starter must do:
 
-1. Take the new files: `app/Actions/ChangeLog/`, `app/Aggregates/ChangeLogAggregate.php`, `app/Events/ChangeLog/`,
+1. Framework: set `mortelos/framework` to `^0.7.84`, run `composer update mortelos/framework -W` and clear it in
+   `vet.json` with `bin/vet-agent`. Then the tests:
+   - Add the `tearDown()` of `tests/TestCase.php`. The framework locks every tenant creation (a file on SQLite, an
+     advisory lock on PostgreSQL) and lets go of it only when the application terminates. A test that makes no request
+     never terminates its application, so without it the next test that creates a tenant fails with "tenant creation
+     is locked".
+   - In `tests/Feature/HorizonConfigTest.php`, build the framework jobs inside the test (the data set holds class names):
+     their constructors read the config, which does not exist while Pest collects data sets.
+   - The agent run jobs now take up to 270 s (`mortel.agent.max_runtime_seconds` plus 150 s). Give the supervisor that
+     reads `agents` a timeout above that and its connection a `retry_after` above the supervisor (the starter: 360 s and
+     420 s; `DB_QUEUE_RETRY_AFTER`, `REDIS_QUEUE_RETRY_AFTER`). `HorizonConfigTest` fails until the order is right.
+2. Take the new files: `app/Actions/ChangeLog/`, `app/Aggregates/ChangeLogAggregate.php`, `app/Events/ChangeLog/`,
    `app/Contracts/ChangeLog/`, `app/Support/ChangeLog/`, `app/Enums/ChangeLogActorKind.php`,
    `app/Enums/ChangeLogUndoState.php`, `app/Exceptions/ChangeAlreadyUndoneException.php`,
    `app/Exceptions/UndoRefusedException.php`, `app/Http/Controllers/ChangeLogExportController.php`,
    `resources/views/pages/changelog/`, `resources/mortelos/outlets.json`, the two migrations `2026_11_13_2000*` and the
    tests `tests/Feature/ChangeLog*`, `tests/Feature/DoctorChangeLogTest.php`, `tests/Browser/ChangeLogVerifyTest.php`
    with `tests/Support/ChangeLog/` (required in `tests/Pest.php`).
-2. Take the changes in `routes/starter.php`, `StarterServiceProvider` (bindings, the tag, `PolicyCache`),
+3. Take the changes in `routes/starter.php`, `StarterServiceProvider` (bindings, the tag, `PolicyCache`),
    `StarterGovernanceGate` (`SCOPES` and `allowsActor`), `config/event-sourcing.php` (`changelog.change.undone`), the
    topbar, `StarterDoctor` and `tests/Feature/GovernanceSeederTest.php`.
-3. Run `php artisan migrate`: it adds the indexes and gives an existing `owner` role `changelog.view`.
-4. Register a sentence and a part for each of your own event types in a `DescribesChanges` class tagged
+4. Run `php artisan migrate`: it adds the indexes and gives an existing `owner` role `changelog.view`.
+5. Register a sentence and a part for each of your own event types in a `DescribesChanges` class tagged
    `changelog.descriptions`, and bind the outlets you need (`docs/change-log.md`). Until then your events read "Wijziging vastgelegd" under "Overig", without undo.
-5. Run `php artisan starter:doctor`.
+6. Run `php artisan starter:doctor`.
 
 ## To 0.17.0
 

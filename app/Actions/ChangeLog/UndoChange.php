@@ -108,7 +108,7 @@ final class UndoChange
                 }
             });
         } catch (UndoRefusedException $refused) {
-            return ActionResult::failed($this->failureText->forResult($refused->result), $refused->result->data);
+            return ActionResult::failed($this->failureText->forResult($undo, $refused->result), $refused->result->data);
         } catch (ChangeAlreadyUndoneException $undone) {
             return ActionResult::failed($undone->getMessage());
         } catch (AuthorizationException $denied) {

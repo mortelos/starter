@@ -21,14 +21,21 @@ use Mortel\Actions\Undo;
 use Mortel\Actions\UndoRegistry;
 use Mortel\Enums\PolicyScope;
 use Mortel\Enums\TrustLevel;
-use Mortel\OwnTables\OwnTableConflict;
+use Mortel\OwnTables\AggregateUuid;
+use Mortel\OwnTables\ChangeSet;
+use Mortel\OwnTables\OwnTableChanges;
+use Mortel\OwnTables\RevertOwnTableChanges;
 use Mortel\Support\Actor;
+use Mortel\Support\EventContext;
 use Mortel\Support\Scalar;
 use Tests\Support\ChangeLog\LinkAgents;
 use Tests\Support\ChangeLog\MapAccess;
 use Tests\Support\ChangeLog\RevertThing;
 use Tests\Support\ChangeLog\RevertWithoutAbility;
 use Tests\Support\ChangeLog\RevertWithRequirement;
+use Tests\Support\ChangeLog\Thing;
+use Tests\Support\ChangeLog\ThingAggregate;
+use Tests\Support\ChangeLog\ThingWritten;
 
 use function Pest\Laravel\actingAs;
 
@@ -109,38 +116,118 @@ it('undoes an invitation from the log: the invitation is revoked', function (): 
         ->and(Invitation::query()->sole()->revoked_at)->not->toBeNull();
 });
 
-it('changes nothing and names what changed when the counter-Action reports conflicts', function (): void {
-    registerThing(handler: function (): ActionResult {
-        storeChangeEvent('things.thing.reverted', [], 'system:half-way');
+/**
+ * The real own-table setup: a table with a revision column, the framework's projector, and a sentence whose Undo is the
+ * framework's RevertOwnTableChanges for the event's aggregate and version. That counter-Action names no ability, so the
+ * viewer gets level Act on the part.
+ */
+function setUpThings(): void
+{
+    Thing::createTable();
+    app()->instance(ChangeLogAccess::class, new MapAccess(['things' => TrustLevel::Act, 'other' => TrustLevel::Observe]));
 
-        return ActionResult::failed('1 row changed in the meantime.', ['conflicts' => [
-            ['table' => 'things', 'key' => ['id' => 12], 'reason' => 'changed', 'fields' => ['name', 'colour']],
-            ['table' => 'things', 'key' => ['id' => 13], 'reason' => 'missing', 'fields' => []],
-        ]]);
-    });
-    $viewer = changeLogViewer('things.manage');
-    $id = storeChangeEvent('things.thing.changed', ['name' => 'Bank'], (string) $viewer->id);
+    $descriptions = changeLogDescriptions();
+    $descriptions->part('things', 'Dingen');
+    $descriptions->table(Thing::TABLE, 'Ding', ['name' => 'de naam', 'colour' => 'de kleur']);
+    $descriptions->register('things.thing.written', 'things', fn (ChangeLogEntry $entry): ChangeDescription => new ChangeDescription(
+        sentence: 'Ding: '.$entry->text('summary'),
+        undo: Undo::of(RevertOwnTableChanges::class, [
+            'aggregate' => ThingAggregate::class,
+            'aggregate_uuid' => $entry->aggregateUuid,
+            'version' => $entry->aggregateVersion,
+        ]),
+    ));
+}
+
+function thingEventId(int $version): string
+{
+    return Scalar::string(DB::table('events')->where('event_type', 'things.thing.written')->where('aggregate_version', $version)->value('id'));
+}
+
+it('undoes an own-table change through RevertOwnTableChanges and puts the row back', function (): void {
+    setUpThings();
+    $viewer = changeLogViewer();
+    $thing = new Thing(['name' => 'Bank', 'colour' => 'red']);
+    Thing::write($thing, 'Bank aangemaakt', Actor::user($viewer));
+    $thing->name = 'Stoel';
+    Thing::write($thing, 'Bank heet nu Stoel', Actor::user($viewer));
+
+    $result = app(UndoChange::class)->handle(thingEventId(2), Actor::user($viewer));
+
+    expect($result->isDone())->toBeTrue($result->message)
+        ->and(Thing::query()->sole()->name)->toBe('Bank')
+        ->and(DB::table('events')->where('event_type', 'own_table.changes.reverted')->count())->toBe(1)
+        ->and(DB::table('events')->where('event_type', ChangeUndone::TYPE)->value('aggregate_uuid'))->toBe(thingEventId(2));
+});
+
+it('changes nothing and names what changed when the row was changed in the meantime', function (): void {
+    setUpThings();
+    $viewer = changeLogViewer();
+    $other = changeLogViewer();
+    $thing = new Thing(['name' => 'Bank', 'colour' => 'red']);
+    Thing::write($thing, 'Bank aangemaakt', Actor::user($viewer));
+    $thing->name = 'Stoel';
+    Thing::write($thing, 'Bank heet nu Stoel', Actor::user($viewer));
+    $thing->name = 'Tafel';
+    $thing->colour = 'blue';
+    Thing::write($thing, 'Stoel heet nu Tafel en is anders van kleur', Actor::user($other));
 
     actingAs($viewer);
     Livewire::test('pages::changelog.index')
-        ->call('undo', $id)
+        ->call('undo', thingEventId(2))
         ->assertSet('failed', true)
-        ->assertSee('Dit kan niet meer ongedaan worden gemaakt, want er is intussen iets veranderd. Bij Ding 12 zijn de naam en de kleur intussen gewijzigd. Ding 13 bestaat niet meer. Er is niets teruggedraaid.')
-        ->assertSee('Ongedaan maken');
+        ->assertSee('Dit kan niet meer ongedaan worden gemaakt, want er is intussen iets veranderd. Bij Ding '.$thing->id.' zijn de naam en de kleur intussen gewijzigd. Er is niets teruggedraaid.');
 
-    expect(DB::table('events')->where('event_type', ChangeUndone::TYPE)->count())->toBe(0)
-        ->and(DB::table('events')->where('event_type', 'things.thing.reverted')->count())->toBe(0);
+    $row = Thing::query()->sole();
+    expect([$row->name, $row->colour, $row->revision])->toBe(['Tafel', 'blue', 3])
+        ->and(DB::table('events')->where('event_type', 'own_table.changes.reverted')->count())->toBe(0)
+        ->and(DB::table('events')->where('event_type', ChangeUndone::TYPE)->count())->toBe(0);
 });
 
-it('changes nothing and names the row when an own-table write throws OwnTableConflict', function (): void {
-    registerThing(handler: fn (): never => throw new OwnTableConflict('things id=12 changed in the meantime: revision 4 was expected, the row has 5.'));
+it('says a row is gone when it was removed in the meantime', function (): void {
+    setUpThings();
+    $viewer = changeLogViewer();
+    $thing = new Thing(['name' => 'Bank', 'colour' => 'red']);
+    Thing::write($thing, 'Bank aangemaakt', Actor::user($viewer));
+    $thing->name = 'Stoel';
+    Thing::write($thing, 'Bank heet nu Stoel', Actor::user($viewer));
+    app(EventContext::class)->within(Actor::user($viewer), 'Stoel weg', fn () => app(OwnTableChanges::class)->record(
+        ThingAggregate::retrieve(AggregateUuid::for('changelog_thing', $thing->id)),
+        new ThingWritten('Stoel weg'),
+        ChangeSet::make()->delete(Thing::query()->sole()),
+    ));
+
+    $result = app(UndoChange::class)->handle(thingEventId(2), Actor::user($viewer));
+
+    expect($result->isFailed())->toBeTrue()
+        ->and($result->message)->toBe('Dit kan niet meer ongedaan worden gemaakt, want er is intussen iets veranderd. Ding '.$thing->id.' bestaat niet meer. Er is niets teruggedraaid.')
+        ->and(Thing::query()->count())->toBe(0);
+});
+
+it('changes nothing when an own-table write in the counter-Action throws OwnTableConflict', function (): void {
+    setUpThings();
     $viewer = changeLogViewer('things.manage');
+    $thing = new Thing(['name' => 'Bank', 'colour' => 'red']);
+    Thing::write($thing, 'Bank aangemaakt', Actor::user($viewer));
+
+    // A counter-Action that writes a row it read before someone else changed it: the framework refuses the stale write.
+    registerThing(handler: function (array $params, Actor $actor) use ($thing): ActionResult {
+        $stale = Thing::query()->findOrFail($thing->id);
+        $fresh = Thing::query()->findOrFail($thing->id);
+        $fresh->colour = 'green';
+        Thing::write($fresh, 'Bank heeft een andere kleur', $actor);
+        $stale->name = 'Terug';
+        Thing::write($stale, 'Bank terug', $actor);
+
+        return ActionResult::done('Terug.');
+    });
     $id = storeChangeEvent('things.thing.changed', ['name' => 'Bank'], (string) $viewer->id);
 
     $result = app(UndoChange::class)->handle($id, Actor::user($viewer));
 
     expect($result->isFailed())->toBeTrue()
-        ->and($result->message)->toBe('Dit kan niet meer ongedaan worden gemaakt, want er is intussen iets veranderd. Ding 12 is intussen gewijzigd. Er is niets teruggedraaid.')
+        ->and($result->message)->toBe('Dit kan niet meer ongedaan worden gemaakt, want er is intussen iets veranderd. Iemand heeft het intussen aangepast. Er is niets teruggedraaid.')
+        ->and([Thing::query()->sole()->name, Thing::query()->sole()->colour])->toBe(['Bank', 'red'])
         ->and(DB::table('events')->where('event_type', ChangeUndone::TYPE)->count())->toBe(0);
 });
 
