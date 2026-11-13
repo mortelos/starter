@@ -15,7 +15,8 @@ use Illuminate\Support\Str;
 $isLocal = env('APP_ENV') === 'local';
 
 // Per worktree on a development machine: the same Redis is shared by every worktree, and without its own prefix
-// they would run each other's jobs and show each other's failures. Anywhere else the prefix follows the app name,
+// they would show each other's failures. The queue keys have their own prefix, REDIS_PREFIX in config/database.php,
+// which gets the same hash there; without that the worktrees would still run each other's jobs. Anywhere else the prefix follows the app name,
 // not the path (a release directory changes with every deploy and would lose the metrics and failed jobs).
 $prefix = filled(env('HORIZON_PREFIX'))
     ? (string) env('HORIZON_PREFIX')

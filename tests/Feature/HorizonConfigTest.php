@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -245,17 +246,17 @@ it('keeps the database queue as the default of the starter', function (): void {
 });
 
 /**
- * Loads config/horizon.php again under other environment values, as Laravel does at boot.
+ * Loads a config file again under other environment values, as Laravel does at boot.
  *
  * @param  array<string, string>  $env
  * @return array<array-key, mixed>
  */
-function horizonConfigWith(array $env): array
+function configFileWith(string $file, array $env): array
 {
     $original = [$_ENV, $_SERVER];
 
     try {
-        foreach (['HORIZON_PREFIX', 'APP_ENV', 'APP_NAME'] as $name) {
+        foreach (['HORIZON_PREFIX', 'REDIS_PREFIX', 'APP_ENV', 'APP_NAME'] as $name) {
             unset($_ENV[$name], $_SERVER[$name]);
         }
 
@@ -263,16 +264,42 @@ function horizonConfigWith(array $env): array
             $_ENV[$name] = $_SERVER[$name] = $value;
         }
 
-        $config = require config_path('horizon.php');
+        $config = require config_path($file);
 
         if (! is_array($config)) {
-            throw new RuntimeException('config/horizon.php does not return an array.');
+            throw new RuntimeException("config/{$file} does not return an array.");
         }
 
         return $config;
     } finally {
         [$_ENV, $_SERVER] = $original;
     }
+}
+
+/**
+ * @param  array<string, string>  $env
+ * @return array<array-key, mixed>
+ */
+function horizonConfigWith(array $env): array
+{
+    return configFileWith('horizon.php', $env);
+}
+
+/**
+ * The prefix Laravel puts before every Redis key, so before the queue keys too.
+ *
+ * @param  array<string, string>  $env
+ */
+function redisKeyPrefixWith(array $env): string
+{
+    $options = configFileWith('database.php', $env)['redis'] ?? [];
+    $prefix = is_array($options) && is_array($options['options'] ?? null) ? ($options['options']['prefix'] ?? null) : null;
+
+    if (! is_string($prefix)) {
+        throw new RuntimeException('config/database.php has no redis prefix.');
+    }
+
+    return $prefix;
 }
 
 it('gives a local machine a prefix per worktree when HORIZON_PREFIX is empty', function (): void {
@@ -287,4 +314,46 @@ it('uses a prefix that follows the app name outside a local machine, so a deploy
 
 it('lets HORIZON_PREFIX win', function (): void {
     expect(horizonConfigWith(['APP_ENV' => 'local', 'HORIZON_PREFIX' => 'custom:'])['prefix'])->toBe('custom:');
+});
+
+it('also gives the queue keys in Redis a prefix per worktree on a local machine, with the same hash as Horizon', function (): void {
+    $hash = substr(hash('sha256', base_path()), 0, 12);
+
+    $keys = redisKeyPrefixWith(['APP_ENV' => 'local', 'APP_NAME' => 'My Portal']);
+
+    expect($keys)->toBe('my-portal-database-'.$hash.'-')
+        ->and(horizonConfigWith(['APP_ENV' => 'local'])['prefix'])->toContain($hash);
+});
+
+it('treats an empty REDIS_PREFIX as no prefix at all, so a local worktree still gets its own', function (): void {
+    $hash = substr(hash('sha256', base_path()), 0, 12);
+
+    expect(redisKeyPrefixWith(['APP_ENV' => 'local', 'APP_NAME' => 'My Portal', 'REDIS_PREFIX' => '']))->toContain($hash);
+});
+
+it('keeps the Redis key prefix stable outside a local machine, so a deploy keeps its queue', function (): void {
+    expect(redisKeyPrefixWith(['APP_ENV' => 'production', 'APP_NAME' => 'My Portal']))->toBe('my-portal-database-')
+        ->and(redisKeyPrefixWith(['APP_ENV' => 'staging', 'APP_NAME' => 'My Portal']))->toBe('my-portal-database-');
+});
+
+it('lets REDIS_PREFIX win, locally too', function (): void {
+    expect(redisKeyPrefixWith(['APP_ENV' => 'local', 'REDIS_PREFIX' => 'own-prefix-']))->toBe('own-prefix-')
+        ->and(redisKeyPrefixWith(['APP_ENV' => 'production', 'REDIS_PREFIX' => 'own-prefix-']))->toBe('own-prefix-');
+});
+
+it('plans horizon:snapshot only while the queue is on Redis', function (): void {
+    $snapshot = collect(app(Schedule::class)->events())
+        ->first(fn ($event): bool => str_contains((string) $event->command, 'horizon:snapshot'));
+
+    if (! $snapshot instanceof Event) {
+        throw new RuntimeException('horizon:snapshot is not in the schedule.');
+    }
+
+    foreach (['sync', 'database'] as $connection) {
+        config(['queue.default' => $connection]);
+        expect($snapshot->filtersPass(app()))->toBeFalse("horizon:snapshot is planned on the {$connection} queue");
+    }
+
+    config(['queue.default' => 'redis']);
+    expect($snapshot->filtersPass(app()))->toBeTrue();
 });
