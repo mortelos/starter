@@ -34,3 +34,10 @@ Agent workflows:
 | --- | --- |
 | Clean machine, missing tooling, Herd, PHP, Composer, Node, GitHub access, MortelOS CLI, DBngin, TablePlus, or `mortelos new` setup | `mortelos-tooling-setup` |
 | New portal kickoff after a host app can boot and verify | `setup-portal` |
+
+Sign-in options (each has a short guide in `docs/`):
+
+| What | Turn it on | Guide |
+| --- | --- | --- |
+| Two-factor sign-in (authenticator app and recovery codes) | Each user: **Instellingen**, card **Tweestaps** | [docs/two-factor.md](docs/two-factor.md) |
+| Sign in with Google and Microsoft | Set `SOCIAL_LOGIN_*` client id and secret in `.env`; a button shows only when both are set | [docs/social-login.md](docs/social-login.md) |

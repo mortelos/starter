@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
+use Laravel\Fortify\Features;
 use Mortel\Contracts\TenantResolver;
 use Mortel\Models\UteqStoredEvent;
 use Mortel\Repositories\UteqStoredEventRepository;
+use Mortel\SocialLogin\SocialLogin;
 use Spatie\EventSourcing\StoredEvents\Repositories\StoredEventRepository;
 
 final class StarterDoctor extends Command
@@ -99,6 +103,8 @@ final class StarterDoctor extends Command
         }
 
         $this->checkEventStore($missing, $invalid);
+        $this->checkTwoFactor($missing, $invalid);
+        $this->checkSocialLogin($missing, $invalid);
         $this->checkSingleTenantFrameworkBaseline($missing, $invalid);
 
         // The spine rails of mortelos/app-standards. EnforcePolicy only sits on the routes
@@ -112,6 +118,97 @@ final class StarterDoctor extends Command
         }
 
         return $missing === [] && $invalid === [] ? self::SUCCESS : self::FAILURE;
+    }
+
+    /**
+     * Fortify two-factor (docs/two-factor.md): the feature, the guard social login hands over to, the columns, the
+     * limiter and the challenge routes.
+     *
+     * @param  list<string>  $missing
+     * @param  list<string>  $invalid
+     */
+    private function checkTwoFactor(array &$missing, array &$invalid): void
+    {
+        if (! Features::enabled(Features::twoFactorAuthentication())) {
+            $invalid[] = 'fortify.features';
+            $this->components->error('fortify.features does not enable two-factor authentication');
+        } else {
+            $this->components->info('Fortify two-factor feature on');
+        }
+
+        $guard = config('fortify.guard');
+
+        if ($guard !== config('auth.defaults.guard')) {
+            $invalid[] = 'fortify.guard';
+            $this->components->error('fortify.guard must be the default guard ('.(is_string(config('auth.defaults.guard')) ? config('auth.defaults.guard') : '?').'), or a sign-in through social login throws');
+        } else {
+            $this->components->info('fortify.guard → '.(is_string($guard) ? $guard : '?'));
+        }
+
+        if (Schema::hasTable('users')) {
+            foreach (['two_factor_secret', 'two_factor_recovery_codes', 'two_factor_confirmed_at'] as $column) {
+                if (! Schema::hasColumn('users', $column)) {
+                    $missing[] = 'database.users.'.$column;
+                    $this->components->error('database column users.'.$column.' is missing');
+                }
+            }
+        }
+
+        if (RateLimiter::limiter('two-factor') === null) {
+            $invalid[] = 'rate-limiter.two-factor';
+            $this->components->error('rate limiter two-factor is not defined: every code would end in a 500');
+        } else {
+            $this->components->info('rate limiter two-factor defined');
+        }
+
+        foreach (['two-factor.login', 'two-factor.login.store'] as $name) {
+            if (! Route::has($name)) {
+                $invalid[] = 'route.'.$name;
+                $this->components->error('route '.$name.' is missing from routes/starter.php');
+            }
+        }
+    }
+
+    /**
+     * Social login (docs/social-login.md). A provider without keys is a valid state (no button), so that is a
+     * warning that says what stays off; a provider that is listed but unknown is an error.
+     *
+     * @param  list<string>  $missing
+     * @param  list<string>  $invalid
+     */
+    private function checkSocialLogin(array &$missing, array &$invalid): void
+    {
+        if (! Schema::hasTable('social_identities')) {
+            $missing[] = 'database.social_identities';
+            $this->components->error('database table social_identities is missing (publish and run the social-login migration)');
+        } else {
+            $this->components->info('database table social_identities present');
+        }
+
+        $listed = config('social-login.providers');
+        $listed = is_array($listed) ? $listed : [];
+        $known = array_keys(SocialLogin::PROVIDERS);
+
+        foreach ($listed as $name) {
+            if (! is_string($name) || ! in_array($name, $known, true)) {
+                $invalid[] = 'social-login.providers';
+                $this->components->error('social-login.providers lists an unknown provider: '.(is_string($name) ? $name : get_debug_type($name)));
+            }
+        }
+
+        $available = array_map(static fn ($provider): string => $provider->name(), app(SocialLogin::class)->available());
+
+        if ($available === []) {
+            $this->components->warn('no social login provider has its client id and secret: the login page shows no Google or Microsoft button');
+        } else {
+            $this->components->info('social login buttons for: '.implode(', ', $available));
+        }
+
+        foreach ($known as $name) {
+            if (in_array($name, $listed, true) && ! in_array($name, $available, true)) {
+                $this->components->warn('social login provider '.$name.' is listed but has no client id and secret: no button');
+            }
+        }
     }
 
     /**

@@ -5,9 +5,13 @@ declare(strict_types=1);
 use App\Actions\Account\ChangePassword;
 use App\Actions\Account\UpdateProfile;
 use App\Models\User;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Mortel\SocialLogin\Models\SocialIdentity;
+use Mortel\SocialLogin\Contracts\SocialProvider;
+use Mortel\SocialLogin\SocialLogin;
 
 new
 #[Layout('layouts::app')]
@@ -78,6 +82,30 @@ class extends Component {
         $this->password_confirmation = '';
         $this->passwordMessage = 'Wachtwoord gewijzigd.';
     }
+
+    /**
+     * The providers this installation offers (client id and secret set), and whether this user linked each.
+     *
+     * @return list<array{name: string, label: string, linked: bool, url: string}>
+     */
+    #[Computed]
+    public function socialProviders(): array
+    {
+        $linked = SocialIdentity::query()
+            ->where('user_id', auth()->id())
+            ->pluck('provider')
+            ->all();
+
+        return array_map(
+            static fn (SocialProvider $provider): array => [
+                'name' => $provider->name(),
+                'label' => $provider->label(),
+                'linked' => in_array($provider->name(), $linked, true),
+                'url' => route('settings.social-login.link', ['provider' => $provider->name()]),
+            ],
+            app(SocialLogin::class)->available(),
+        );
+    }
 }; ?>
 
 <div class="p-6">
@@ -125,5 +153,11 @@ class extends Component {
                 </form>
             </x-mortel::card>
         @endisland
+
+        <livewire:settings.two-factor />
+
+        @if ($this->socialProviders !== [])
+            <x-settings.social-login-card :providers="$this->socialProviders" :error="$errors->first('social_login')" />
+        @endif
     </div>
 </div>
