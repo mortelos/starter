@@ -16,6 +16,9 @@ return [
         'passkey_form_component' => null,
         'password_form_component' => 'auth.password-form',
 
+        // Seconds a second code check for the same waiting user waits for the first (SerializeTwoFactorChallenge).
+        'two_factor_lock_wait' => 5,
+
         'controllers' => [
             'accept_invitation' => AcceptInvitationController::class,
             'passkey_authenticated' => PasskeyAuthenticatedController::class,

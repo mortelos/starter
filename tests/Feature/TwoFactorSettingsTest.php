@@ -9,6 +9,7 @@ use App\Actions\Account\RegenerateRecoveryCodes;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
 
 use function Pest\Laravel\actingAs;
@@ -186,4 +187,17 @@ it('keeps the secret when the setup is started again', function (): void {
 
 it('uses the same columns as Laravel Fortify', function (): void {
     expect(Schema::hasColumns('users', ['two_factor_secret', 'two_factor_recovery_codes', 'two_factor_confirmed_at']))->toBeTrue();
+});
+
+it('does not let the browser switch on the display of the recovery codes', function (): void {
+    $user = userWithTwoFactor();
+    actingAs($user);
+
+    // A visitor can send any property update with a Livewire request; without the password this must not work.
+    expect(fn () => Livewire::test('settings.two-factor')->set('showRecoveryCodes', true))
+        ->toThrow(CannotUpdateLockedPropertyException::class);
+
+    Livewire::test('settings.two-factor')
+        ->assertDontSee('bbbbbbbbbb-2222222222')
+        ->assertDontSeeHtml('data-test="recovery-codes"');
 });

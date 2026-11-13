@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\SerializeTwoFactorChallenge;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -54,11 +55,12 @@ Route::middleware(['web'])->group(function () use ($starterClass): void {
 
     // Laravel Fortify's code challenge, after the password (PasswordLoginController) or after social login
     // (mortelos/social-login). Fortify's own routes are off (AppServiceProvider); these two are the only ones used.
+    // The POST checks one code at a time per waiting user, so one recovery code cannot be accepted twice at once.
     Route::get('/two-factor-challenge', [TwoFactorAuthenticatedSessionController::class, 'create'])
         ->middleware('guest:'.config('fortify.guard'))
         ->name('two-factor.login');
     Route::post('/two-factor-challenge', [TwoFactorAuthenticatedSessionController::class, 'store'])
-        ->middleware(['guest:'.config('fortify.guard'), 'throttle:two-factor'])
+        ->middleware(['guest:'.config('fortify.guard'), 'throttle:two-factor', SerializeTwoFactorChallenge::class])
         ->name('two-factor.login.store');
 
     Route::get('/invite/{token}', [$starterClass('starter.auth.controllers.accept_invitation'), 'show'])->name('invite.show');

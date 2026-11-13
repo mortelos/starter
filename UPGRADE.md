@@ -17,7 +17,7 @@ What an app built on the starter must do:
 
 1. Take the new files: `config/fortify.php`, `config/social-login.php`, `lang/nl/auth.php`, `lang/nl.json`,
    `lang/vendor/social-login/`, the two migrations, `app/Actions/Account/*TwoFactor*.php`, `RegenerateRecoveryCodes.php`,
-   `app/Support/PasswordConfirmation.php`, the views under `resources/views/auth`, `resources/views/components/settings`
+   `app/Support/PasswordConfirmation.php`, `app/Http/Middleware/SerializeTwoFactorChallenge.php`, the views under `resources/views/auth`, `resources/views/components/settings`
    and the changes in `routes/starter.php`, `AppServiceProvider` (limiter `two-factor`, `Fortify::ignoreRoutes()`),
    `StarterServiceProvider`, `User` (trait `TwoFactorAuthenticatable`) and the `.env.example` keys.
 2. Run `composer update -W`, clear the new packages in `vet.json` with `bin/vet-agent`, then `php artisan migrate`.
