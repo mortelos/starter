@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Support\HorizonAccess;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Gate;
 use Mortel\Enums\PolicyEffect;
 use Mortel\Models\Policy;
@@ -84,11 +85,12 @@ it('gives the seeded owner access to Horizon', function (): void {
     actingAs(User::query()->where('email', 'admin@example.test')->firstOrFail())->get('/horizon')->assertOk();
 });
 
-/** Runs the migration that gives an existing owner role Horizon access. */
+/** Runs the migration that gives an existing owner role Horizon access, again (it ran once with the test database). */
 function grantHorizonMigration(): void
 {
-    $migration = require database_path('migrations/2026_11_13_100000_grant_horizon_access.php');
-    $migration->up();
+    $exit = Artisan::call('migrate:refresh', ['--path' => 'database/migrations/2026_11_13_100000_grant_horizon_access.php', '--force' => true]);
+
+    expect($exit)->toBe(0);
 }
 
 it('gives an owner role that exists from before Horizon the access, once', function (): void {

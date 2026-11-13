@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\PendingCommand;
 use Tests\TestCase;
 
@@ -35,7 +35,7 @@ it('fails on Redis when the supervisors of the environment are missing', functio
 
 it('fails on Redis when Redis does not answer', function (): void {
     config(['queue.default' => 'redis', 'horizon.environments.testing' => config('horizon.environments.production')]);
-    Redis::shouldReceive('connection')->andThrow(new RuntimeException('connection refused'));
+    Queue::shouldReceive('connection')->andThrow(new RuntimeException('connection refused'));
 
     $command = artisan('starter:doctor');
     assert($command instanceof PendingCommand);
@@ -44,7 +44,7 @@ it('fails on Redis when Redis does not answer', function (): void {
 
 it('is green on Redis when everything is there', function (): void {
     config(['queue.default' => 'redis', 'horizon.environments.testing' => config('horizon.environments.production')]);
-    Redis::shouldReceive('connection->ping')->andReturn(true);
+    Queue::shouldReceive('connection->size')->andReturn(0);
 
     $command = artisan('starter:doctor');
     assert($command instanceof PendingCommand);

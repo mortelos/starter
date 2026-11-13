@@ -39,7 +39,8 @@ final class QueueTimeouts
             }
 
             foreach ($supervisors as $name => $supervisor) {
-                $supervisorTimeout = (int) ($supervisor['timeout'] ?? 60);
+                $configured = $supervisor['timeout'] ?? null;
+                $supervisorTimeout = is_numeric($configured) ? (int) $configured : 60;
                 $jobTimeout = self::jobTimeout($job);
 
                 if ($jobTimeout !== null && $jobTimeout >= $supervisorTimeout) {

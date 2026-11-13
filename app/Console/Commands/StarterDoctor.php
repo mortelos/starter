@@ -7,8 +7,8 @@ namespace App\Console\Commands;
 use App\Support\HorizonAccess;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Fortify\Features;
@@ -238,7 +238,7 @@ final class StarterDoctor extends Command
             return;
         }
 
-        $environment = (string) config('app.env');
+        $environment = config()->string('app.env');
 
         if (! is_array(config("horizon.environments.{$environment}")) || config("horizon.environments.{$environment}") === []) {
             $invalid[] = 'horizon.environments';
@@ -264,7 +264,8 @@ final class StarterDoctor extends Command
         }
 
         try {
-            Redis::connection(is_string(config('horizon.use')) ? config('horizon.use') : 'default')->ping();
+            // The queue's own size() call: it reaches Redis the way a worker does, with the queue's connection settings.
+            Queue::connection('redis')->size('default');
             $this->components->info('Redis answers');
         } catch (\Throwable $exception) {
             $invalid[] = 'horizon.redis';

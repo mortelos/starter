@@ -13,7 +13,6 @@ use Mortel\Jobs\ContinueAgentRunJob;
 use Mortel\Jobs\DeliverWebhookJob;
 use Mortel\Jobs\ExecuteAgentRunJob;
 use PHPUnit\Framework\ExpectationFailedException;
-use Symfony\Component\Finder\SplFileInfo;
 use Tests\Support\QueueTimeouts;
 
 uses(RefreshDatabase::class);
@@ -45,15 +44,49 @@ function appJobClasses(): array
         return [];
     }
 
-    return collect(File::allFiles(app_path('Jobs')))
-        ->map(fn (SplFileInfo $file): string => 'App\\Jobs\\'.str_replace(['/', '.php'], ['\\', ''], $file->getRelativePathname()))
-        ->filter(fn (string $class): bool => class_exists($class) && is_subclass_of($class, ShouldQueue::class))
-        ->sort()
-        ->values()
-        ->all();
+    $classes = [];
+
+    foreach (File::allFiles(app_path('Jobs')) as $file) {
+        $class = 'App\\Jobs\\'.str_replace(['/', '.php'], ['\\', ''], $file->getRelativePathname());
+
+        if (class_exists($class) && is_subclass_of($class, ShouldQueue::class)) {
+            $classes[] = $class;
+        }
+    }
+
+    sort($classes);
+
+    return $classes;
 }
 
-/** The jobs of mortelos/framework that name a queue of their own, as the framework dispatches them. */
+/**
+ * The supervisors of one environment of config/horizon.php, checked while they are read.
+ *
+ * @return array<string, array{connection: string, queue: list<string>}>
+ */
+function horizonSupervisors(string $environment): array
+{
+    $supervisors = [];
+
+    foreach (config()->array("horizon.environments.{$environment}") as $name => $supervisor) {
+        $connection = is_array($supervisor) ? ($supervisor['connection'] ?? null) : null;
+        $queues = is_array($supervisor) && is_array($supervisor['queue'] ?? null) ? $supervisor['queue'] : [];
+
+        if (! is_string($connection)) {
+            throw new RuntimeException("Supervisor {$name} of {$environment} has no connection.");
+        }
+
+        $supervisors[(string) $name] = ['connection' => $connection, 'queue' => array_values(array_filter($queues, 'is_string'))];
+    }
+
+    return $supervisors;
+}
+
+/**
+ * The jobs of mortelos/framework that name a queue of their own, as the framework dispatches them.
+ *
+ * @return array<class-string<ShouldQueue>, ShouldQueue>
+ */
 function frameworkJobs(): array
 {
     return [
@@ -96,8 +129,8 @@ it('reads every queue the framework sends jobs to', function (): void {
 
     $read = [];
 
-    foreach ((array) config('horizon.environments.production') as $supervisor) {
-        $read = [...$read, ...(array) ($supervisor['queue'] ?? [])];
+    foreach (horizonSupervisors('production') as $supervisor) {
+        $read = [...$read, ...$supervisor['queue']];
     }
 
     expect(array_unique($named))->not->toBe([])->and(array_diff($named, $read))->toBe([]);
@@ -177,7 +210,7 @@ it('passes a job that fits', function (): void {
 
 it('ships one supervisor, default, on redis', function (): void {
     foreach (['production', 'staging', 'local'] as $environment) {
-        $supervisors = (array) config("horizon.environments.{$environment}");
+        $supervisors = horizonSupervisors($environment);
 
         expect(array_keys($supervisors))->toBe(['default'])
             ->and($supervisors['default']['connection'])->toBe('redis')
@@ -186,10 +219,10 @@ it('ships one supervisor, default, on redis', function (): void {
 });
 
 it('warns about a long wait on every queue a supervisor reads', function (): void {
-    $waits = array_keys((array) config('horizon.waits'));
+    $waits = array_keys(config()->array('horizon.waits'));
 
-    foreach ((array) config('horizon.environments.production') as $supervisor) {
-        foreach ((array) $supervisor['queue'] as $queue) {
+    foreach (horizonSupervisors('production') as $supervisor) {
+        foreach ($supervisor['queue'] as $queue) {
             expect($waits)->toContain($supervisor['connection'].':'.$queue);
         }
     }
@@ -197,7 +230,7 @@ it('warns about a long wait on every queue a supervisor reads', function (): voi
 
 it('keeps failed jobs in the database, with Horizon holding a copy', function (): void {
     expect(config('queue.failed.driver'))->toBe('database-uuids')
-        ->and(Schema::hasTable((string) config('queue.failed.table')))->toBeTrue()
+        ->and(Schema::hasTable(config()->string('queue.failed.table')))->toBeTrue()
         ->and(config('horizon.trim.failed'))->toBeGreaterThan(0);
 });
 
@@ -208,10 +241,15 @@ it('runs horizon:snapshot from the scheduler', function (): void {
 });
 
 it('keeps the database queue as the default of the starter', function (): void {
-    expect((string) file_get_contents(base_path('.env.example')))->toMatch('/^QUEUE_CONNECTION=database$/m');
+    expect(File::get(base_path('.env.example')))->toMatch('/^QUEUE_CONNECTION=database$/m');
 });
 
-/** Loads config/horizon.php again under other environment values, as Laravel does at boot. */
+/**
+ * Loads config/horizon.php again under other environment values, as Laravel does at boot.
+ *
+ * @param  array<string, string>  $env
+ * @return array<array-key, mixed>
+ */
 function horizonConfigWith(array $env): array
 {
     $original = [$_ENV, $_SERVER];
@@ -225,8 +263,11 @@ function horizonConfigWith(array $env): array
             $_ENV[$name] = $_SERVER[$name] = $value;
         }
 
-        /** @var array<string, mixed> $config */
         $config = require config_path('horizon.php');
+
+        if (! is_array($config)) {
+            throw new RuntimeException('config/horizon.php does not return an array.');
+        }
 
         return $config;
     } finally {
@@ -241,7 +282,7 @@ it('gives a local machine a prefix per worktree when HORIZON_PREFIX is empty', f
 });
 
 it('uses a prefix that follows the app name outside a local machine, so a deploy keeps its metrics', function (): void {
-    expect(horizonConfigWith(['APP_ENV' => 'production', 'APP_NAME' => 'Mijn Portaal'])['prefix'])->toBe('mijn-portaal-horizon:');
+    expect(horizonConfigWith(['APP_ENV' => 'production', 'APP_NAME' => 'My Portal'])['prefix'])->toBe('my-portal-horizon:');
 });
 
 it('lets HORIZON_PREFIX win', function (): void {

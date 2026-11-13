@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Support\HorizonAccess;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -42,6 +43,6 @@ final class HorizonServiceProvider extends HorizonApplicationServiceProvider
 
     protected function gate(): void
     {
-        Gate::define('viewHorizon', static fn ($user = null): bool => HorizonAccess::allows($user));
+        Gate::define('viewHorizon', static fn (?Authenticatable $user = null): bool => HorizonAccess::allows($user));
     }
 }

@@ -101,6 +101,10 @@
             "version": "v13.36.0",
             "hash": "tree-v2:f6daeafa5dd68f5bd7fe73eadd3905a0faf995489fb7c7f1b84f3f9d3a0ca7eb"
         },
+        "laravel/horizon": {
+            "version": "v5.51.0",
+            "hash": "tree-v2:2237caf3a2d86f009625441f634a518c38293878b1c9b5ee69a1601ec3ca5ee7"
+        },
         "laravel/mcp": {
             "version": "v0.6.7",
             "hash": "tree-v2:70bba6dc714261937979ab09c6b588e904565eb4ccbe71409eb97268b8509625"
@@ -112,6 +116,10 @@
         "laravel/prompts": {
             "version": "v0.3.26",
             "hash": "tree-v2:5131de1988c6323c82b0ac41b1d3b256b3e5ae6d9a02edb24f6a177bd4a8f3d0"
+        },
+        "laravel/sentinel": {
+            "version": "v1.1.0",
+            "hash": "tree-v2:2893786cf018af94219a831c0e4056110487dd448a8dd32f80c936760a180115"
         },
         "laravel/serializable-closure": {
             "version": "v2.1.0",
