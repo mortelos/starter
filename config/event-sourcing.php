@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Events\ChangeLog\ChangeUndone;
 use App\Events\Invitations\InvitationAccepted;
 use App\Events\Invitations\InvitationCreated;
 use App\Events\Invitations\InvitationRevoked;
@@ -41,6 +42,7 @@ return [
         'invitations.invitation.created' => InvitationCreated::class,
         'invitations.invitation.revoked' => InvitationRevoked::class,
         'invitations.invitation.accepted' => InvitationAccepted::class,
+        'changelog.change.undone' => ChangeUndone::class,
     ],
 
     /*

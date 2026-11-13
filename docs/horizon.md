@@ -21,7 +21,7 @@ supervisors for the environment, the prefix, the extension and that Redis answer
 
 | Subject | Setting | Where |
 | --- | --- | --- |
-| Supervisor | One, `default`: connection `redis`, queues `agents`, `webhooks`, `default`, timeout 200 s. An app adds its own supervisors next to it and keeps the rules below. | `config/horizon.php` |
+| Supervisor | One, `default`: connection `redis`, queues `agents`, `webhooks`, `default`, timeout 360 s. An app adds its own supervisors next to it and keeps the rules below. | `config/horizon.php` |
 | Prefix | `HORIZON_PREFIX` for Horizon's own data and `REDIS_PREFIX` for the queue keys. Both empty: on a local machine (`APP_ENV=local`) `horizon-<hash of the path>:` and `<app name>-database-<same hash>-`, so every worktree has its own Horizon and its own queue on a shared Redis (the hash is the same in both); elsewhere `<app name>-horizon:` and `<app name>-database-`, which do not change with a release directory. An empty `REDIS_PREFIX` counts as not set. | `config/horizon.php`, `config/database.php` |
 | Failed jobs | Stay in the database (`failed_jobs`, driver `database-uuids`). Horizon keeps only a copy to show: 1 day recent, 3 days in the list. | `config/queue.php`, `trim` |
 | Long wait | `waits`: 120 s on `agents` and `webhooks`, 60 s on `default`. A `LongWaitDetected` is logged as a warning ("Horizon: long wait on the queue"); with `HORIZON_NOTIFICATION_MAIL` Horizon also mails it. | `config/horizon.php`, `HorizonServiceProvider` |
@@ -41,15 +41,16 @@ timeout of the job  <  timeout of its supervisor  <  retry_after of its connecti
 ```
 
 A job that runs longer than its supervisor's timeout is killed. A supervisor that runs longer than `retry_after`
-(`config/queue.php`, 300 s for `redis` and `database`) has its running job handed to a second worker, so the job runs
-twice. The starter has 150 s (agent runs), 200 s (supervisor `default`), 300 s (`retry_after`).
+(`config/queue.php`, 420 s for `redis` and `database`) has its running job handed to a second worker, so the job runs
+twice. The starter has 270 s (agent runs: the run budget of 120 s plus 150 s, since
+mortelos/framework 0.7.84), 360 s (supervisor `default`), 420 s (`retry_after`).
 
 `tests/Feature/HorizonConfigTest.php` checks it for every job:
 
 - each job in `app/Jobs` must be listed in `queuedJobs()` in that test, or the coverage test fails;
 - the framework jobs on the queues `agents` and `webhooks` are checked too, and the test fails when the framework starts
   using a queue no supervisor reads;
-- the test also proves that it fails: a probe job with a timeout of 250 s (over the 200 s of the supervisor), one at 200 s,
+- the test also proves that it fails: a probe job with a timeout of 400 s (over the 360 s of the supervisor), one at 360 s,
   a supervisor at `retry_after`, and a job on a queue nobody reads.
 
 A job with a longer running time needs its own supervisor with a higher `timeout`, and a connection with a higher

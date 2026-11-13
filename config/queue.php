@@ -40,9 +40,10 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            // Must stay above the longest job timeout (agent runs: 150 s). Lower, and a
-            // second worker takes a running tries=1 job and marks its agent run Failed.
-            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 300),
+            // Must stay above the longest job timeout (agent runs: 270 s) and the 360 s of the
+            // Horizon supervisor. Lower, and a second worker takes a running tries=1 job and
+            // marks its agent run Failed.
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 420),
             'after_commit' => false,
         ],
 
@@ -71,7 +72,7 @@ return [
             'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
             'queue' => env('REDIS_QUEUE', 'default'),
             // Same rule as the database connection above.
-            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 300),
+            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 420),
             'block_for' => null,
             'after_commit' => false,
         ],

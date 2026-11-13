@@ -16,3 +16,5 @@ Deploying (build id, assets of the previous build, release notes): [deploying.md
 Sign-in: [two-factor.md](two-factor.md) (authenticator app and recovery codes), [social-login.md](social-login.md) (Google and Microsoft).
 
 Queue: [horizon.md](horizon.md) (Redis, supervisors, dashboard access, timeouts).
+
+Events: [change-log.md](change-log.md) (the change log, undo, and its four outlets).

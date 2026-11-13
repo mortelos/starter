@@ -12,6 +12,7 @@ use Mortel\Actions\Policies\CheckPolicy;
 use Mortel\Contracts\TenantResolver;
 use Mortel\Enums\PolicyScope;
 use Mortel\Support\Actor;
+use Mortel\Support\Scalar;
 
 /**
  * Fail-closed governance gate (R7), single-tenant baseline, deny-by-default.
@@ -42,6 +43,7 @@ final class StarterGovernanceGate implements GovernanceGate
         'users.manage' => PolicyScope::Role,
         'invitations.manage' => PolicyScope::Action,
         'horizon.view' => PolicyScope::Action,
+        'changelog.view' => PolicyScope::Action,
     ];
 
     public function __construct(
@@ -58,9 +60,11 @@ final class StarterGovernanceGate implements GovernanceGate
     /**
      * Deny-by-default ability check over the owner-editable policy data. The
      * contract only exposes canManage(); the users surface asks for
-     * `users.manage` through this method on the bound concrete instance.
+     * `users.manage` through this method on the bound concrete instance. A
+     * resource type and id go to CheckPolicy as they are, so a policy on that
+     * kind of record (an explicit deny, for one) counts.
      */
-    public function allows(?Authenticatable $user, string $action, ?PolicyScope $scope = null): bool
+    public function allows(?Authenticatable $user, string $action, ?PolicyScope $scope = null, ?string $resourceType = null, ?string $resourceId = null): bool
     {
         if ($user === null) {
             return false;
@@ -77,18 +81,26 @@ final class StarterGovernanceGate implements GovernanceGate
             return false;
         }
 
-        return $this->checkPolicy->check((string) $roleId, $action, $scope ?? self::scopeFor($action))->allowed;
+        return $this->checkPolicy->check((string) $roleId, $action, $scope ?? self::scopeFor($action), $resourceType, $resourceId)->allowed;
     }
 
     /**
      * The same check for the Actor an Action receives: an agent or bridge acting
      * on behalf of a user gets that user's rights, anything without a user none.
      */
-    public function allowsActor(Actor $actor, string $action, ?PolicyScope $scope = null): bool
+    public function allowsActor(Actor $actor, string $action, ?PolicyScope $scope = null, ?string $resourceType = null, ?string $resourceId = null): bool
     {
         $userId = $actor->userId();
 
-        return $userId !== null && $this->allows(User::query()->find($userId), $action, $scope);
+        if ($userId === null) {
+            return false;
+        }
+
+        // The signed-in user acting for themselves needs no second read of `users`.
+        $current = auth()->user();
+        $user = $current !== null && (string) Scalar::scalarString($current->getAuthIdentifier()) === $userId ? $current : User::query()->find($userId);
+
+        return $this->allows($user, $action, $scope, $resourceType, $resourceId);
     }
 
     public static function scopeFor(string $action): PolicyScope

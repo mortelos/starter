@@ -240,7 +240,7 @@ Pages that were open during a deploy must keep working and no user input may be 
 - Avoid loose bullet fragments when a short complete sentence is clearer.
 <!-- mortelos-agent-rules:endpackage -->
 
-<!-- mortelos-agent-rules:package=mortelos/framework hash=3d096b371bbe889754ff78600dda76b24575d749 -->
+<!-- mortelos-agent-rules:package=mortelos/framework hash=de5d02848c15d41149a78bf84091b06b19c879b5 -->
 # mortelos/framework
 ## Agent Runtime Completion Contract
 
@@ -249,6 +249,11 @@ Pages that were open during a deploy must keep working and no user input may be 
 - If the direct tool is unavailable, hidden by policy, or missing a folder grant, give an honest final answer that names the missing tool or permission.
 - Treat approval-gated tools as the correct execution path. Request the tool call and let the runtime pause for approval instead of creating a proposal that claims the work is done.
 - When `inbox.create` is genuinely appropriate, write clean Dutch proposal copy: a result-oriented title, one complete-sentence summary, and at most two concise body paragraphs. Do not start with "Gebaseerd op" and avoid loose hyphen bullet lists for simple proposals.
+
+## Tenant Lookups From Scripts
+
+- In a script or tinker session, never loop `tenancy()->initialize($tenant)` over tenants: the second tenant throws `TenantIsolationViolation` and raises a production alarm. Switch through `Mortel\Tenancy\Tenants::run()` or `Tenants::each()`.
+- For a read-only lookup across tenants on a server, use `php artisan mortel:tenants:inspect <file|->` (see `docs/tenant-isolation.md`).
 <!-- mortelos-agent-rules:endpackage -->
 
 <!-- mortelos-agent-rules:end -->

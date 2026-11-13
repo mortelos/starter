@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\ChangeLogExportController;
 use App\Http\Middleware\SerializeTwoFactorChallenge;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -76,6 +77,8 @@ Route::middleware(['web'])->group(function () use ($starterClass): void {
         Route::livewire('/governance/roles', 'pages::governance.roles')->name('governance.roles');
         Route::livewire('/users', 'pages::users.index')->name('users');
         Route::livewire('/settings', 'pages::settings.index')->name('settings');
+        Route::livewire('/changelog', 'pages::changelog.index')->name('changelog');
+        Route::get('/changelog/export', ChangeLogExportController::class)->name('changelog.export');
 
         // Link Google or Microsoft to your own account: the package's link route, with the settings page as the
         // place to come back to. Linking itself (and its refusals) is the package's.

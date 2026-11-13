@@ -28,7 +28,8 @@ $prefix = filled(env('HORIZON_PREFIX'))
  * and that is below `retry_after` of its connection (config/queue.php), or a second worker takes a job that is
  * still running.
  *
- *   agents    the agent runs of mortelos/framework (ExecuteAgentRunJob, ContinueAgentRunJob): 150 s.
+ *   agents    the agent runs of mortelos/framework (ExecuteAgentRunJob, ContinueAgentRunJob): 270 s, the run budget
+ *             (mortel.agent.max_runtime_seconds, 120 s) plus 150 s.
  *   webhooks  DeliverWebhookJob: 30 s.
  *   default   everything without a queue of its own.
  */
@@ -39,7 +40,7 @@ $supervisors = [
         'balance' => 'simple',
         'maxProcesses' => 3,
         'tries' => 1,
-        'timeout' => 200,
+        'timeout' => 360,
         'memory' => 256,
         'nice' => 0,
     ],

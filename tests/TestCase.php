@@ -17,4 +17,15 @@ abstract class TestCase extends BaseTestCase
         // where `npm run build` has not run (e.g. CI without a Node step).
         $this->withoutVite();
     }
+
+    protected function tearDown(): void
+    {
+        // mortelos/framework (0.7.84 too) locks every tenant creation (Tenancy\TenantCreationLock: a file on SQLite, an
+        // advisory lock on PostgreSQL) and lets go of it when the application terminates. A test that does not make a
+        // request never terminates its application, and every test boots a new one in the same process, so the lock
+        // would stay and the next test that creates a tenant would fail ("tenant creation is locked").
+        $this->app->terminate();
+
+        parent::tearDown();
+    }
 }

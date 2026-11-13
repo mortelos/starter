@@ -1,0 +1,36 @@
+{
+    "schema": "mortelos.outlets.v1",
+    "package": "mortelos/starter",
+    "outlets": [
+        {
+            "kind": "registry",
+            "name": "App\\Support\\ChangeLog\\ChangeLogDescriptions",
+            "tag": "changelog.descriptions",
+            "description": "Change log: per stored event type a part and a readable sentence with its Undo or the reason there is none, from classes implementing App\\Contracts\\ChangeLog\\DescribesChanges tagged changelog.descriptions; unregistered types read \"Wijziging vastgelegd\" under \"Overig\". See docs/change-log.md."
+        },
+        {
+            "kind": "contract",
+            "name": "App\\Contracts\\ChangeLog\\DescribesChanges",
+            "required": false,
+            "description": "Change log: a class that adds parts, sentences and table words to ChangeLogDescriptions; tag it changelog.descriptions in a service provider."
+        },
+        {
+            "kind": "contract",
+            "name": "App\\Contracts\\ChangeLog\\ChangeLogAgents",
+            "default": "App\\Support\\ChangeLog\\GenericChangeLogAgents",
+            "description": "Change log: the name, agent key and on-behalf-of user of agent and bridge actors, and the agents the \"Wie\" filter offers."
+        },
+        {
+            "kind": "contract",
+            "name": "App\\Contracts\\ChangeLog\\ChangeLogAccess",
+            "default": "App\\Support\\ChangeLog\\ViewersSeeEverything",
+            "description": "Change log: the trust level of a user per part; null hides the part's rows, Act also allows undo when the counter-Action names no ability."
+        },
+        {
+            "kind": "contract",
+            "name": "App\\Contracts\\ChangeLog\\ChangeLogArchive",
+            "default": "App\\Support\\ChangeLog\\NoChangeLogArchive",
+            "description": "Change log: read-only history from before the move to events, shown under \"Vóór de overstap\" and appended to the CSV export."
+        }
+    ]
+}

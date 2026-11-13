@@ -1,6 +1,10 @@
 {
     "schema": 4,
     "require": {
+        "amphp/redis": {
+            "version": "v2.0.4",
+            "hash": "tree-v2:a2be9c8e04fa146bcbeeb350320ac0153141cace173893ca8c30d7a5d4604eaa"
+        },
         "bacon/bacon-qr-code": {
             "version": "v3.1.1",
             "hash": "tree-v2:12897f0a1a47ba843a8c4dfa9cd986bc3d7455929b42b7005d030fdd778dc72a"
@@ -190,8 +194,8 @@
             "hash": "tree-v2:943bf2413be502209c4ce6a6e03de8c8390b698772b3c9eee7e62ed1dad9c8ea"
         },
         "mortelos/framework": {
-            "version": "0.7.1",
-            "hash": "tree-v2:f3c37a14aeef9c07986e3e4f47fd200e32403433c688c09323b3ab84b8dbb78f"
+            "version": "0.7.84",
+            "hash": "tree-v2:0c4d22ba7b5ea8852cc2e64604e50eb1110ba3b23391927a53588f6c5775cd73"
         },
         "mortelos/social-login": {
             "version": "0.3.3",
