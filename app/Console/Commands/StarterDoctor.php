@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Support\HorizonAccess;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Fortify\Features;
@@ -105,6 +108,7 @@ final class StarterDoctor extends Command
         $this->checkEventStore($missing, $invalid);
         $this->checkTwoFactor($missing, $invalid);
         $this->checkSocialLogin($missing, $invalid);
+        $this->checkHorizon($invalid);
         $this->checkSingleTenantFrameworkBaseline($missing, $invalid);
 
         // The spine rails of mortelos/app-standards. EnforcePolicy only sits on the routes
@@ -208,6 +212,63 @@ final class StarterDoctor extends Command
             if (in_array($name, $listed, true) && ! in_array($name, $available, true)) {
                 $this->components->warn('social login provider '.$name.' is listed but has no client id and secret: no button');
             }
+        }
+    }
+
+    /**
+     * Horizon (docs/horizon.md). On the database queue it is off and that is fine; on Redis the supervisors, the
+     * extension and the connection have to be there.
+     *
+     * @param  list<string>  $invalid
+     */
+    private function checkHorizon(array &$invalid): void
+    {
+        if (! Gate::has('viewHorizon')) {
+            $invalid[] = 'horizon.gate';
+            $this->components->error('gate viewHorizon is not defined: HorizonServiceProvider is not registered in bootstrap/providers.php');
+        } else {
+            $this->components->info('gate viewHorizon defined (ability '.HorizonAccess::ABILITY.')');
+        }
+
+        $queue = config('queue.default');
+
+        if ($queue !== 'redis') {
+            $this->components->warn('QUEUE_CONNECTION is '.(is_string($queue) ? $queue : '?').': Horizon and its dashboard are off, jobs run on that queue');
+
+            return;
+        }
+
+        $environment = (string) config('app.env');
+
+        if (! is_array(config("horizon.environments.{$environment}")) || config("horizon.environments.{$environment}") === []) {
+            $invalid[] = 'horizon.environments';
+            $this->components->error("config/horizon.php has no supervisors for the environment {$environment}");
+        } else {
+            $this->components->info("Horizon supervisors for {$environment}: ".implode(', ', array_keys((array) config("horizon.environments.{$environment}"))));
+        }
+
+        $prefix = config('horizon.prefix');
+
+        if (! is_string($prefix) || $prefix === '') {
+            $invalid[] = 'horizon.prefix';
+            $this->components->error('horizon.prefix is empty: worktrees and apps on the same Redis would share their queue');
+        } else {
+            $this->components->info('Horizon prefix → '.$prefix);
+        }
+
+        if (config('database.redis.client') === 'phpredis' && ! extension_loaded('redis')) {
+            $invalid[] = 'horizon.redis-extension';
+            $this->components->error('REDIS_CLIENT is phpredis but the redis PHP extension is not loaded');
+
+            return;
+        }
+
+        try {
+            Redis::connection(is_string(config('horizon.use')) ? config('horizon.use') : 'default')->ping();
+            $this->components->info('Redis answers');
+        } catch (\Throwable $exception) {
+            $invalid[] = 'horizon.redis';
+            $this->components->error('Redis does not answer (check REDIS_HOST, REDIS_PORT and REDIS_PASSWORD): '.$exception->getMessage());
         }
     }
 
