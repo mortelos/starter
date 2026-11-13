@@ -23,7 +23,6 @@ final class StarterChangeDescriptions implements DescribesChanges
     {
         $descriptions->part('users', 'Gebruikers');
         $descriptions->part('access', 'Rollen en rechten');
-        $descriptions->part('changelog', 'Wijzigingslog');
 
         $descriptions->register('invitations.invitation.created', 'users', fn (ChangeLogEntry $entry): ChangeDescription => new ChangeDescription(
             sentence: 'Uitnodiging klaargezet voor '.($entry->text('email') ?? 'een onbekend adres'),
@@ -56,7 +55,8 @@ final class StarterChangeDescriptions implements DescribesChanges
             $descriptions->register($type, 'access', fn (ChangeLogEntry $entry): string => ($name = $entry->text('name')) === null ? $plain : sprintf($named, $name));
         }
 
-        $descriptions->register(ChangeUndone::TYPE, 'changelog', fn (ChangeLogEntry $entry): ChangeDescription => new ChangeDescription(
+        // The part of an undo row is the part of the change it undid (ChangeLogReader::partOf()), for rights and filters.
+        $descriptions->register(ChangeUndone::TYPE, ChangeLogDescriptions::OTHER, fn (ChangeLogEntry $entry): ChangeDescription => new ChangeDescription(
             sentence: 'Ongedaan gemaakt: '.($entry->text('summary') ?? ChangeLogDescriptions::FALLBACK_SENTENCE),
         ));
     }

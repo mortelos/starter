@@ -61,7 +61,7 @@ final class UndoChange
 
         $userId = $actor->userId();
         $levels = $this->reader->levels($userId === null ? null : User::query()->find($userId));
-        $level = $levels[$this->descriptions->partOf($entry->type)->key] ?? null;
+        $level = $levels[$this->reader->partOf($entry)->key] ?? null;
         $description = $this->descriptions->describe($entry);
         $undo = $description->undo;
 

@@ -21,6 +21,19 @@ function changeLogDescriptions(): ChangeLogDescriptions
     return $descriptions;
 }
 
+/**
+ * @param  array<string, string>  $query
+ * @return list<string> the lines of the CSV, the header first
+ */
+function changeLogCsv(User $user, array $query = []): array
+{
+    $response = Pest\Laravel\actingAs($user)->get(route('changelog.export', $query));
+    $response->assertOk();
+    $lines = array_values(array_filter(explode("\n", str_replace("\xEF\xBB\xBF", '', $response->streamedContent()))));
+
+    return $lines;
+}
+
 /** A member whose role is allowed `changelog.view` and the given other abilities. */
 function changeLogViewer(string ...$abilities): User
 {

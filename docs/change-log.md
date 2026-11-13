@@ -15,7 +15,7 @@ for its own domain through its outlets, listed in `resources/mortelos/outlets.js
 | --- | --- |
 | Open the page and the CSV export | ability `changelog.view` (scope Action, `StarterGovernanceGate::SCOPES`). The seeder gives it to `owner`; the migration `2026_11_13_200000_grant_changelog_access` does the same for an existing `owner` role. Other roles get it on `/governance/roles`. The profile menu links to the page for those who have it. |
 | See the rows of a part | the `ChangeLogAccess` outlet. Default: whoever may open the page sees every part. |
-| Undo a change | `UndoChange` (`app/Actions/ChangeLog/UndoChange.php`), for every caller: the user must be allowed the original action, which is the `ABILITY` constant of the counter-Action, or its `requires()` (an object with `action` and `scope`, the shape of the framework's `PolicyRequirement`), or else level `Act` on the part from `ChangeLogAccess`. |
+| Undo a change | `UndoChange` (`app/Actions/ChangeLog/UndoChange.php`), for every caller: the user must be allowed the original action, which is the `ABILITY` constant of the counter-Action, or the `Mortel\Api\PolicyRequirement` its `requires()` returns, checked whole (action, scope and resource type) through `CheckPolicy`, or else level `Act` on the part from `ChangeLogAccess`. A `requires()` that returns anything else is refused. |
 | An agent or bridge undoing | only its own changes: the same actor, or the same agent key from `ChangeLogAgents`. This is checked in `UndoChange`, so it holds for a tool call as well as the screen. An agent acts with the rights of the user it acts for; without one it has none. |
 
 ## Undo
@@ -34,8 +34,11 @@ and columns words with `table()` (below). An `OwnTableConflict` thrown by a stal
 says that someone changed it in the meantime. Any other refusal shows its own message. A counter-Action that answers `approval_needed` is rolled back as well: an undo button does not
 start an approval.
 
-The undone row then shows "Ongedaan gemaakt" with a link to the row of the undo. A row without an undo shows the reason
-its describer gives; an expired Undo shows that it is too late.
+The undone row then shows "Ongedaan gemaakt" with a link to the row of the undo; the link drops the filters, which could
+hide that row. The undo row ("Ongedaan gemaakt: …") names the change it undid, so it belongs to the part of that change:
+only whoever may see that part sees the undo row, and the part filter shows it next to the change
+(`ChangeLogReader::partOf()`). A row without an undo shows the reason its describer gives; an expired Undo shows that it
+is too late.
 
 The open list stays at the point where it was loaded, so an undo does not push the rows down. New rows show after a
 filter change or **Naar de nieuwste**.
@@ -154,8 +157,9 @@ filtering 2 queries and about 67 KB (budget 10 queries and 150 KB). On PostgreSQ
 10,000 events answered in about 160 to 190 ms. Pages are 50 rows, with a cursor on
 `(created_at, id)`. The migration `2026_11_13_200001_add_change_log_indexes_to_events_table` adds the indexes
 `events_created_at_id_index` and `events_actor_created_at_index`; `starter:doctor` warns when they are missing. One
-policy cache per request (`PolicyCache` bound scoped in `StarterServiceProvider`) keeps the rights checks of a page at
-one read of `policies`.
+policy cache per HTTP request (`app/Http/Middleware/SharePolicyCacheForRequest.php`, in the web group) keeps the rights
+checks of a page at one read of `policies`. Outside a request, in a job or an agent run, every check reads `policies`
+again, so a right that another process revokes counts in the next step.
 
 ## Code
 

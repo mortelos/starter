@@ -14,7 +14,8 @@ user without the new ability `changelog.view`. It also moves to `mortelos/framew
 | no change log | page `changelog` and export `changelog.export` in `routes/starter.php`, a link in the profile menu |
 | abilities `governance.manage`, `users.manage`, `invitations.manage`, `horizon.view` | also `changelog.view` (scope Action) |
 | `events` with indexes on `created_at` and `event_class` | also `events_created_at_id_index` and `events_actor_created_at_index` |
-| one `PolicyCache` per `CheckPolicy` | one per request or job (`scoped` in `StarterServiceProvider`) |
+| one `PolicyCache` per `CheckPolicy` | one per HTTP request (middleware `SharePolicyCacheForRequest` in the web group, bound in `StarterServiceProvider`); a job still reads `policies` per check |
+| `StarterGovernanceGate::allows()` with action and scope | also resource type and id, passed to `CheckPolicy` |
 | no outlets of the starter itself | `resources/mortelos/outlets.json`: the registry `ChangeLogDescriptions` (tag `changelog.descriptions`) and the contracts `DescribesChanges`, `ChangeLogAgents`, `ChangeLogAccess`, `ChangeLogArchive` |
 
 What an app built on the starter must do:
@@ -34,11 +35,13 @@ What an app built on the starter must do:
    `app/Contracts/ChangeLog/`, `app/Support/ChangeLog/`, `app/Enums/ChangeLogActorKind.php`,
    `app/Enums/ChangeLogUndoState.php`, `app/Exceptions/ChangeAlreadyUndoneException.php`,
    `app/Exceptions/UndoRefusedException.php`, `app/Http/Controllers/ChangeLogExportController.php`,
+   `app/Http/Middleware/SharePolicyCacheForRequest.php`,
    `resources/views/pages/changelog/`, `resources/mortelos/outlets.json`, the two migrations `2026_11_13_2000*` and the
    tests `tests/Feature/ChangeLog*`, `tests/Feature/DoctorChangeLogTest.php`, `tests/Browser/ChangeLogVerifyTest.php`
    with `tests/Support/ChangeLog/` (required in `tests/Pest.php`).
-3. Take the changes in `routes/starter.php`, `StarterServiceProvider` (bindings, the tag, `PolicyCache`),
-   `StarterGovernanceGate` (`SCOPES` and `allowsActor`), `config/event-sourcing.php` (`changelog.change.undone`), the
+3. Take the changes in `routes/starter.php`, `bootstrap/app.php` (the middleware), `StarterServiceProvider` (bindings,
+   the tag, `PolicyCache`),
+   `StarterGovernanceGate` (`SCOPES`, resource type and id in `allows` and `allowsActor`), `config/event-sourcing.php` (`changelog.change.undone`), the
    topbar, `StarterDoctor` and `tests/Feature/GovernanceSeederTest.php`.
 4. Run `php artisan migrate`: it adds the indexes and gives an existing `owner` role `changelog.view`.
 5. Register a sentence and a part for each of your own event types in a `DescribesChanges` class tagged

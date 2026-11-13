@@ -7,7 +7,7 @@ namespace App\Support\ChangeLog;
 use App\Access\StarterGovernanceGate;
 use App\Contracts\ChangeLog\ChangeLogAgents;
 use Mortel\Actions\Undo;
-use Mortel\Enums\PolicyScope;
+use Mortel\Api\PolicyRequirement;
 use Mortel\Enums\TrustLevel;
 use Mortel\Support\Actor;
 
@@ -17,8 +17,9 @@ use Mortel\Support\Actor;
  *
  *  1. The part of the change must be visible to the actor's user (level not null).
  *  2. An agent or bridge may only undo its own changes: the same actor, or the same agent key (ChangeLogAgents).
- *  3. The actor must be allowed the original action: the `ABILITY` constant of the counter-Action, or its
- *     `requires()` (a PolicyRequirement-shaped object with `action` and `scope`), or else level Act on the part.
+ *  3. The actor must be allowed the original action: the `ABILITY` constant of the counter-Action, or the
+ *     PolicyRequirement its `requires()` returns (all of it, resource type included), or else level Act on the part.
+ *     A `requires()` that returns anything else is refused.
  */
 final class UndoPermission
 {
@@ -43,9 +44,11 @@ final class UndoPermission
 
         $requirement = $this->requirement($undo->action);
 
-        $allowed = $requirement === null
-            ? $level === TrustLevel::Act
-            : $this->allows($actor, $requirement[0], $requirement[1]);
+        $allowed = match (true) {
+            $requirement === null => $level === TrustLevel::Act,
+            $requirement === false => false,
+            default => $this->allows($actor, $requirement),
+        };
 
         return $allowed ? null : 'Je mag deze wijziging niet ongedaan maken.';
     }
@@ -71,8 +74,12 @@ final class UndoPermission
         return $mine !== null && $theirs !== null && $mine->key === $theirs->key;
     }
 
-    /** @return array{0: string, 1: PolicyScope}|null */
-    private function requirement(string $action): ?array
+    /**
+     * What the original action asks: the `ABILITY` of the counter-Action, or the PolicyRequirement its `requires()`
+     * returns, whole (action, scope and resource type). Null when it names nothing (then level Act decides); false when
+     * `requires()` returns something else, which is refused rather than guessed at.
+     */
+    private function requirement(string $action): PolicyRequirement|false|null
     {
         if (! class_exists($action)) {
             return null;
@@ -81,26 +88,28 @@ final class UndoPermission
         $constant = $action.'::ABILITY';
 
         if (defined($constant) && is_string($ability = constant($constant)) && $ability !== '') {
-            return [$ability, StarterGovernanceGate::scopeFor($ability)];
+            return new PolicyRequirement($ability, StarterGovernanceGate::scopeFor($ability));
         }
 
         $instance = method_exists($action, 'requires') ? app($action) : null;
 
-        if (is_object($instance) && method_exists($instance, 'requires')) {
-            $requirement = $instance->requires();
-            $name = is_object($requirement) && property_exists($requirement, 'action') ? $requirement->action : null;
-            $scope = is_object($requirement) && property_exists($requirement, 'scope') ? $requirement->scope : null;
-
-            if (is_string($name) && $name !== '') {
-                return [$name, $scope instanceof PolicyScope ? $scope : StarterGovernanceGate::scopeFor($name)];
-            }
+        if (! is_object($instance) || ! method_exists($instance, 'requires')) {
+            return null;
         }
 
-        return null;
+        $requirement = $instance->requires();
+
+        return $requirement instanceof PolicyRequirement ? $requirement : false;
     }
 
-    private function allows(Actor $actor, string $ability, PolicyScope $scope): bool
+    /**
+     * The framework's own check (CheckPolicy through the gate) with every field of the requirement. There is no record
+     * id for an undo, so this is the exact check on the resource type: a policy on another record does not open it.
+     */
+    private function allows(Actor $actor, PolicyRequirement $requirement): bool
     {
-        return $this->decisions[$actor->id().'|'.$ability.'|'.$scope->value] ??= $this->gate->allowsActor($actor, $ability, $scope);
+        $key = implode('|', [$actor->id(), $requirement->action, $requirement->scope->value, $requirement->resourceType ?? '']);
+
+        return $this->decisions[$key] ??= $this->gate->allowsActor($actor, $requirement->action, $requirement->scope, $requirement->resourceType);
     }
 }

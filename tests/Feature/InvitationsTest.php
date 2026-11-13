@@ -275,6 +275,9 @@ it('refuses to accept for an address that already has an account', function (): 
 });
 
 it('rebuilds the invitations table from the events alone', function (): void {
+    // The projector writes the event time; a first projection and a replay on either side of a second boundary would
+    // differ by one second in updated_at, so the clock stands still.
+    Carbon::setTestNow(Carbon::now()->startOfSecond());
     $owner = invitationsManager();
     $revoked = invite($owner, 'ingetrokken@example.test');
     app(RevokeInvitation::class)->handle(invitationId($revoked), Actor::user($owner));

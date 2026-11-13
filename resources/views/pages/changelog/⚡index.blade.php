@@ -240,7 +240,7 @@ class extends Component {
                                 @if ($row->undo === ChangeLogUndoState::Available)
                                 <x-slot:trailing><x-mortel::button size="sm" wire:click="undo('{{ $row->id }}')">Ongedaan maken</x-mortel::button></x-slot:trailing>
                                 @elseif ($row->undo === ChangeLogUndoState::Undone)
-                                <x-slot:trailing><span class="flex items-center gap-2"><x-mortel::badge size="sm">Ongedaan gemaakt</x-mortel::badge><x-mortel::link href="{{ route('changelog', [...$this->filter->query(), 'focus' => $row->undoneBy]) }}" wire:navigate class="text-sm">Bekijk</x-mortel::link></span></x-slot:trailing>
+                                <x-slot:trailing><span class="flex items-center gap-2"><x-mortel::badge size="sm">Ongedaan gemaakt</x-mortel::badge><x-mortel::link href="{{ route('changelog', ['focus' => $row->undoneBy]) }}" wire:navigate class="text-sm">Bekijk</x-mortel::link></span></x-slot:trailing>
                                 @elseif ($row->note !== null)
                                 <x-slot:trailing><x-mortel::text class="text-xs sm:max-w-56">{{ $row->note }}</x-mortel::text></x-slot:trailing>
                                 @endif

@@ -12,6 +12,7 @@ use App\Enums\ChangeLogUndoState;
 use App\Events\ChangeLog\ChangeUndone;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Closure;
 use Generator;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Query\Builder;
@@ -177,7 +178,7 @@ final class ChangeLogReader
                 : [ChangeLogUndoState::Unavailable, $refusal],
         };
 
-        return ['description' => $description, 'part' => $this->descriptions->partOf($entry->type), 'state' => $state, 'note' => $note, 'undo' => $undo];
+        return ['description' => $description, 'part' => $this->partOf($entry), 'state' => $state, 'note' => $note, 'undo' => $undo];
     }
 
     /** @return array<string, string> user id => name, the members of the tenant for the "Wie" filter */
@@ -243,22 +244,25 @@ final class ChangeLogReader
         $query = DB::table('events')->select(self::COLUMNS)->orderByDesc('created_at')->orderByDesc('id');
         $registered = $this->descriptions->registeredTypes();
 
-        // Hidden parts, in SQL, so a page is always full.
+        // Hidden parts, in SQL, so a page is always full. An undo row counts as the part of the change it undid.
         $visible = array_merge([], ...array_map($this->descriptions->typesOf(...), array_keys($levels)));
 
         if (isset($levels[ChangeLogDescriptions::OTHER])) {
-            $this->whereTypeNotIn($query, array_values(array_diff($registered, $visible)));
+            $hidden = array_values(array_diff($registered, $visible));
+            $this->wherePartType($query, fn (Builder $where, string $column) => $this->whereNotIn($where, $column, $hidden));
         } elseif ($visible === []) {
             $query->whereRaw('1 = 0');
         } else {
-            $query->whereIn('event_type', $visible);
+            $this->wherePartType($query, fn (Builder $where, string $column) => $where->whereIn($column, $visible));
         }
 
         if ($filter->part !== '') {
+            $types = $this->descriptions->typesOf($filter->part) ?: [''];
+
             match (true) {
                 ! isset($levels[$filter->part]) => $query->whereRaw('1 = 0'),
-                $filter->part === ChangeLogDescriptions::OTHER => $this->whereTypeNotIn($query, $registered),
-                default => $query->whereIn('event_type', $this->descriptions->typesOf($filter->part) ?: ['']),
+                $filter->part === ChangeLogDescriptions::OTHER => $this->wherePartType($query, fn (Builder $where, string $column) => $this->whereNotIn($where, $column, $registered)),
+                default => $this->wherePartType($query, fn (Builder $where, string $column) => $where->whereIn($column, $types)),
             };
         }
 
@@ -275,12 +279,38 @@ final class ChangeLogReader
         return $query;
     }
 
+    /**
+     * A condition on the event type that decides the part of a row: its own `event_type`, or for an undo row the type
+     * of the change it undid (`event_type` in the payload of ChangeUndone). So an undo row is only seen, and filtered,
+     * where the undone change is; its text names that change.
+     *
+     * @param  Closure(Builder, string): mixed  $condition  gets the query and the column to put the condition on
+     */
+    private function wherePartType(Builder $query, Closure $condition): void
+    {
+        $query->where(fn (Builder $where) => $where
+            ->where(function (Builder $own) use ($condition): void {
+                $own->where(fn (Builder $type) => $type->whereNull('event_type')->orWhere('event_type', '!=', ChangeUndone::TYPE));
+                $condition($own, 'event_type');
+            })
+            ->orWhere(function (Builder $undo) use ($condition): void {
+                $undo->where('event_type', ChangeUndone::TYPE);
+                $condition($undo, 'event_properties->event_type');
+            }));
+    }
+
     /** @param  list<string>  $types */
-    private function whereTypeNotIn(Builder $query, array $types): void
+    private function whereNotIn(Builder $query, string $column, array $types): void
     {
         if ($types !== []) {
-            $query->where(fn (Builder $where) => $where->whereNull('event_type')->orWhereNotIn('event_type', $types));
+            $query->where(fn (Builder $where) => $where->whereNull($column)->orWhereNotIn($column, $types));
         }
+    }
+
+    /** The part a row belongs to: an undo row has the part of the change it undid. */
+    public function partOf(ChangeLogEntry $entry): ChangePart
+    {
+        return $this->descriptions->partOf($entry->type === ChangeUndone::TYPE ? ($entry->text('event_type') ?? $entry->type) : $entry->type);
     }
 
     private function whereWho(Builder $query, string $who): void
@@ -323,7 +353,7 @@ final class ChangeLogReader
         $rows = [];
 
         foreach ($entries as $entry) {
-            $part = $this->descriptions->partOf($entry->type);
+            $part = $this->partOf($entry);
             $assessment = $this->assess($viewer, $entry, $levels[$part->key] ?? null, $undone[$entry->id] ?? null);
 
             $rows[] = new ChangeLogRow(

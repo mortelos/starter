@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\SharePolicyCacheForRequest;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,7 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // One policy cache per request; jobs read `policies` fresh (app/Http/Middleware/SharePolicyCacheForRequest.php).
+        $middleware->web(append: [SharePolicyCacheForRequest::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         Flare::handles($exceptions);

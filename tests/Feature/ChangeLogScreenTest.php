@@ -30,19 +30,6 @@ beforeEach(function (): void {
     $descriptions->register('stock.item.counted', 'stock', fn ($entry): string => 'Voorraad '.$entry->text('name').' geteld');
 });
 
-/**
- * @param  array<string, string>  $query
- * @return list<string> the lines of the CSV, the header first
- */
-function changeLogCsv(User $user, array $query = []): array
-{
-    $response = actingAs($user)->get(route('changelog.export', $query));
-    $response->assertOk();
-    $lines = array_values(array_filter(explode("\n", str_replace("\xEF\xBB\xBF", '', $response->streamedContent()))));
-
-    return $lines;
-}
-
 it('refuses the page and the export without changelog.view', function (): void {
     $user = User::factory()->create();
     attachGovernanceMembership($user, createRole('member'));

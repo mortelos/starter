@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Support\ChangeLog;
 
+use App\Access\StarterGovernanceGate;
 use App\Contracts\ChangeLog\ChangeLogAccess;
 use App\Contracts\ChangeLog\ChangeLogAgents;
 use App\Contracts\ChangeLog\ChangeLogArchive;
@@ -12,9 +13,16 @@ use App\Support\ChangeLog\ChangeLogAgentIdentity;
 use App\Support\ChangeLog\ChangeLogArchiveEntry;
 use App\Support\ChangeLog\ChangeLogArchivePage;
 use App\Support\ChangeLog\ChangeLogFilter;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Mortel\Api\PolicyRequirement;
 use Mortel\Enums\PolicyScope;
 use Mortel\Enums\TrustLevel;
+use Mortel\Support\Actor;
 
 /** A counter-Action that names its ability, like every host Action. */
 final class RevertThing
@@ -26,16 +34,47 @@ final class RevertThing
 final class RevertWithoutAbility {}
 
 /** A counter-Action with a requires() in the shape of a PolicyRequirement. */
+/** A counter-Action with the framework's PolicyRequirement, on one resource type. */
 final class RevertWithRequirement
+{
+    public function requires(): PolicyRequirement
+    {
+        return new PolicyRequirement('things.manage', PolicyScope::Policy, 'secret_thing');
+    }
+}
+
+/** A counter-Action whose requires() is not a PolicyRequirement: the change log does not guess what it means. */
+final class RevertWithOddRequirement
 {
     public function requires(): object
     {
         return new class
         {
             public string $action = 'things.manage';
-
-            public PolicyScope $scope = PolicyScope::Policy;
         };
+    }
+}
+
+/**
+ * A queued job that checks one right, lets another process take it away (a direct write to `policies`, past the
+ * projector that would invalidate this process's cache), and checks it again. The answers land in the cache store.
+ */
+final class CheckRightTwiceJob implements ShouldQueue
+{
+    use Dispatchable;
+    use Queueable;
+
+    public const string RESULTS = 'test.check-right-twice';
+
+    public function __construct(public string $userId, public string $ability) {}
+
+    public function handle(StarterGovernanceGate $gate): void
+    {
+        $before = $gate->allowsActor(Actor::user($this->userId), $this->ability);
+        DB::table('policies')->where('name', $this->ability)->delete();
+        $after = $gate->allowsActor(Actor::user($this->userId), $this->ability);
+
+        Cache::put(self::RESULTS, [$before, $after]);
     }
 }
 
