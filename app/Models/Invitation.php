@@ -32,6 +32,9 @@ final class Invitation extends Model
 {
     use CentralConnection;
 
+    // The projector owns both timestamps, even when an event leaves updated_at unchanged.
+    public $timestamps = false;
+
     public $incrementing = false;
 
     protected $keyType = 'string';
