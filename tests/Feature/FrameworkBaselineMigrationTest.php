@@ -6,6 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use PHPUnit\Framework\Assert;
 
 uses(RefreshDatabase::class);
 
@@ -17,7 +18,7 @@ it('defaults an entity without visibility to tenant', function (): void {
 
 it('aligns the framework schema on Postgres', function (): void {
     if (DB::getDriverName() !== 'pgsql') {
-        $this->markTestSkipped('Postgres column types require Postgres.');
+        Assert::markTestSkipped('Postgres column types require Postgres.');
     }
 
     $columns = [
@@ -30,14 +31,17 @@ it('aligns the framework schema on Postgres', function (): void {
     foreach ($columns as $table => $names) {
         foreach ($names as $name) {
             $column = collect(Schema::getColumns($table))->firstWhere('name', $name);
+            assert(is_array($column));
             expect($column['type_name'])->toBe('jsonb');
         }
     }
 
     $visibility = collect(Schema::getColumns('entities'))->firstWhere('name', 'visibility');
+    assert(is_array($visibility));
     expect($visibility['default'])->toBe("'tenant'::character varying");
 
     $embedding = collect(Schema::getColumns('entities'))->firstWhere('name', 'embedding');
+    assert(is_array($embedding));
     $vectorAvailable = DB::table('pg_available_extensions')->where('name', 'vector')->exists();
     expect($embedding['type'])->toBe($vectorAvailable ? 'vector(768)' : 'json');
 
