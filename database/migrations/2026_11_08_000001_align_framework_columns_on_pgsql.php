@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 /*
@@ -11,7 +12,8 @@ use Illuminate\Support\Facades\DB;
 | operators (the disclosure filter of the list engine compares field_classifications
 | with '{}'). The embedding becomes the framework's `vector(768)` with its HNSW index, so
 | semantic search works with pgvector. SQLite has one JSON type and no vectors: nothing
-| changes there. This follow-up preserves the original baseline for existing installations.
+| changes there. If vector cannot be installed, a savepoint lets embeddings stay JSON.
+| This follow-up preserves the original baseline for existing installations.
 |
 | Safe to run again: a column that already has the target type is left alone. An embedding
 | that is not a list of exactly 768 numbers (another model, a broken value) cannot become
@@ -37,11 +39,18 @@ return new class extends Migration
 
         $this->alter('json', 'jsonb');
 
-        if (! DB::table('pg_available_extensions')->where('name', 'vector')->exists()) {
-            return;
-        }
+        if (! DB::table('pg_extension')->where('extname', 'vector')->exists()) {
+            if (! DB::table('pg_available_extensions')->where('name', 'vector')->exists()) {
+                return;
+            }
 
-        DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
+            try {
+                // A nested transaction uses a savepoint when the migrator owns the transaction.
+                DB::transaction(fn () => DB::statement('CREATE EXTENSION IF NOT EXISTS vector'));
+            } catch (QueryException) {
+                return;
+            }
+        }
         $dimensions = self::DIMENSIONS;
 
         if ($this->type('entities', 'embedding') === 'json') {
