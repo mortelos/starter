@@ -28,6 +28,7 @@ use Mortel\Support\Actor;
 use Mortel\Support\EventContext;
 use Spatie\EventSourcing\Projectionist;
 use Spatie\EventSourcing\StoredEvents\Repositories\StoredEventRepository;
+use Tests\TestCase;
 
 uses(RefreshDatabase::class);
 
@@ -293,6 +294,29 @@ it('rebuilds the invitations table from the events alone', function (): void {
     expect($before)->toHaveCount(3)
         ->and(DB::table('invitations')->orderBy('id')->get()->toArray())->toEqual($before);
 });
+
+it('preserves event timestamps across a delayed replay near a second boundary', function (int $transitionDelay): void {
+    /** @var TestCase $this */
+    $owner = invitationsManager();
+    $this->travelTo(Carbon::parse('2026-11-14 09:24:08.999999'));
+
+    $revoked = invite($owner, 'revoked@example.test');
+    $accepted = invite($owner, 'accepted@example.test');
+    invite($owner, 'open@example.test');
+
+    $this->travel($transitionDelay)->seconds();
+    app(RevokeInvitation::class)->handle(invitationId($revoked), Actor::user($owner));
+    app(AcceptInvitation::class)->handle(inviteToken($accepted), 'Someone', 'secret-password');
+
+    $before = DB::table('invitations')->orderBy('id')->get()->toArray();
+    $this->travel(1)->days();
+
+    DB::table('invitations')->truncate();
+    app(Projectionist::class)->replay(collect([app(InvitationProjector::class)]));
+
+    expect($before)->toHaveCount(3)
+        ->and(DB::table('invitations')->orderBy('id')->get()->toArray())->toEqual($before);
+})->with(['same second' => 0, 'next second' => 1]);
 
 it('rejects an invitation event whose payload does not match its schema', function (): void {
     $event = (new ReflectionClass(InvitationCreated::class))->newInstanceWithoutConstructor();
