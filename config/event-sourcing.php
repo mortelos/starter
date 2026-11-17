@@ -12,7 +12,6 @@ use Mortel\Projectors\ChannelProjector;
 use Mortel\Projectors\DocumentProjector;
 use Mortel\Projectors\EntityLinkProjector;
 use Mortel\Projectors\EntityProjector;
-use Mortel\Projectors\ExperimentProjector;
 use Mortel\Projectors\InboxAttentionProjector;
 use Mortel\Projectors\InboxItemReclassifiedProjector;
 use Mortel\Projectors\MetricProjector;
@@ -56,7 +55,6 @@ return [
         DocumentProjector::class,
         EntityLinkProjector::class,
         EntityProjector::class,
-        ExperimentProjector::class,
         InboxAttentionProjector::class,
         InboxItemReclassifiedProjector::class,
         MetricProjector::class,
