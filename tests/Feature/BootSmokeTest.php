@@ -47,6 +47,19 @@ it('completes the default password login to dashboard flow', function (): void {
     get('/dashboard')->assertOk();
 });
 
+it('returns to the page that asked for a login after a password login', function (): void {
+    $user = User::factory()->create([
+        'email' => 'admin@example.test',
+    ]);
+
+    get(route('settings', ['tab' => 'profiel']))->assertRedirect(route('login'));
+
+    post('/auth/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ])->assertRedirect(route('settings', ['tab' => 'profiel']));
+});
+
 it('throws LogicException when an auth controller is missing', function (): void {
     config()->set('starter.auth.controllers.password_login', null);
 

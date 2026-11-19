@@ -51,6 +51,7 @@ final class PasswordLoginController extends Controller
         $guard->login($user, $remember);
         $request->session()->regenerate();
 
-        return redirect()->route('home');
+        // Back to the page that sent the guest to the login page, like social login and the code challenge do.
+        return redirect()->intended(route('home'));
     }
 }
