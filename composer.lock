@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a624f6841ded48281b94cfba9e120c76",
+    "content-hash": "1787b749effe801a64f2437048353b91",
     "packages": [
         {
             "name": "amphp/amp",
@@ -12909,15 +12909,16 @@
         },
         {
             "name": "mortelos/dev-tools",
-            "version": "0.6.0",
+            "version": "0.7.4",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/dev-tools/0.6.0.zip",
-                "reference": "ddf8426c2f2862221a123f2e0d96d19f7f80b89b",
-                "shasum": "c1776f9909344896234b28716e997b2f1e867277"
+                "url": "https://packages.mortelos.com/dist/mortelos/dev-tools/0.7.4.zip",
+                "reference": "63f542e840f0f5d569661ca879c3499e3eb7e115",
+                "shasum": "2e4a88ac160c653f79e8848cd94874817afa9ec3"
             },
             "require": {
                 "illuminate/console": "^13.0",
+                "illuminate/database": "^13.0",
                 "illuminate/filesystem": "^13.0",
                 "illuminate/routing": "^13.0",
                 "illuminate/support": "^13.0",
@@ -12944,7 +12945,7 @@
                 "proprietary"
             ],
             "description": "Developer tooling for MortelOS package-ready feature decisions",
-            "time": "2026-10-21T07:31:25+02:00"
+            "time": "2026-11-21T14:38:47+01:00"
         },
         {
             "name": "myclabs/deep-copy",

@@ -1,0 +1,31 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Direct insert\(\) on governed model Mortel\\Models\\Entity bypasses the spine\: governed state changes through an aggregate, a projector or a \#\[GovernedWriter\] action\.$#'
+			identifier: mortelos.spine.governedWrite
+			count: 1
+			path: tests/Feature/ActorColumnsMigrationTest.php
+
+		-
+			message: '#^Direct insert\(\) on governed model Mortel\\Models\\Role bypasses the spine\: governed state changes through an aggregate, a projector or a \#\[GovernedWriter\] action\.$#'
+			identifier: mortelos.spine.governedWrite
+			count: 1
+			path: tests/Feature/ActorColumnsMigrationTest.php
+
+		-
+			message: '#^Direct insert\(\) on governed model Mortel\\Models\\Entity bypasses the spine\: governed state changes through an aggregate, a projector or a \#\[GovernedWriter\] action\.$#'
+			identifier: mortelos.spine.governedWrite
+			count: 3
+			path: tests/Feature/FrameworkBaselineMigrationTest.php
+
+		-
+			message: '#^Direct truncate\(\) on governed model App\\Models\\Invitation bypasses the spine\: governed state changes through an aggregate, a projector or a \#\[GovernedWriter\] action\.$#'
+			identifier: mortelos.spine.governedWrite
+			count: 2
+			path: tests/Feature/InvitationsTest.php
+
+		-
+			message: '#^Direct delete\(\) on governed model Mortel\\Models\\Policy bypasses the spine\: governed state changes through an aggregate, a projector or a \#\[GovernedWriter\] action\.$#'
+			identifier: mortelos.spine.governedWrite
+			count: 1
+			path: tests/Support/ChangeLog/Fixtures.php
