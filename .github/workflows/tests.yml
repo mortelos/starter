@@ -118,14 +118,16 @@ jobs:
         run: php artisan mortelos:agent-rules:check
 
       # Fails on a new guard violation and on baseline growth; recorded debt may only go down.
+      # With the tenant-isolation-exception label only the tenant baseline may grow (the tenant step checks it).
       - name: Mortel audit
         shell: bash
         env:
+          MORTELOS_PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
           EXCEPTION_LABEL: ${{ github.event.action == 'labeled' && github.event.label.name == 'tenant-isolation-exception' }}
         run: |
           if [[ "$EXCEPTION_LABEL" == "true" ]]; then
-            echo "::notice::Label tenant-isolation-exception: the audit runs without --base, so the baseline may grow in this PR."
-            php artisan mortelos:audit
+            echo "::notice::Label tenant-isolation-exception: the audit skips tenant-isolation, so only the tenant baseline may grow in this PR; the tenant step checks it."
+            php artisan mortelos:audit --base=origin/main --skip=tenant-isolation
           else
             php artisan mortelos:audit --base=origin/main
           fi
