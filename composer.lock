@@ -12875,12 +12875,12 @@
         },
         {
             "name": "mortelos/agent-standards",
-            "version": "0.1.45",
+            "version": "0.1.47",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/agent-standards/0.1.45.zip",
-                "reference": "625c97682f02111f44574d70e6f29bf7f65d8307",
-                "shasum": "d123ceeee949b6255871c8c653a064b78415979d"
+                "url": "https://packages.mortelos.com/dist/mortelos/agent-standards/0.1.47.zip",
+                "reference": "9c8ebf66c274d8b7a496087965cc0990a12fa35e",
+                "shasum": "ae2a8ce93deb991a7039067479ec4df785cf1d26"
             },
             "require": {
                 "illuminate/support": "^13.0",

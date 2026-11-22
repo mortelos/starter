@@ -696,8 +696,8 @@
             "hash": "tree-v2:4bc0e2fbaea02a9469caa0f1105242dca2907278bc1fd8a3f9c6c8a2ddf920d7"
         },
         "mortelos/agent-standards": {
-            "version": "0.1.45",
-            "hash": "tree-v2:c127f93f431b02bb094930a6f7e13a05bd7e5e74ba0dca5d1fbc3281ce758189"
+            "version": "0.1.47",
+            "hash": "tree-v2:d2a06e28d267881b10edb5b1c693cdcbc23a42e6d102cb61ff311846949cf85b"
         },
         "mortelos/dev-tools": {
             "version": "0.7.4",
