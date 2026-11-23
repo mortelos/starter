@@ -18,6 +18,16 @@ return [
         'user' => User::class,
     ],
 
+    'workflows' => [
+        // Workflow schedules use this timezone, or the application timezone when empty.
+        'timezone' => env('MORTEL_WORKFLOWS_TIMEZONE'),
+        // A step that still fails after its retries fails the run (framework 0.7.107+).
+        'after_retries' => env('MORTEL_WORKFLOWS_AFTER_RETRIES', 'abort'),
+        // The run-due tick restarts a lost next-step job after 15 minutes, at most
+        // three times, then only logs it (framework 0.7.109+).
+        'recover_stalled_runs' => env('MORTEL_WORKFLOWS_RECOVER_STALLED_RUNS', true),
+    ],
+
     'events' => [
         // Host stored events validate against the schema file next to their class,
         // for example app/Events/Invitations/invitation.created.v1.schema.json.
