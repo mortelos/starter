@@ -141,11 +141,14 @@ jobs:
 
       - name: Upload verify screenshots
         if: always()
+        # The screenshots are evidence, not a test: a full artifact quota must not fail the job.
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: verify-screenshots
           path: tests/Browser/Screenshots
           if-no-files-found: ignore
+          retention-days: 3
 
       - name: Drop self-hosted test databases
         if: always() && runner.environment == 'self-hosted'
