@@ -9,6 +9,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Validation\UncompromisedVerifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
@@ -99,14 +100,16 @@ it('validates email in both entry points', function (string $email): void {
         ->toThrow(ValidationException::class);
     Livewire::test('pages::settings.index')->set('email', $email)->call('updateProfile')->assertHasErrors('email');
     expect($user->fresh()?->email)->toBe($original);
-})->with(['', 'invalid', 'taken@example.test', 'TAKEN@example.test', str_repeat('a', 250).'@example.test']);
+})->with(['', 'invalid', 'taken@example.test', 'TAKEN@example.test', str_repeat('a', 64).'@'.str_repeat('b', 63).'.'.str_repeat('c', 63).'.'.str_repeat('d', 63).'.test']);
 
 it('normalizes email and permits the own address', function (): void {
     $user = User::factory()->create(['email' => 'own@example.test']);
     app(UpdateProfile::class)->handle($user, 'Name', 'OWN@EXAMPLE.TEST', $user);
     expect($user->fresh()?->email)->toBe('own@example.test');
     actingAs($user);
-    Livewire::test('pages::settings.index')->set('email', 'NEW@EXAMPLE.TEST')->call('updateProfile')->assertHasNoErrors();
+    $page = Livewire::test('pages::settings.index')->set('email', 'NEW@EXAMPLE.TEST')->call('updateProfile');
+    $page->assertHasNoErrors();
+    $page->assertSet('email', 'new@example.test');
     expect($user->fresh()?->email)->toBe('new@example.test');
 });
 
@@ -128,4 +131,25 @@ it('runs the production leak check only once and displays its error', function (
     } finally {
         Password::defaults(fn () => Password::min(8));
     }
+});
+
+it('clears profile errors after correcting a duplicate email', function (): void {
+    $user = User::factory()->create();
+    User::factory()->create(['email' => 'taken@example.test']);
+    actingAs($user);
+    $page = Livewire::test('pages::settings.index')->set('email', 'taken@example.test')->call('updateProfile');
+    $page->assertHasErrors('email');
+    $page->set('email', 'available@example.test')->call('updateProfile');
+    $page->assertHasNoErrors(['name', 'email']);
+    $page->assertSee('Profiel bijgewerkt.');
+});
+
+it('enforces the explicit email storage limit', function (): void {
+    $email = str_repeat('a', 64).'@'.str_repeat('b', 63).'.'.str_repeat('c', 63).'.'.str_repeat('d', 63).'.test';
+    // Each local/domain part fits its limit; RFC validation also rejects the total length.
+    // Assert Max explicitly so removing max:255 cannot be hidden by that other error.
+    $user = User::factory()->create();
+    $validator = Validator::make(['name' => 'Name', 'email' => $email], UpdateProfile::rules($user));
+    $validator->passes();
+    expect($validator->failed()['email'])->toHaveKey('Max');
 });

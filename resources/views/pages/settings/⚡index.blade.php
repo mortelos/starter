@@ -46,6 +46,8 @@ class extends Component {
 
     public function updateProfile(): void
     {
+        $this->resetErrorBag(['name', 'email']);
+
         $user = auth()->user();
 
         if (! $user instanceof User) {
@@ -54,6 +56,7 @@ class extends Component {
 
         app(UpdateProfile::class)->handle($user, $this->name, $this->email, $user);
 
+        $this->email = $user->email;
         $this->profileMessage = 'Profiel bijgewerkt.';
     }
 
