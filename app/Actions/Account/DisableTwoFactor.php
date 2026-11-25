@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Actions\Account;
 
+use App\Contracts\GovernanceGate;
 use App\Models\User;
 use App\Support\PasswordConfirmation;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
 
 /**
@@ -25,6 +27,19 @@ final class DisableTwoFactor
         }
 
         if ($user->two_factor_confirmed_at !== null) {
+            $rawPassword = $user->getRawOriginal('password');
+
+            if (
+                (bool) config('starter.auth.require_two_factor_for_approvers', true)
+                && is_string($rawPassword)
+                && $rawPassword !== ''
+                && app(GovernanceGate::class)->canManage($user)
+            ) {
+                throw ValidationException::withMessages([
+                    'confirm_password' => 'Goedkeurders met een wachtwoord kunnen tweestaps niet uitzetten.',
+                ]);
+            }
+
             PasswordConfirmation::ensure($user, $password);
         }
 

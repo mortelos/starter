@@ -201,3 +201,18 @@ it('does not let the browser switch on the display of the recovery codes', funct
         ->assertDontSee('bbbbbbbbbb-2222222222')
         ->assertDontSeeHtml('data-test="recovery-codes"');
 });
+
+it('prevents an approver with a password from disabling confirmed two-factor', function (): void {
+    $approver = userWithTwoFactor();
+    $role = createRole('approver');
+    grantPolicy($role, 'governance.manage');
+    attachGovernanceMembership($approver, $role);
+    actingAs($approver);
+
+    Livewire::test('settings.two-factor')
+        ->set('confirm_password', 'password')
+        ->call('disable')
+        ->assertHasErrors(['confirm_password']);
+
+    expect($approver->fresh()?->hasEnabledTwoFactorAuthentication())->toBeTrue();
+});

@@ -26,8 +26,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        RateLimiter::for('auth', static fn (Request $request): Limit => Limit::perMinute(5)
-            ->by($request->ip() ?? 'global'));
+        RateLimiter::for('auth', static function (Request $request): array {
+            $limits = [
+                Limit::perMinute(5)->by($request->ip() ?? 'global'),
+            ];
+
+            $email = $request->input('email');
+
+            if (is_string($email) && trim($email) !== '') {
+                $limits[] = Limit::perMinute(5)->by('email:'.mb_strtolower(trim($email)));
+            }
+
+            return $limits;
+        });
 
         // The code or recovery code after the password or after social login. Keyed on the user waiting in the
         // challenge (Fortify's `login.id`) and the IP, so one guessed code does not lock out someone else.

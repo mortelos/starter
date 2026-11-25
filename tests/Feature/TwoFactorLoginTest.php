@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Middleware\SerializeTwoFactorChallenge;
 use App\Models\User;
+use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
@@ -17,6 +18,7 @@ use function Pest\Laravel\assertGuest;
 use function Pest\Laravel\from;
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
+use function Pest\Laravel\withServerVariables;
 
 uses(RefreshDatabase::class);
 
@@ -237,4 +239,53 @@ it('frees the lock after a check, a failed one too', function (): void {
     $lock = Cache::lock(SerializeTwoFactorChallenge::key(modelKeyString($user)), 5);
     expect($lock->get())->toBeTrue();
     $lock->release();
+});
+
+it('dispatches the Failed auth event when password credentials do not match', function (): void {
+    Event::fake([Failed::class]);
+    $user = User::factory()->create();
+
+    postPassword($user, 'not-the-password')->assertSessionHasErrors('email');
+
+    Event::assertDispatched(Failed::class, fn (Failed $event): bool => $event->user?->is($user) && $event->credentials['email'] === $user->email);
+});
+
+it('throttles password login attempts per account across different IP addresses', function (): void {
+    RateLimiter::clear('auth');
+    $user = User::factory()->create();
+
+    foreach (range(1, 5) as $attempt) {
+        withServerVariables(['REMOTE_ADDR' => "198.51.100.{$attempt}"])
+            ->from('/login')
+            ->post('/auth/login', ['email' => $user->email, 'password' => 'wrong'])
+            ->assertSessionHasErrors('email');
+    }
+
+    withServerVariables(['REMOTE_ADDR' => '198.51.100.99'])
+        ->from('/login')
+        ->post('/auth/login', ['email' => $user->email, 'password' => 'password'])
+        ->assertStatus(429);
+
+    assertGuest();
+});
+
+it('sends an approver signing in with a password without two-factor to settings until confirmed', function (): void {
+    $approver = User::factory()->create();
+    $role = createRole('approver');
+    grantPolicy($role, 'governance.manage');
+    attachGovernanceMembership($approver, $role);
+
+    postPassword($approver)->assertRedirect(route('home'));
+
+    get('/dashboard')->assertRedirect(route('settings'));
+    get('/settings')->assertOk();
+
+    $approverWithTwoFactor = userWithTwoFactor();
+    attachGovernanceMembership($approverWithTwoFactor, $role);
+    auth()->logout();
+
+    postPassword($approverWithTwoFactor)->assertRedirect(route('two-factor.login'));
+    post(route('two-factor.login.store'), ['code' => twoFactorCode($approverWithTwoFactor)])->assertRedirect(route('home'));
+
+    get('/dashboard')->assertOk();
 });

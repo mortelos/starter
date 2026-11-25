@@ -6,9 +6,11 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Auth\Events\Failed;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Validation\ValidationException;
 
 final class PasswordLoginController extends Controller
@@ -31,6 +33,8 @@ final class PasswordLoginController extends Controller
         $user = $provider->retrieveByCredentials($credentials);
 
         if ($user === null || ! $provider->validateCredentials($user, $credentials)) {
+            Event::dispatch(new Failed(Auth::getDefaultDriver(), $user, $credentials)); // arch-guard: ignore
+
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);
@@ -43,6 +47,7 @@ final class PasswordLoginController extends Controller
             $request->session()->put([
                 'login.id' => $user->getKey(),
                 'login.remember' => $remember,
+                'auth.method' => 'password',
             ]);
 
             return redirect()->route('two-factor.login');
@@ -50,6 +55,7 @@ final class PasswordLoginController extends Controller
 
         $guard->login($user, $remember);
         $request->session()->regenerate();
+        $request->session()->put('auth.method', 'password');
 
         // Back to the page that sent the guest to the login page, like social login and the code challenge do.
         return redirect()->intended(route('home'));
