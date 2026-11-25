@@ -6,12 +6,14 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Mortel\Actions\Policy\CreatePolicy;
+use Mortel\Actions\Policy\DeletePolicy;
 use Mortel\Enums\PolicyEffect;
 use Mortel\Enums\PolicyScope;
 use Mortel\Events\Role\RoleCreated;
 use Mortel\Models\Policy;
 use Mortel\Models\Role;
 use Mortel\Models\UteqStoredEvent;
+use Mortel\Support\PolicyCache;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
@@ -158,3 +160,34 @@ it('removes a policy from a role', function (): void {
 
     expect(Policy::query()->whereKey($policy->getKey())->exists())->toBeFalse();
 });
+
+it('refuses every follow-up when governance access is revoked', function (string $method): void {
+    actingAs(ownerUser());
+    $role = createRole('Target');
+    $policy = grantPolicy($role, 'inbox.manage');
+    $page = Livewire::test('pages::governance.roles')
+        ->set('newRoleName', 'Forbidden')
+        ->set('editingRoleId', modelKeyString($role))
+        ->set('editRoleName', 'Forbidden')
+        ->set('policyAction.'.modelKeyString($role), 'forbidden.manage');
+
+    $permission = Policy::query()->where('name', 'governance.manage')->firstOrFail();
+    app(DeletePolicy::class)->handle(
+        modelKeyString($permission), governanceTenantId(), governanceBranchId(), 'system:test',
+    );
+    app(PolicyCache::class)->invalidate();
+    $roles = Role::query()->get()->toArray();
+    $policies = Policy::query()->get()->toArray();
+    $events = UteqStoredEvent::query()->count();
+
+    $arguments = match ($method) {
+        'startEditRole', 'deleteRole', 'addPolicy' => [modelKeyString($role)],
+        'deletePolicy' => [modelKeyString($policy)],
+        default => [],
+    };
+    $page->call($method, ...$arguments)->assertForbidden();
+
+    expect(Role::query()->get()->toArray())->toBe($roles);
+    expect(Policy::query()->get()->toArray())->toBe($policies);
+    expect(UteqStoredEvent::query()->count())->toBe($events);
+})->with(['createRole', 'startEditRole', 'cancelEditRole', 'updateRole', 'deleteRole', 'addPolicy', 'deletePolicy', 'loadRoles', '$refresh']);

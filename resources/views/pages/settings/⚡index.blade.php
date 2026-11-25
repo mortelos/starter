@@ -46,18 +46,13 @@ class extends Component {
 
     public function updateProfile(): void
     {
-        $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
-        ]);
-
         $user = auth()->user();
 
         if (! $user instanceof User) {
             abort(403);
         }
 
-        app(UpdateProfile::class)->handle($user, $validated['name'], $validated['email'], $user);
+        app(UpdateProfile::class)->handle($user, $this->name, $this->email, $user);
 
         $this->profileMessage = 'Profiel bijgewerkt.';
     }
@@ -66,7 +61,7 @@ class extends Component {
     {
         $this->validate([
             'current_password' => ['required', 'string'],
-            'password' => ['required', 'string', 'min:12', 'confirmed'],
+            'password' => ['required', 'string', 'confirmed'],
         ]);
 
         $user = auth()->user();
@@ -75,7 +70,7 @@ class extends Component {
             abort(403);
         }
 
-        app(ChangePassword::class)->handle($user, $this->current_password, $this->password, $user);
+        app(ChangePassword::class)->handle($user, $this->current_password, $this->password, $user, $this->password_confirmation);
 
         $this->current_password = '';
         $this->password = '';
