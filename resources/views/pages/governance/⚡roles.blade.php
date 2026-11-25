@@ -59,6 +59,11 @@ class extends Component {
         $this->loadRoles();
     }
 
+    public function hydrate(): void
+    {
+        abort_unless(auth()->check() && app(GovernanceGate::class)->canManage(auth()->user()), 403);
+    }
+
     public function loadRoles(): void
     {
         $roles = Role::query()->orderBy('name')->get();
