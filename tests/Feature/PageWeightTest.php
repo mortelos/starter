@@ -9,10 +9,13 @@ use Database\Seeders\ScaleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Route as Router;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Str;
 use Mortel\Models\Role;
 use Mortel\Support\Actor;
 use Mortel\Support\Scalar;
 use Mortelos\Ui\Testing\PageWeight;
+use PHPUnit\Framework\ExpectationFailedException;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
@@ -44,16 +47,32 @@ function weightAdmin(): User
 }
 
 /**
- * The package that owns a route ("vendor/name"), or null when this app owns it. A route is a package's when its
- * controller class or its closure lives under vendor/. Two kinds are always the app's to measure: a Livewire page
- * (the user reads a page, whoever draws its component) and the routes in `$appRoutes`, which the app registers itself
- * with a controller of a package.
+ * The packages whose GET routes are no page of this app, each with its true reason. Only a package on this list
+ * leaves the sweeps. `laravel/framework` is never on it: `Route::view()` and `Route::redirect()` are the app's, and so
+ * is every route whose controller a package supplies. A route of a package that is not on the list goes into a sweep
+ * (or fails the test) until someone adds the package here with a reason.
+ *
+ * @return array<string, string>
+ */
+function weightPackages(): array
+{
+    return [
+        'laravel/horizon' => 'The Horizon dashboard and its JSON API, behind its own gate.',
+        'livewire/livewire' => "Livewire's own scripts, source maps, component assets and file preview.",
+        'mortelos/social-login' => 'The redirects and the callback of the social-login package (signing in and linking a provider account).',
+        'mortelos/ui' => 'The kit routes: scripts, version, receipts, release notes and the catalog and kitchen-sink pages of the UI kit.',
+        'stancl/tenancy' => 'The tenant asset route of the tenancy package.',
+    ];
+}
+
+/**
+ * The package a route's controller or closure comes from ("vendor/name"), found from the file under vendor/, or null
+ * when the code is the app's. A Livewire page is always null: the user reads a page, so a page that a package draws is
+ * still a page of this app.
  */
 function weightPackage(Route $route): ?string
 {
-    // Fortify's own routes are off; `routes/starter.php` registers this one page with Fortify's controller.
-    $appRoutes = ['two-factor.login'];
-    if ($route->getAction('livewire_component') !== null || in_array($route->getName(), $appRoutes, true)) {
+    if ($route->getAction('livewire_component') !== null) {
         return null;
     }
     $uses = $route->getAction('uses');
@@ -73,10 +92,11 @@ function weightPackage(Route $route): ?string
 }
 
 /**
- * The GET routes a sweep leaves out, each with its reason. A route of a package gets a generated reason with the
- * package name. A route of this app goes to exactly one of the two sweeps: the sweep that is signed in (routes behind
- * `auth`) or the guest sweep (the rest), and the other sweep names it as measured elsewhere. A route the app adds
- * is in a sweep by itself; when a page cannot be measured it needs its own true reason below, or the test fails.
+ * The GET routes a sweep leaves out, each with its reason. A route of a package on `weightPackages()` gets that
+ * reason. Every other route goes to exactly one of the two sweeps: the sweep that is signed in (routes behind `auth`)
+ * or the guest sweep (the rest), and the other sweep names it as measured elsewhere. A route the app adds (a
+ * `Route::view()` or a `Route::redirect()` too) is in a sweep by itself; when a page cannot be measured it needs its
+ * own true reason below, or the test fails.
  *
  * @return array<string, string>
  */
@@ -90,8 +110,8 @@ function weightExclusions(bool $signedIn): array
         $uri = '/'.ltrim($route->uri(), '/');
         $package = weightPackage($route);
         $behindAuth = array_any($route->gatherMiddleware(), fn (mixed $middleware): bool => is_string($middleware) && ($middleware === 'auth' || str_starts_with($middleware, 'auth:')));
-        if ($package !== null) {
-            $excluded[$uri] = "Route of the package {$package}, not of this app.";
+        if ($package !== null && isset(weightPackages()[$package])) {
+            $excluded[$uri] = "Package {$package}: ".weightPackages()[$package];
         } elseif ($behindAuth !== $signedIn) {
             $excluded[$uri] = $signedIn ? 'Guest page of this app: the guest sweep measures it.' : 'Page behind sign-in: the signed-in sweep measures it.';
         }
@@ -100,6 +120,8 @@ function weightExclusions(bool $signedIn): array
     return [
         ...$excluded,
         '/' => 'Redirects to the login page or the start page.',
+        '/up' => 'The health check that Laravel registers: not a page of this app.',
+        '/storage/{path}' => 'Serves files of the local disk: not a page.',
         '/changelog/export' => 'Download of the change log, not a page.',
         '/settings/social-login/{provider}' => 'Starts linking a provider account: redirects to the provider.',
     ];
@@ -130,7 +152,7 @@ function weightInviteToken(): string
 {
     $admin = weightAdmin();
     $result = app(InviteUser::class)->handle(
-        'page-weight@scale.example.test',
+        'page-weight-'.Str::lower(Str::random(8)).'@scale.example.test',
         Scalar::string(Role::query()->where('name', 'owner')->firstOrFail()->getKey()),
         Actor::user($admin),
     );
@@ -197,4 +219,50 @@ it('keeps every guest page inside the page budget', function (): void {
 
     expect($weight->notCovered)->toBe([], 'Pages without a main region: '.json_encode($weight->notCoveredReasons));
     expect(array_keys($weight->measurements))->not->toBeEmpty();
+})->group('page-weight');
+
+// What it proves: a route the app adds is never dropped silently. A `Route::view()` with sign-in and one without are
+// each in a sweep and are measured, and a `Route::redirect()` fails the guest sweep until it has its own reason.
+// Neither is in the exclusions of the sweep that measures it, because `laravel/framework` is not a package of the list.
+it('keeps a route the app adds in a sweep', function (): void {
+    View::addLocation(base_path('tests/Fixtures/views'));
+    Router::middleware('web')->group(function (): void {
+        Router::view('/weight-proof/guest', 'weight-proof');
+        Router::view('/weight-proof/signed-in', 'weight-proof')->middleware('auth');
+    });
+
+    $excludedSignedIn = weightExclusions(signedIn: true);
+    $excludedGuest = weightExclusions(signedIn: false);
+    expect(array_key_exists('/weight-proof/signed-in', $excludedSignedIn))->toBeFalse();
+    expect(array_key_exists('/weight-proof/guest', $excludedSignedIn))->toBeTrue('The other sweep names it.');
+    expect(array_key_exists('/weight-proof/guest', $excludedGuest))->toBeFalse();
+    expect(array_key_exists('/weight-proof/signed-in', $excludedGuest))->toBeTrue('The other sweep names it.');
+
+    $signedIn = PageWeight::sweep(
+        request: fn (string $url) => get($url),
+        login: fn () => actingAs(weightAdmin()),
+        fakeAi: fn () => null,
+        exclude: weightExclusions(signedIn: true),
+        resolve: fn (Route $route): array => weightResolve($route),
+    );
+    expect(array_keys($signedIn->measurements))->toContain('/weight-proof/signed-in');
+    expect(array_key_exists('/weight-proof/guest', $signedIn->measurements))->toBeFalse();
+
+    $guest = fn () => PageWeight::sweep(
+        request: fn (string $url) => withSession(['login.id' => weightAdmin()->getKey(), 'login.remember' => false])->get($url),
+        login: function (): void {
+            auth()->forgetGuards();
+            session()->flush();
+        },
+        fakeAi: fn () => null,
+        exclude: weightExclusions(signedIn: false),
+        resolve: fn (Route $route): array => weightResolve($route),
+    );
+    $measuredAsGuest = $guest()->measurements;
+    expect(array_keys($measuredAsGuest))->toContain('/weight-proof/guest');
+    expect(array_key_exists('/weight-proof/signed-in', $measuredAsGuest))->toBeFalse();
+
+    Router::redirect('/weight-proof/redirect', '/');
+    expect(array_key_exists('/weight-proof/redirect', weightExclusions(signedIn: false)))->toBeFalse();
+    expect($guest)->toThrow(ExpectationFailedException::class);
 })->group('page-weight');
