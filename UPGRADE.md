@@ -14,7 +14,7 @@ user without the new ability `changelog.view`. It also moves to `mortelos/framew
 | no change log | page `changelog` and export `changelog.export` in `routes/starter.php`, a link in the profile menu |
 | abilities `governance.manage`, `users.manage`, `invitations.manage`, `horizon.view` | also `changelog.view` (scope Action) |
 | `events` with indexes on `created_at` and `event_class` | also `events_created_at_id_index` and `events_actor_created_at_index` |
-| one `PolicyCache` per `CheckPolicy` | one per HTTP request (middleware `SharePolicyCacheForRequest` in the web group, bound in `StarterServiceProvider`); a job still reads `policies` per check |
+| one `PolicyCache` per `CheckPolicy` | one per HTTP request (middleware `SharePolicyCacheForRequest` in the web group, put in the container for the request and removed afterwards, never bound); a job still reads `policies` per check |
 | `StarterGovernanceGate::allows()` with action and scope | also resource type and id, passed to `CheckPolicy` |
 | no outlets of the starter itself | `resources/mortelos/outlets.json`: the registry `ChangeLogDescriptions` (tag `changelog.descriptions`) and the contracts `DescribesChanges`, `ChangeLogAgents`, `ChangeLogAccess`, `ChangeLogArchive` |
 
@@ -40,7 +40,7 @@ What an app built on the starter must do:
    tests `tests/Feature/ChangeLog*`, `tests/Feature/DoctorChangeLogTest.php`, `tests/Browser/ChangeLogVerifyTest.php`
    with `tests/Support/ChangeLog/` (required in `tests/Pest.php`).
 3. Take the changes in `routes/starter.php`, `bootstrap/app.php` (the middleware), `StarterServiceProvider` (bindings,
-   the tag, `PolicyCache`),
+   the tag; no binding of `PolicyCache`),
    `StarterGovernanceGate` (`SCOPES`, resource type and id in `allows` and `allowsActor`), `config/event-sourcing.php` (`changelog.change.undone`), the
    topbar, `StarterDoctor` and `tests/Feature/GovernanceSeederTest.php`.
 4. Run `php artisan migrate`: it adds the indexes and gives an existing `owner` role `changelog.view`.
