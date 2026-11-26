@@ -200,7 +200,7 @@ class extends Component {
             </x-mortel::table.columns>
             <x-mortel::table.rows>
                 @forelse($members as $member)
-                    <x-mortel::table.row wire:key="member-{{ $member['id'] }}" data-page-weight-row data-id="{{ $member['id'] }}">
+                    <x-mortel::table.row wire:key="member-{{ $member['id'] }}" data-page-weight-row data-member-role="{{ $member['role'] }}" data-id="{{ $member['id'] }}">
                         <x-mortel::table.cell>{{ $member['name'] }}</x-mortel::table.cell>
                         <x-mortel::table.cell>{{ $member['email'] }}</x-mortel::table.cell>
                         <x-mortel::table.cell><x-mortel::badge size="sm">{{ $member['role'] }}</x-mortel::badge></x-mortel::table.cell>
