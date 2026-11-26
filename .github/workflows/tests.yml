@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  # Label changes must not cancel the run authorized by the tenant-isolation exception label.
+  # Label changes must not cancel the run authorized by an exception label (tenant-isolation-exception, guard-baseline-exception).
   cancel-in-progress: ${{ github.event.action != 'labeled' && github.event.action != 'unlabeled' }}
 
 jobs:
@@ -119,13 +119,22 @@ jobs:
 
       # Fails on a new guard violation and on baseline growth; recorded debt may only go down.
       # With the tenant-isolation-exception label only the tenant baseline may grow (the tenant step checks it).
+      # With the guard-baseline-exception label the audit runs without --base, so the guard baseline may grow in this PR
+      # (for a rule that is new inside an existing check, which the ratchet always counts as growth). Like the tenant
+      # label it is applied only by the orchestrator after review, it counts only in the run that the labeling itself
+      # starts, and a later push is checked with --base again until the label is removed and applied again. Every
+      # baseline entry still needs a reason, named in the pull request.
       - name: Mortel audit
         shell: bash
         env:
           MORTELOS_PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
           EXCEPTION_LABEL: ${{ github.event.action == 'labeled' && github.event.label.name == 'tenant-isolation-exception' }}
+          BASELINE_EXCEPTION_LABEL: ${{ github.event.action == 'labeled' && github.event.label.name == 'guard-baseline-exception' }}
         run: |
-          if [[ "$EXCEPTION_LABEL" == "true" ]]; then
+          if [[ "$BASELINE_EXCEPTION_LABEL" == "true" ]]; then
+            echo "::notice::Label guard-baseline-exception: the audit runs without --base, so the guard baseline may grow in this PR."
+            php artisan mortelos:audit
+          elif [[ "$EXCEPTION_LABEL" == "true" ]]; then
             echo "::notice::Label tenant-isolation-exception: the audit skips tenant-isolation, so only the tenant baseline may grow in this PR; the tenant step checks it."
             php artisan mortelos:audit --base=origin/main --skip=tenant-isolation
           else

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1787b749effe801a64f2437048353b91",
+    "content-hash": "b9793f4e56e95d6f0a149674afa073d9",
     "packages": [
         {
             "name": "amphp/amp",
@@ -4809,15 +4809,16 @@
         },
         {
             "name": "mortelos/ui",
-            "version": "0.6.0",
+            "version": "0.6.84",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/ui/0.6.0.zip",
-                "reference": "7f5ba611d6826bd61c095b8f216bffcfd35fb6b9",
-                "shasum": "97a8b07e27ed2829534af8cd8991eced7266afc6"
+                "url": "https://packages.mortelos.com/dist/mortelos/ui/0.6.84.zip",
+                "reference": "5d16a1ac25a2e849af0556eb223024496fc9ed04",
+                "shasum": "f5ee1fa4239c1c80f56c31e7c5f9ca5f85f17309"
             },
             "require": {
                 "illuminate/support": "^13.0",
+                "league/commonmark": "^2.8.1",
                 "livewire/livewire": "^4.4.4",
                 "php": "^8.4"
             },
@@ -4840,8 +4841,7 @@
             "license": [
                 "proprietary"
             ],
-            "description": "Reusable UI primitives for MortelOS starter and packages",
-            "time": "2026-10-27T13:44:03+01:00"
+            "description": "Reusable UI primitives for MortelOS starter and packages"
         },
         {
             "name": "nesbot/carbon",
@@ -12910,12 +12910,12 @@
         },
         {
             "name": "mortelos/dev-tools",
-            "version": "0.7.4",
+            "version": "0.7.6",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/dev-tools/0.7.4.zip",
-                "reference": "63f542e840f0f5d569661ca879c3499e3eb7e115",
-                "shasum": "2e4a88ac160c653f79e8848cd94874817afa9ec3"
+                "url": "https://packages.mortelos.com/dist/mortelos/dev-tools/0.7.6.zip",
+                "reference": "8e01cb9d4fa3756f291f1183e92a9fddd5afb513",
+                "shasum": "4f78e807a66bcdb698e13a512dae908f5f4c3347"
             },
             "require": {
                 "illuminate/console": "^13.0",
@@ -12945,8 +12945,7 @@
             "license": [
                 "proprietary"
             ],
-            "description": "Developer tooling for MortelOS package-ready feature decisions",
-            "time": "2026-11-21T14:38:47+01:00"
+            "description": "Developer tooling for MortelOS package-ready feature decisions"
         },
         {
             "name": "myclabs/deep-copy",
