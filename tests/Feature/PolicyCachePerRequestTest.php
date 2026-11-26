@@ -3,9 +3,12 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\SharePolicyCacheForRequest;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Mortel\Agent\Tools\AgentToolRegistry;
+use Mortel\Enums\PolicyScope;
 use Mortel\Models\AgentRun;
 use Mortel\Support\PolicyCache;
 
@@ -48,6 +51,24 @@ it('puts back a cache that was already there instead of dropping it', function (
     (new SharePolicyCacheForRequest)->handle(request(), fn () => response('ok'));
 
     expect(app(PolicyCache::class))->toBe($outer);
+});
+
+it('makes a cache that was already there read policies again after a nested request, so a right revoked inside it counts', function (): void {
+    $outer = new PolicyCache;
+    app()->instance(PolicyCache::class, $outer);
+    $reads = 0;
+    DB::listen(function (QueryExecuted $query) use (&$reads): void {
+        if (preg_match('/\bfrom\s+["`]?policies["`]?(\s|$)/i', $query->sql) === 1) {
+            $reads++;
+        }
+    });
+
+    $outer->forRole('role', PolicyScope::Action);
+    $outer->forRole('role', PolicyScope::Action);
+    (new SharePolicyCacheForRequest)->handle(request(), fn () => response('ok'));
+    $outer->forRole('role', PolicyScope::Action);
+
+    expect($reads)->toBe(2);
 });
 
 it('puts the middleware in the web group', function (): void {

@@ -32,9 +32,14 @@ final class SharePolicyCacheForRequest
         try {
             return $next($request);
         } finally {
-            $previous instanceof PolicyCache
-                ? app()->instance(PolicyCache::class, $previous)
-                : app()->forgetInstance(PolicyCache::class);
+            if ($previous instanceof PolicyCache) {
+                // A nested request: a policy that changed inside it only ended this request's cache, so the outer
+                // cache reads `policies` again before it answers another check.
+                $previous->invalidate();
+                app()->instance(PolicyCache::class, $previous);
+            } else {
+                app()->forgetInstance(PolicyCache::class);
+            }
         }
     }
 }
