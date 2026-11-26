@@ -200,7 +200,7 @@ class extends Component {
             </x-mortel::table.columns>
             <x-mortel::table.rows>
                 @forelse($members as $member)
-                    <x-mortel::table.row wire:key="member-{{ $member['id'] }}">
+                    <x-mortel::table.row wire:key="member-{{ $member['id'] }}" data-page-weight-row data-id="{{ $member['id'] }}">
                         <x-mortel::table.cell>{{ $member['name'] }}</x-mortel::table.cell>
                         <x-mortel::table.cell>{{ $member['email'] }}</x-mortel::table.cell>
                         <x-mortel::table.cell><x-mortel::badge size="sm">{{ $member['role'] }}</x-mortel::badge></x-mortel::table.cell>
@@ -275,7 +275,7 @@ class extends Component {
                 </x-mortel::table.columns>
                 <x-mortel::table.rows>
                     @foreach($pendingInvites as $invite)
-                        <x-mortel::table.row wire:key="invite-{{ $invite['id'] }}">
+                        <x-mortel::table.row wire:key="invite-{{ $invite['id'] }}" data-page-weight-row data-invite-row data-id="{{ $invite['id'] }}">
                             <x-mortel::table.cell>{{ $invite['email'] }}</x-mortel::table.cell>
                             <x-mortel::table.cell><x-mortel::badge size="sm">{{ $invite['role'] }}</x-mortel::badge></x-mortel::table.cell>
                             <x-mortel::table.cell>{{ $invite['expires_at'] }}</x-mortel::table.cell>

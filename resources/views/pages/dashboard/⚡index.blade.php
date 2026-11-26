@@ -44,12 +44,14 @@ class extends Component {
     @endif
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {{-- mortel-guard: heavy-in-loop One component per widget class that the app lists in config('starter.dashboard.primary_widgets'), which is empty in the starter; it never grows with records. --}}
         @foreach (config('starter.dashboard.primary_widgets', []) as $widget)
             <livewire:dynamic-component :is="$widget" :wire:key="'dashboard-primary-'.$widget" />
         @endforeach
     </div>
 
     <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {{-- mortel-guard: heavy-in-loop One component per widget class that the app lists in config('starter.dashboard.secondary_widgets'), which is empty in the starter; it never grows with records. --}}
         @foreach (config('starter.dashboard.secondary_widgets', []) as $widget)
             <livewire:dynamic-component :is="$widget" :wire:key="'dashboard-secondary-'.$widget" />
         @endforeach
