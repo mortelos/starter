@@ -10,7 +10,6 @@ use App\Contracts\ChangeLog\ChangeLogAccess;
 use App\Contracts\ChangeLog\ChangeLogAgents;
 use App\Contracts\ChangeLog\ChangeLogArchive;
 use App\Contracts\GovernanceGate;
-use App\Http\Middleware\SharePolicyCacheForRequest;
 use App\Support\ChangeLog\ChangeLogDescriptions;
 use App\Support\ChangeLog\ChangeLogReader;
 use App\Support\ChangeLog\GenericChangeLogAgents;
@@ -32,7 +31,6 @@ use Mortel\SocialLogin\Contracts\ProvisionsSocialUsers;
 use Mortel\SocialLogin\Provisioning\RefuseUnknownUsers;
 use Mortel\SocialLogin\Support\SignInMethods;
 use Mortel\Support\Actor;
-use Mortel\Support\PolicyCache;
 use Mortel\Support\Scalar;
 
 final class StarterServiceProvider extends ServiceProvider
@@ -58,9 +56,6 @@ final class StarterServiceProvider extends ServiceProvider
 
         // The framework denies every inbox item by default; the owner may view and decide on their own items.
         $this->app->bind(AuthorizeInboxItemAccess::class, OwnerScopedInboxItemAccess::class);
-
-        // One policy cache per HTTP request, none shared in a job (SharePolicyCacheForRequest).
-        $this->app->bind(PolicyCache::class, fn (Application $app): PolicyCache => SharePolicyCacheForRequest::resolve($app));
 
         // Change log (docs/change-log.md): the registry of sentences per event type, built from the classes tagged
         // ChangeLogDescriptions::TAG (no shared state), and the three contract outlets with their defaults (bindIf: a

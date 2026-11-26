@@ -5,36 +5,41 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Contracts\Container\Container;
 use Illuminate\Http\Request;
 use Mortel\Support\PolicyCache;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * One policy cache per HTTP request (the web group, so Livewire updates too): a screen that checks several rights
- * (the change log asks one per row action, the topbar one) reads `policies` once. The cache lives on the request, so
- * it ends with it. Outside a request (a queue job, an agent run, a command) every CheckPolicy gets a fresh cache, as
- * mortelos/framework intends, so a right that another process revokes counts in the next step. The framework's
- * PolicyProjector invalidates the same instance when a policy changes during the request.
+ * (the change log asks one per row action, the topbar one) reads `policies` once.
+ *
+ * The cache is put in the container for the length of the request and removed in a `finally`, never bound for good:
+ * a binding makes `app()->bound(PolicyCache::class)` true in a queue worker too, and the framework's
+ * AgentToolRegistry then "puts back" the cache it found there for the rest of the process, across jobs and tenants.
+ * Outside a request (a queue job, an agent run, a command) nothing is bound, so every CheckPolicy gets a fresh cache,
+ * as mortelos/framework intends, so a right that another process revokes counts in the next step. The framework's
+ * PolicyProjector invalidates the same instance when a policy changes during the request. Under Octane the `finally`
+ * ends the cache before the next request on the worker.
  */
 final class SharePolicyCacheForRequest
 {
-    public const string ATTRIBUTE = 'mortel.policy_cache';
-
     /** @param  Closure(Request): Response  $next */
     public function handle(Request $request, Closure $next): Response
     {
-        $request->attributes->set(self::ATTRIBUTE, new PolicyCache);
+        $previous = app()->isShared(PolicyCache::class) ? app(PolicyCache::class) : null;
+        app()->instance(PolicyCache::class, new PolicyCache);
 
-        return $next($request);
-    }
-
-    /** The binding of PolicyCache: the cache of the current request, or a fresh one. */
-    public static function resolve(Container $container): PolicyCache
-    {
-        $request = $container->bound('request') ? $container->make('request') : null;
-        $cache = $request instanceof Request ? $request->attributes->get(self::ATTRIBUTE) : null;
-
-        return $cache instanceof PolicyCache ? $cache : new PolicyCache;
+        try {
+            return $next($request);
+        } finally {
+            if ($previous instanceof PolicyCache) {
+                // A nested request: a policy that changed inside it only ended this request's cache, so the outer
+                // cache reads `policies` again before it answers another check.
+                $previous->invalidate();
+                app()->instance(PolicyCache::class, $previous);
+            } else {
+                app()->forgetInstance(PolicyCache::class);
+            }
+        }
     }
 }
