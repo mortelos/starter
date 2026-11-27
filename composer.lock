@@ -12875,12 +12875,12 @@
         },
         {
             "name": "mortelos/agent-standards",
-            "version": "0.1.53",
+            "version": "0.1.54",
             "dist": {
                 "type": "zip",
-                "url": "https://packages.mortelos.com/dist/mortelos/agent-standards/0.1.53.zip",
-                "reference": "6d0b6a82be852ace36380555b9accfeb8be2f84c",
-                "shasum": "ccecf8f5f0ccb5cde2b1f6204cce321992568923"
+                "url": "https://packages.mortelos.com/dist/mortelos/agent-standards/0.1.54.zip",
+                "reference": "75aab176dc856ce68a6b15eeaf50eff5593e7f80",
+                "shasum": "8def26a8c56396a348e1fed3af2660d58c6d6ece"
             },
             "require": {
                 "illuminate/support": "^13.0",
@@ -12905,8 +12905,7 @@
             "license": [
                 "proprietary"
             ],
-            "description": "MortelOS-owned AI agent coding standards for Laravel portal work.",
-            "time": "2026-11-25T16:54:21+01:00"
+            "description": "MortelOS-owned AI agent coding standards for Laravel portal work."
         },
         {
             "name": "mortelos/dev-tools",
