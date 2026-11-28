@@ -19,6 +19,9 @@ return [
         // Seconds a second code check for the same waiting user waits for the first (SerializeTwoFactorChallenge).
         'two_factor_lock_wait' => 5,
 
+        // Approvers who sign in with a password must confirm two-factor authentication before using protected pages.
+        'require_two_factor_for_approvers' => true,
+
         'controllers' => [
             'accept_invitation' => AcceptInvitationController::class,
             'passkey_authenticated' => PasskeyAuthenticatedController::class,
